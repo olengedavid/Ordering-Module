@@ -11,6 +11,7 @@ const form = useForm({
     email: '',
     password: '',
     password_confirmation: '',
+    user_type: 'admin'
 });
 
 const submit = () => {
