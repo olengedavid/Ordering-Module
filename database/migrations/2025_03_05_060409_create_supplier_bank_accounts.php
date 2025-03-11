@@ -11,10 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('supplier_bank_accounts', function (Blueprint $table) {
+        Schema::create('company_bank_accounts', function (Blueprint $table) {
             $table->id();
             $table->uuid('uuid')->unique();
-            $table->foreignId('supplier_id')->constrained()->onDelete('cascade');
+            $table->foreignId('created_by')->constrained('users');
+            $table->foreignId('company_id')->constrained('companies')->onDelete('cascade');
             $table->string('bank_name');
             $table->string('account_name');
             $table->string('account_number');
@@ -29,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('supplier_bank_accounts');
+        Schema::dropIfExists('company_bank_accounts');
     }
 };

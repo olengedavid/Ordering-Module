@@ -1,18 +1,19 @@
 <?php
 
-namespace App\Models\Supplier;
+namespace App\Models\Companies;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
-class SupplierBankAccount extends Model
+class CompanyBankAccount extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'uuid',
-        'supplier_id',
+        'company_id',
+        'created_by',
         'bank_name',
         'account_name',
         'account_number',
@@ -34,9 +35,9 @@ class SupplierBankAccount extends Model
         });
     }
 
-    public function supplier()
+    public function company()
     {
-        return $this -> belongsTo(Supplier::class);
+        return $this -> belongsTo(Company::class);
     }
 
     public function creator()

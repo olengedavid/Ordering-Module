@@ -1,11 +1,11 @@
 <?php
-namespace App\Models\Supplier;
+namespace App\Models\Companies;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
-class Supplier extends Model
+class Company extends Model
 {
     use HasFactory;
     protected $fillable =[
@@ -44,7 +44,7 @@ class Supplier extends Model
 
     public function bankAccounts()
     {
-        return $this->hasMany(SupplierBankAccount::class, 'supplier_id');
+        return $this->hasMany(CompanyBankAccount::class, 'company_id');
     }
     
 }
