@@ -14,7 +14,16 @@ class CompanyController extends Controller{
      *  Display create supplier page
      */
 
-     public function api_create_supplier() : Response
+     public function index() : Response
+     {
+        $suppliers = Company::latest()->get();
+
+        return Inertia::render('Supplier/Index', [
+            'suppliers' => $suppliers
+        ]);
+     }
+
+     public function create() : Response
      {
         return Inertia::render('Supplier/Create');
      }
