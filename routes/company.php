@@ -20,6 +20,7 @@ Route::middleware('auth')->group(function () {
     Route::post('supplier/delivery-regions', [DeliveryRegionController::class, 'store'])->name('supplier.delivery-regions.store');
 
     #Product Routes
+    Route::get('supplier/products', [ProductController::class, 'getProductsBySupplier'])->name('supplier.products.index');
     Route::get('products', [ProductController::class, 'index'])->name('products.index');
     Route::get('products/create', [ProductController::class, 'create'])->name('products.create');
     Route::post('products/create', [ProductController::class, 'store'])->name('products.store');

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Companies\Product;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Models\Companies\Company;
 
 class ProductController extends Controller
 {
@@ -35,10 +36,22 @@ class ProductController extends Controller
     public function index(): \Inertia\Response
     {
         $products = Product::latest()->get();
-        
+
         return Inertia::render('Products/Index', [
             'products' => $products
         ]);
+    }
+
+    public function getProductsBySupplier(Request $request)
+    {
+        $company = Company::where('uuid', $request->uuid)->firstOrFail();
+
+        $products = Product::where('company_id', $company->id)
+            ->with(['creator'])
+            ->latest()
+            ->get();
+
+        return response()->json($products);
     }
 
     public function store(Request $request)
@@ -52,11 +65,12 @@ class ProductController extends Controller
             'manufucturer' => 'required|string',
             'primary_image' => 'required|image|mimes:jpeg,png,jpg|max:2048',
             'secondary_images.*' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'created_by' => 'required|integer|exists:users,id'
+            'created_by' => 'required|integer|exists:users,id',
+            'company_id' => 'required|integer|exists:companies,id'
         ]);
-    
+
         $images = [];
-    
+
         // Handle primary image
         if ($request->hasFile('primary_image')) {
             $primaryImage = $request->file('primary_image');
@@ -68,7 +82,7 @@ class ProductController extends Controller
                 'type' => 'primary'
             ];
         }
-    
+
         // Handle secondary images
         if ($request->hasFile('secondary_images')) {
             foreach ($request->file('secondary_images') as $image) {
@@ -81,13 +95,13 @@ class ProductController extends Controller
                 ];
             }
         }
-    
+
         $product = Product::create([
             ...$validated,
             'images' => json_encode($images), // Encode the images array to JSON
             'status' => 'active'
         ]);
-    
+
         return redirect()->route('products.index')
             ->with('success', 'Product created successfully');
     }

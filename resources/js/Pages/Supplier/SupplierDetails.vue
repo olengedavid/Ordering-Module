@@ -4,7 +4,7 @@ import { Head } from "@inertiajs/vue3";
 import BankAccountList from "@/Components/Supplier/BankAccountList.vue";
 import WarehouseList from "@/Components/Supplier/WarehouseList.vue";
 import DeliveryRegionList from "@/Components/Supplier/DeliveryRegionList.vue";
-// import ProductList from "@/Components/Supplier/ProductList.vue";
+import ProductList from "@/Components/Supplier/ProductList.vue";
 
 defineProps({
   supplier: Object,
@@ -117,7 +117,7 @@ defineProps({
           <DeliveryRegionList :supplier="supplier" />
         </div>
         <div v-else-if="activeTab === 'Products'">
-          <ProductList :supplier-uuid="supplier.uuid" />
+          <ProductList :supplier="supplier" />
         </div>
       </div>
     </div>
