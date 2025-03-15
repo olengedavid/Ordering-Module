@@ -51,7 +51,8 @@ class ProductController extends Controller
             'description' => 'nullable|string',
             'manufucturer' => 'required|string',
             'primary_image' => 'required|image|mimes:jpeg,png,jpg|max:2048',
-            'secondary_images.*' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
+            'secondary_images.*' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'created_by' => 'required|integer|exists:users,id'
         ]);
     
         $images = [];

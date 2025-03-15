@@ -88,6 +88,12 @@ defineProps({
                         Delete
                       </button>
                     </td> -->
+                    <Link
+                        :href="route('suppliers.show', { uuid: supplier.uuid })"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                    >
+                        View Details
+                    </Link>
                   </tr>
                   <tr v-if="suppliers.length === 0">
                     <td colspan="5" class="px-6 py-4 text-center text-gray-500">

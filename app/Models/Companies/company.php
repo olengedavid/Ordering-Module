@@ -4,6 +4,7 @@ namespace App\Models\Companies;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use App\Models\User;
 
 class Company extends Model
 {

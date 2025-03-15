@@ -22,6 +22,8 @@ return new class extends Migration
             $table->string('manufucturer');
             $table->string('status');
             $table->json('images')->nullable();
+            $table->foreignId('created_by')->constrained('users');
+            $table->foreignId('company_id')->constrained('companies')->onDelete('cascade');
             $table->timestamps();
         });
     }

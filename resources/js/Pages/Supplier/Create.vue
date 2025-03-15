@@ -3,7 +3,10 @@ import InputLabel from "@/Components/InputLabel.vue";
 import GuestLayout from "@/Layouts/GuestLayout.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
 import TextInput from "@/Components/TextInput.vue";
-import { Head, Link, useForm } from "@inertiajs/vue3";
+import { Head, Link, useForm, usePage } from "@inertiajs/vue3";
+
+const page = usePage();
+const user = page.props.auth.user;
 
 const form = useForm({
   company_name: "",
@@ -12,7 +15,7 @@ const form = useForm({
   office_address: "",
   krapin: "",
   contact_person: "",
-  created_by: 1
+  created_by: user.id,
 });
 
 const submit = () => {

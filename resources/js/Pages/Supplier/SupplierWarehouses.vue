@@ -1,6 +1,6 @@
 <script setup>
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
-import { Head, Link, useForm } from "@inertiajs/vue3";
+import { Head, Link, useForm, usePage } from "@inertiajs/vue3";
 import Modal from "@/Components/Modal.vue";
 import InputError from "@/Components/InputError.vue";
 import InputLabel from "@/Components/InputLabel.vue";
@@ -9,6 +9,8 @@ import PrimaryButton from "@/Components/PrimaryButton.vue";
 import { ref } from "vue";
 
 const showingModal = ref(false);
+const page = usePage();
+const user = page.props.auth.user;
 
 const form = useForm({
   name: "",
@@ -18,6 +20,7 @@ const form = useForm({
   contact_person: "",
   phone_number: "",
   status: "active",
+  created_by: user.id,
   company_id: 1,
 });
 
