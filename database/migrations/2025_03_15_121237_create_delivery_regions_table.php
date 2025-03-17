@@ -11,19 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('warehouses', function (Blueprint $table) {
+        Schema::create('delivery_regions', function (Blueprint $table) {
             $table->id();
-            $table->timestamps();
             $table->uuid('uuid')->unique();
-            $table->string('name');
-            $table->string('address');
-            $table->string('phone_number');
-            $table->string('email');
-            $table->string('krapin');
-            $table->string('contact_person');
-            $table->string('status');
+            $table->foreignId('warehouse_id')->constrained('warehouses')->onDelete('cascade');
             $table->foreignId('company_id')->constrained('companies')->onDelete('cascade');
+            $table->string('region');
+            $table->decimal('delivery_fee', 10, 2);
             $table->foreignId('created_by')->constrained('users');
+            $table->string('status')->default('active');
+            $table->timestamps();
         });
     }
 
@@ -32,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('warehouses');
+        Schema::dropIfExists('delivery_regions');
     }
 };

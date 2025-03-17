@@ -4,36 +4,35 @@ namespace App\Models\Companies;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
-use App\Models\Companies\Company;
 
-class Warehouse extends Model
+class Product extends Model
 {
     use HasFactory;
 
-     /**
-     * TO be added
-     * Country
-     * Region
-     * Gps Location
-     */
-    protected $fillable = [
+    protected $fillable =[
         'name',
-        'address',
-        'phone_number',
-        'email',
-        'uuid',
-        'created_by',
-        'krapin',
-        'contact_person',
+        'sku_number',
+        'category',
+        'unit_of_measure',
+        'description',
+        'manufucturer',
         'status',
+        'out_of_stock_level',
+        'replenish_level',
+        'images',
+        'created_by',
         'company_id'
+    ];
+
+    protected $casts = [
+        'uuid' => 'string',
     ];
 
     protected static function boot()
     {
         parent::boot();
-        static::creating(function ($warehouse) {
-            $warehouse->uuid = Str::uuid()->toString();
+        static::creating(function ($product) {
+            $product->uuid = Str::uuid()->toString();
         });
     }
 

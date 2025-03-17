@@ -11,19 +11,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('warehouses', function (Blueprint $table) {
+        Schema::create('products', function (Blueprint $table) {
             $table->id();
-            $table->timestamps();
             $table->uuid('uuid')->unique();
             $table->string('name');
-            $table->string('address');
-            $table->string('phone_number');
-            $table->string('email');
-            $table->string('krapin');
-            $table->string('contact_person');
+            $table->string('sku_number')->unique();
+            $table->string('category');
+            $table->string('unit_of_measure');
+            $table->text('description')->nullable();
+            $table->string('manufucturer');
             $table->string('status');
-            $table->foreignId('company_id')->constrained('companies')->onDelete('cascade');
+            $table->json('images')->nullable();
             $table->foreignId('created_by')->constrained('users');
+            $table->foreignId('company_id')->constrained('companies')->onDelete('cascade');
+            $table->timestamps();
         });
     }
 
@@ -32,6 +33,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('warehouses');
+        Schema::dropIfExists('products');
     }
 };

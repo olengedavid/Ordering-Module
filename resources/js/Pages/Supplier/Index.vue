@@ -165,6 +165,7 @@ const resetPagination = () => {
                       <th @click="sortBy('phone_number')" class="sortable">
                         Phone <i :class="getSortIcon('phone_number')"></i>
                       </th>
+                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -173,6 +174,12 @@ const resetPagination = () => {
                       <td>{{ supplier.contact_person }}</td>
                       <td>{{ supplier.email }}</td>
                       <td>{{ supplier.phone_number }}</td>
+                      <Link
+                        :href="route('suppliers.show', { uuid: supplier.uuid })"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                    >
+                        View Details
+                    </Link>
                     </tr>
                     <tr v-if="paginatedSuppliers.length === 0">
                       <td colspan="4" class="empty-state">
