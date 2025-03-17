@@ -22,6 +22,9 @@ const form = useForm({
 const submit = () => {
     form.post(route('login'), {
         onFinish: () => form.reset('password'),
+        onSuccess: () => {
+            window.location.href = route('suppliers.index');
+        },
     });
 };
 
