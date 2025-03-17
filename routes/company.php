@@ -5,6 +5,7 @@ use App\Http\Controllers\Company\CompanyController;
 use App\Http\Controllers\Product\ProductController;
 use App\Http\Controllers\Company\CompanyBankAccountController;
 use App\Http\Controllers\Company\DeliveryRegionController;
+use App\Http\Controllers\Company\InventoryController;
 
 Route::middleware('auth')->group(function () {
     Route::get('suppliers', [CompanyController::class, 'index'])->name('suppliers.index');
@@ -25,4 +26,11 @@ Route::middleware('auth')->group(function () {
     Route::get('products/create', [ProductController::class, 'create'])->name('products.create');
     Route::post('products/create', [ProductController::class, 'store'])->name('products.store');
     
+    #Inventory Routes
+    // Route::get('supplier/inventories', [InventoryController::class, 'index'])->name('supplier.inventories.index');
+    Route::get('supplier/inventories', [InventoryController::class, 'index'])->name('supplier.inventories.index');
+    Route::get('api/supplier/inventories', [InventoryController::class, 'getInventoriesBySupplier'])->name('supplier.inventories');
+    Route::post('supplier/inventories', [InventoryController::class, 'store'])->name('supplier.inventories.store');
+    Route::put('supplier/inventories/{inventory}', [InventoryController::class, 'update'])->name('supplier.inventories.update');
+    Route::delete('supplier/inventories/{inventory}', [InventoryController::class, 'destroy'])->name('supplier.inventories.destroy');
 });
