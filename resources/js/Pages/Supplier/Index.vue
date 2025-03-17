@@ -1,7 +1,8 @@
 <script setup>
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
-import { Head, Link } from "@inertiajs/vue3";
+import { Head, Link, useForm } from "@inertiajs/vue3";
 import { ref, computed } from "vue";
+import InputError from '@/Components/InputError.vue';
 
 const props = defineProps({
   suppliers: {
@@ -16,6 +17,36 @@ const perPage = ref(10);
 const perPageOptions = [5, 10, 20, 50];
 const sortKey = ref('company_name');
 const sortDir = ref('asc');
+
+// Add modal and form handling
+const showModal = ref(false);
+const form = useForm({
+  company_name: '',
+  email: '',
+  phone_number: '',
+  office_address: '',
+  krapin: '',
+  contact_person: '',
+  created_by: 1
+});
+
+const openModal = () => {
+  showModal.value = true;
+  form.reset();
+};
+
+const closeModal = () => {
+  showModal.value = false;
+  form.reset();
+};
+
+const submit = () => {
+  form.post(route("suppliers.create"), {
+    onSuccess: () => {
+      closeModal();
+    },
+  });
+};
 
 const filteredSuppliers = computed(() => {
   if (searchQuery.value.trim() === '') {
@@ -111,10 +142,10 @@ const resetPagination = () => {
                 </div>
                 <input type="text" class="search-input" placeholder="Search suppliers..." v-model="searchQuery">
               </div>
-              <Link :href="route('suppliers.create')" class="add-btn">
+              <button @click="openModal" class="add-btn">
                 <span class="plus-icon">+</span>
                 Add Supplier
-              </Link>
+              </button>
             </div>
             
             <div class="table-container">
@@ -178,6 +209,96 @@ const resetPagination = () => {
                 <button class="pagination-btn" :disabled="currentPage === totalPages" @click="nextPage">
                   Next
                 </button>
+              </div>
+            </div>
+
+            <!-- Add Supplier Modal -->
+            <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
+              <div class="modal-container">
+                <div class="modal-header">
+                  <h2>Add New Supplier</h2>
+                  <button class="close-btn" @click="closeModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                  <form @submit.prevent="submit">
+                    <div class="form-group">
+                      <label for="company_name">Company Name <span class="required">*</span></label>
+                      <input 
+                        id="company_name" 
+                        type="text" 
+                        v-model="form.company_name"
+                        required
+                      >
+                      <InputError :message="form.errors.company_name" />
+                    </div>
+
+                    <div class="form-group">
+                      <label for="email">Business Email <span class="required">*</span></label>
+                      <input 
+                        id="email" 
+                        type="email" 
+                        v-model="form.email"
+                        required
+                      >
+                      <InputError :message="form.errors.email" />
+                    </div>
+
+                    <div class="form-group">
+                      <label for="phone_number">Phone Number <span class="required">*</span></label>
+                      <input 
+                        id="phone_number" 
+                        type="tel" 
+                        v-model="form.phone_number"
+                        required
+                      >
+                      <InputError :message="form.errors.phone_number" />
+                    </div>
+
+                    <div class="form-group">
+                      <label for="office_address">Business Address <span class="required">*</span></label>
+                      <input 
+                        id="office_address" 
+                        type="text" 
+                        v-model="form.office_address"
+                        required
+                      >
+                      <InputError :message="form.errors.office_address" />
+                    </div>
+
+                    <div class="form-group">
+                      <label for="krapin">Tax Number <span class="required">*</span></label>
+                      <input 
+                        id="krapin" 
+                        type="text" 
+                        v-model="form.krapin"
+                        required
+                      >
+                      <InputError :message="form.errors.krapin" />
+                    </div>
+
+                    <div class="form-group">
+                      <label for="contact_person">Contact Person Name <span class="required">*</span></label>
+                      <input 
+                        id="contact_person" 
+                        type="text" 
+                        v-model="form.contact_person"
+                        required
+                      >
+                      <InputError :message="form.errors.contact_person" />
+                    </div>
+
+                    <div class="form-actions">
+                      <button type="button" class="cancel-btn" @click="closeModal">Cancel</button>
+                      <button 
+                        type="submit" 
+                        class="submit-btn"
+                        :disabled="form.processing"
+                      >
+                        {{ form.processing ? 'Creating...' : 'Create Supplier' }}
+                      </button>
+                    </div>
+                  </form>
+                </div>
               </div>
             </div>
           </div>
@@ -464,5 +585,138 @@ const resetPagination = () => {
   .page-numbers {
     display: none;
   }
+}
+
+/* Add these new styles for the modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 50;
+}
+
+.modal-container {
+  background-color: white;
+  border-radius: 8px;
+  width: 500px;
+  max-width: 90%;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #64748b;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.modal-body {
+  padding: 24px;
+  overflow-y: auto;
+  max-height: calc(90vh - 60px);
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #334155;
+}
+
+.required {
+  color: #ef4444;
+  margin-left: 2px;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  color: #1e293b;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #0E64A5;
+  box-shadow: 0 0 0 2px rgba(14, 100, 165, 0.1);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.cancel-btn {
+  padding: 10px 16px;
+  background-color: white;
+  color: #64748b;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancel-btn:hover {
+  background-color: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.submit-btn {
+  padding: 10px 16px;
+  background-color: #0E64A5;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background-color: #0a4f83;
+}
+
+.submit-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 </style>
