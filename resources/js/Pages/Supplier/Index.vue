@@ -1,101 +1,184 @@
 <script setup>
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, Link } from "@inertiajs/vue3";
-import { ref } from "vue";
+import { ref, computed } from "vue";
 
-defineProps({
+const props = defineProps({
   suppliers: {
     type: Array,
     required: true,
   },
 });
+
+const searchQuery = ref('');
+const currentPage = ref(1);
+const perPage = ref(10);
+const perPageOptions = [5, 10, 20, 50];
+const sortKey = ref('company_name');
+const sortDir = ref('asc');
+
+const filteredSuppliers = computed(() => {
+  if (searchQuery.value.trim() === '') {
+    return props.suppliers;
+  }
+  
+  const query = searchQuery.value.toLowerCase();
+  return props.suppliers.filter(supplier => {
+    return Object.values(supplier).some(value => {
+      if (value === null || value === undefined) return false;
+      return String(value).toLowerCase().includes(query);
+    });
+  });
+});
+
+const totalPages = computed(() => {
+  return Math.ceil(filteredSuppliers.value.length / perPage.value);
+});
+
+const paginatedSuppliers = computed(() => {
+  const startIndex = (currentPage.value - 1) * perPage.value;
+  const endIndex = startIndex + perPage.value;
+  
+  const sortedSuppliers = [...filteredSuppliers.value];
+  sortedSuppliers.sort((a, b) => {
+    let modifier = sortDir.value === 'asc' ? 1 : -1;
+    let aValue = a[sortKey.value];
+    let bValue = b[sortKey.value];
+    
+    if (aValue === undefined || aValue === null) aValue = '';
+    if (bValue === undefined || bValue === null) bValue = '';
+    
+    return aValue.toString().localeCompare(bValue.toString()) * modifier;
+  });
+  
+  return sortedSuppliers.slice(startIndex, endIndex);
+});
+
+const sortBy = (key) => {
+  if (sortKey.value === key) {
+    sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortKey.value = key;
+    sortDir.value = 'asc';
+  }
+};
+
+const getSortIcon = (key) => {
+  if (sortKey.value !== key) return 'sort-icon sort-none';
+  return sortDir.value === 'asc' ? 'sort-icon sort-asc' : 'sort-icon sort-desc';
+};
+
+const prevPage = () => {
+  if (currentPage.value > 1) {
+    currentPage.value--;
+  }
+};
+
+const nextPage = () => {
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++;
+  }
+};
+
+const goToPage = (page) => {
+  currentPage.value = page;
+};
+
+const resetPagination = () => {
+  currentPage.value = 1;
+};
 </script>
 
 <template>
   <AuthenticatedLayout>
-    <Head title="Suppliers" />
+    <template #header>
+      <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+        Suppliers
+      </h2>
+    </template>
 
     <div class="py-12">
       <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
         <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-          <div class="p-6 bg-white border-b border-gray-200">
-            <div class="flex justify-between items-center mb-6">
-              <h2 class="text-2xl font-semibold text-gray-800">Suppliers</h2>
-              <Link
-                :href="route('suppliers.create')"
-                class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-              >
+          <div class="p-6 bg-white">
+            <div class="table-controls">
+              <div class="search-container">
+                <div class="search-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" color="#000000" fill="none">
+                    <path opacity="0.4" fill-rule="evenodd" clip-rule="evenodd" d="M16.7929 16.7929C17.1834 16.4024 17.8166 16.4024 18.2071 16.7929L22.7071 21.2929C23.0976 21.6834 23.0976 22.3166 22.7071 22.7071C22.3166 23.0976 21.6834 23.0976 21.2929 22.7071L16.7929 18.2071C16.4024 17.8166 16.4024 17.1834 16.7929 16.7929Z" fill="currentColor" />
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M1 11C1 5.47715 5.47715 1 11 1C16.5228 1 21 5.47715 21 11C21 16.5228 16.5228 21 11 21C5.47715 21 1 16.5228 1 11ZM11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3Z" fill="currentColor" />
+                  </svg>
+                </div>
+                <input type="text" class="search-input" placeholder="Search suppliers..." v-model="searchQuery">
+              </div>
+              <Link :href="route('suppliers.create')" class="add-btn">
+                <span class="plus-icon">+</span>
                 Add Supplier
               </Link>
             </div>
-
-            <div class="overflow-x-auto">
-              <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                  <tr>
-                    <th
-                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Company Name
-                    </th>
-                    <th
-                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Contact Person
-                    </th>
-                    <th
-                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Email
-                    </th>
-                    <th
-                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Phone
-                    </th>
-                    <!-- <th
-                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Actions
-                    </th> -->
-                  </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                  <tr v-for="supplier in suppliers" :key="supplier.id">
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      {{ supplier.company_name }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      {{ supplier.contact_person }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      {{ supplier.email }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      {{ supplier.phone_number }}
-                    </td>
-                    <!-- <td class="px-6 py-4 whitespace-nowrap text-sm">
-                      <Link
-                        :href="route('suppliers.edit', supplier.id)"
-                        class="text-indigo-600 hover:text-indigo-900 mr-3"
-                      >
-                        Edit
-                      </Link>
-                      <button
-                        @click="deleteSupplier(supplier.id)"
-                        class="text-red-600 hover:text-red-900"
-                      >
-                        Delete
-                      </button>
-                    </td> -->
-                  </tr>
-                  <tr v-if="suppliers.length === 0">
-                    <td colspan="5" class="px-6 py-4 text-center text-gray-500">
-                      No suppliers found
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+            
+            <div class="table-container">
+              <div class="table-wrapper">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th @click="sortBy('company_name')" class="sortable">
+                        Company Name <i :class="getSortIcon('company_name')"></i>
+                      </th>
+                      <th @click="sortBy('contact_person')" class="sortable">
+                        Contact Person <i :class="getSortIcon('contact_person')"></i>
+                      </th>
+                      <th @click="sortBy('email')" class="sortable">
+                        Email <i :class="getSortIcon('email')"></i>
+                      </th>
+                      <th @click="sortBy('phone_number')" class="sortable">
+                        Phone <i :class="getSortIcon('phone_number')"></i>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="supplier in paginatedSuppliers" :key="supplier.id" class="data-row">
+                      <td>{{ supplier.company_name }}</td>
+                      <td>{{ supplier.contact_person }}</td>
+                      <td>{{ supplier.email }}</td>
+                      <td>{{ supplier.phone_number }}</td>
+                    </tr>
+                    <tr v-if="paginatedSuppliers.length === 0">
+                      <td colspan="4" class="empty-state">
+                        No suppliers found
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            
+            <!-- Pagination -->
+            <div class="pagination-controls">
+              <div class="per-page">
+                <span>Show</span>
+                <select v-model="perPage" @change="resetPagination" class="per-page-select">
+                  <option v-for="option in perPageOptions" :key="option" :value="option">
+                    {{ option }}
+                  </option>
+                </select>
+                <span>per page</span>
+              </div>
+              <div class="pagination-buttons">
+                <button class="pagination-btn" :disabled="currentPage === 1" @click="prevPage">
+                  Previous
+                </button>
+                <div class="page-numbers">
+                  <span v-for="page in totalPages" :key="page"
+                       :class="['page-number', { active: currentPage === page }]"
+                       @click="goToPage(page)">
+                    {{ page }}
+                  </span>
+                </div>
+                <button class="pagination-btn" :disabled="currentPage === totalPages" @click="nextPage">
+                  Next
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -103,3 +186,283 @@ defineProps({
     </div>
   </AuthenticatedLayout>
 </template>
+
+<style scoped>
+/* Table Controls */
+.table-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+/* Search Container */
+.search-container {
+  position: relative;
+  width: 300px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #64748b;
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px 10px 10px 40px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #0E64A5;
+  box-shadow: 0 0 0 2px rgba(14, 100, 165, 0.1);
+}
+
+.add-btn {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  background-color: #0E64A5;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  text-decoration: none;
+}
+
+.add-btn:hover {
+  background-color: #0a4f83;
+}
+
+.plus-icon {
+  font-size: 1.2rem;
+  margin-right: 8px;
+  font-weight: bold;
+}
+
+/* Table styles */
+.table-container {
+  position: relative;
+  width: 100%;
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+}
+
+.table-wrapper::-webkit-scrollbar {
+  height: 8px;
+}
+
+.table-wrapper::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 4px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8;
+}
+
+.data-table {
+  width: 100%;
+  min-width: 750px;
+  table-layout: auto;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.95rem;
+}
+
+.data-table th, 
+.data-table td {
+  white-space: nowrap;
+  min-width: 120px;
+}
+
+.data-table th {
+  background-color: #f8fafc;
+  color: #64748b;
+  font-weight: 600;
+  text-align: left;
+  padding: 14px 15px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.data-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.sort-icon {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background-repeat: no-repeat;
+  background-position: center;
+  margin-left: 4px;
+  vertical-align: text-bottom;
+}
+
+.sort-none::after {
+  content: '⇵';
+  opacity: 0.3;
+  font-size: 12px;
+}
+
+.sort-asc::after {
+  content: '↑';
+  color: #2563eb;
+  font-size: 12px;
+}
+
+.sort-desc::after {
+  content: '↓';
+  color: #2563eb;
+  font-size: 12px;
+}
+
+.data-table td {
+  padding: 14px 15px;
+  border-bottom: 1px solid #e5e7eb;
+  color: #334155;
+}
+
+.data-table tr:last-child td {
+  border-bottom: none;
+}
+
+.data-row:hover td {
+  background-color: #f8fafc;
+}
+
+.empty-state {
+  text-align: center;
+  color: #64748b;
+  padding: 30px;
+  font-style: italic;
+}
+
+/* Pagination Controls */
+.pagination-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 24px;
+}
+
+.per-page {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.per-page-select {
+  padding: 6px 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  background-color: white;
+  color: #1e293b;
+  font-size: 0.9rem;
+}
+
+.pagination-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pagination-btn {
+  padding: 6px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  background-color: white;
+  color: #1e293b;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background-color: #f1f5f9;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-numbers {
+  display: flex;
+  gap: 4px;
+}
+
+.page-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.page-number:hover {
+  background-color: #f1f5f9;
+}
+
+.page-number.active {
+  background-color: #0E64A5;
+  color: white;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .table-controls {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .search-container {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .table-container {
+    border-radius: 6px;
+  }
+  
+  .table-wrapper {
+    padding-bottom: 4px;
+  }
+  
+  .page-numbers {
+    display: none;
+  }
+}
+</style>
