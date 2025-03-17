@@ -7,4 +7,5 @@ enum userType: string
     case SUPPLIER = 'supplier';
     case ADMIN = 'admin';
     case COMPANY = 'company';
+    case Retailer = 'retailer';
 }

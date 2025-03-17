@@ -8,6 +8,8 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\Enums\UserType;
 use Illuminate\Support\Str;
+use App\Models\Companies\Company;
+
 
 class User extends Authenticatable
 {
@@ -23,7 +25,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'user_type'
+        'user_type',
+        'company_id'
     ];
 
     /**
@@ -57,9 +60,19 @@ class User extends Authenticatable
     protected static function boot()
     {
         parent::boot();
-        
+
         static::creating(function ($model) {
             $model->uuid = Str::uuid();
         });
+    }
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function userPermissions()
+    {
+        return $this->hasMany(userPermission::class, 'user_id');
     }
 }
