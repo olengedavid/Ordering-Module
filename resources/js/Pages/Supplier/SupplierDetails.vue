@@ -1,8 +1,8 @@
 <script setup>
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head } from "@inertiajs/vue3";
-import BankAccountList from "@/Components/Supplier/bankAccountList.vue";
-import WarehouseList from "@/Components/Supplier/warehouseList.vue";
+import BankAccountList from "@/Components/Supplier/BankAccountList.vue";
+import WarehouseList from "@/Components/Supplier/WarehouseList.vue";
 import DeliveryRegionList from "@/Components/Supplier/DeliveryRegionList.vue";
 import ProductList from "@/Components/Supplier/ProductList.vue";
 
