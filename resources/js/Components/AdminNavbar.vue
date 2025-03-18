@@ -35,7 +35,7 @@
             <span>Suppliers</span>
           </Link>
 
-          <Link href="/admin/financial-partners" class="nav-link" :class="{ active: $page.url.startsWith('/admin/financial-partners') }">
+          <div class="nav-link disabled-link" :class="{ active: $page.url.startsWith('/admin/financial-partners') }">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" color="#000000" fill="none" class="nav-icon">
               <path opacity="0.4" d="M2 8.56907C2 7.37289 2.48238 6.63982 3.48063 6.08428L7.58987 3.79744C9.7431 2.59915 10.8197 2 12 2C13.1803 2 14.2569 2.59915 16.4101 3.79744L20.5194 6.08428C21.5176 6.63982 22 7.3729 22 8.56907C22 8.89343 22 9.05561 21.9646 9.18894C21.7785 9.88945 21.1437 10 20.5307 10H3.46928C2.85627 10 2.22152 9.88944 2.03542 9.18894C2 9.05561 2 8.89343 2 8.56907Z" fill="currentColor" />
               <path opacity="0.4" d="M8 18.5V10H4V18.5H8Z" fill="currentColor" />
@@ -48,9 +48,9 @@
               <path d="M19 18.5H5C3.34315 18.5 2 19.8431 2 21.5C2 21.7761 2.22386 22 2.5 22H21.5C21.7761 22 22 21.7761 22 21.5C22 19.8431 20.6569 18.5 19 18.5Z" stroke="currentColor" stroke-width="1.5" />
             </svg>
             <span>Financial Partners</span>
-          </Link>
+          </div>
 
-          <Link href="/admin/regions" class="nav-link" :class="{ active: $page.url.startsWith('/admin/regions') }">
+          <div class="nav-link disabled-link" :class="{ active: $page.url.startsWith('/admin/regions') }">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" color="#000000" fill="none" class="nav-icon">
               <path opacity="0.4" d="M19.7835 5.71989C21.1706 7.43652 22.0012 9.62136 22.0012 12.0002C22.0012 13.5397 21.6534 14.9979 21.032 16.3005C20.6804 14.422 19.0318 13.0002 17.0512 13.0002C14.8145 13.0002 13.0012 14.8135 13.0012 17.0502C13.0012 19.0308 14.423 20.6794 16.3015 21.031C14.9989 21.6524 13.5407 22.0002 12.0012 22.0002C10.6754 22.0002 9.40983 21.7422 8.25202 21.2737L8.51179 21.0002C9.18591 20.1676 9.06769 19.1984 8.7295 18.2291C8.49852 17.5671 8.37016 17.1992 8.29881 16.8205C8.20956 16.3468 8.20956 15.8563 8.20956 14.752C8.20956 12.7651 7.68962 12.2684 5.08993 12.2684C3.85651 12.2684 2.80597 11.6861 2.04675 11.0394C2.47633 6.53306 5.89653 2.89896 10.3002 2.14432C9.74874 3.31015 9.94013 4.72788 11.0414 5.26238C11.9622 5.70932 12.0562 6.35273 12.1514 7.00365C12.2381 7.59679 12.3257 8.19617 13.0406 8.65884C14.0403 9.30578 15.5397 9.14383 17.0391 7.203C17.8061 6.21024 18.8864 5.82579 19.7835 5.71989Z" fill="currentColor" />
               <path d="M21.9999 11.9998C21.9999 6.47694 17.5227 1.99979 11.9999 1.99979C6.47703 1.99979 1.99988 6.47694 1.99988 11.9998C1.99988 17.5226 6.47703 21.9998 11.9999 21.9998" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
@@ -59,9 +59,9 @@
               <path d="M19.8987 19.9286L21.9999 21.9998M21.1082 17.0457C21.1082 19.2803 19.2931 21.0917 17.054 21.0917C14.815 21.0917 12.9999 19.2803 12.9999 17.0457C12.9999 14.8112 14.815 12.9998 17.054 12.9998C19.2931 12.9998 21.1082 14.8112 21.1082 17.0457Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
             </svg>
             <span>Regions</span>
-          </Link>
+          </div>
           
-          <Link href="/admin/users" class="nav-link" :class="{ active: $page.url.startsWith('/admin/users') }">
+          <div class="nav-link disabled-link" :class="{ active: $page.url.startsWith('/admin/users') }">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" color="#000000" fill="none" class="nav-icon">
               <path opacity="0.4" d="M15 8C15 9.65685 13.6569 11 12 11C10.3431 11 9 9.65685 9 8C9 6.34315 10.3431 5 12 5C13.6569 5 15 6.34315 15 8Z" fill="currentColor" />
               <path opacity="0.4" d="M13.7143 14H10.2857C7.91876 14 5.99998 15.9188 5.99998 18.2857C5.99998 19.2325 6.76749 20 7.71426 20H16.2857C17.2325 20 18 19.2325 18 18.2857C18 15.9188 16.0812 14 13.7143 14Z" fill="currentColor" />
@@ -73,7 +73,7 @@
               <path d="M3.71429 19C2.76751 19 2 18.2325 2 17.2857C2 14.9188 3.91878 13 6.28571 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
             </svg>
             <span>Users</span>
-          </Link>
+          </div>
         </div>
 
         <!-- User Profile Dropdown - Hidden on mobile -->
@@ -142,7 +142,7 @@
             <span>Suppliers</span>
           </Link>
           
-          <Link href="/admin/financial-partners" class="mobile-nav-link" :class="{ active: $page.url.startsWith('/admin/financial-partners') }" @click="closeMobileMenu">
+          <div class="mobile-nav-link disabled-link" :class="{ active: $page.url.startsWith('/admin/financial-partners') }">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" color="#000000" fill="none" class="nav-icon">
               <path opacity="0.4" d="M2 8.56907C2 7.37289 2.48238 6.63982 3.48063 6.08428L7.58987 3.79744C9.7431 2.59915 10.8197 2 12 2C13.1803 2 14.2569 2.59915 16.4101 3.79744L20.5194 6.08428C21.5176 6.63982 22 7.3729 22 8.56907C22 8.89343 22 9.05561 21.9646 9.18894C21.7785 9.88945 21.1437 10 20.5307 10H3.46928C2.85627 10 2.22152 9.88944 2.03542 9.18894C2 9.05561 2 8.89343 2 8.56907Z" fill="currentColor" />
               <path opacity="0.4" d="M8 18.5V10H4V18.5H8Z" fill="currentColor" />
@@ -155,9 +155,9 @@
               <path d="M19 18.5H5C3.34315 18.5 2 19.8431 2 21.5C2 21.7761 2.22386 22 2.5 22H21.5C21.7761 22 22 21.7761 22 21.5C22 19.8431 20.6569 18.5 19 18.5Z" stroke="currentColor" stroke-width="1.5" />
             </svg>
             <span>Financial Partners</span>
-          </Link>
+          </div>
           
-          <Link href="/admin/regions" class="mobile-nav-link" :class="{ active: $page.url.startsWith('/admin/regions') }" @click="closeMobileMenu">
+          <div class="mobile-nav-link disabled-link" :class="{ active: $page.url.startsWith('/admin/regions') }">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" color="#000000" fill="none" class="nav-icon">
               <path opacity="0.4" d="M19.7835 5.71989C21.1706 7.43652 22.0012 9.62136 22.0012 12.0002C22.0012 13.5397 21.6534 14.9979 21.032 16.3005C20.6804 14.422 19.0318 13.0002 17.0512 13.0002C14.8145 13.0002 13.0012 14.8135 13.0012 17.0502C13.0012 19.0308 14.423 20.6794 16.3015 21.031C14.9989 21.6524 13.5407 22.0002 12.0012 22.0002C10.6754 22.0002 9.40983 21.7422 8.25202 21.2737L8.51179 21.0002C9.18591 20.1676 9.06769 19.1984 8.7295 18.2291C8.49852 17.5671 8.37016 17.1992 8.29881 16.8205C8.20956 16.3468 8.20956 15.8563 8.20956 14.752C8.20956 12.7651 7.68962 12.2684 5.08993 12.2684C3.85651 12.2684 2.80597 11.6861 2.04675 11.0394C2.47633 6.53306 5.89653 2.89896 10.3002 2.14432C9.74874 3.31015 9.94013 4.72788 11.0414 5.26238C11.9622 5.70932 12.0562 6.35273 12.1514 7.00365C12.2381 7.59679 12.3257 8.19617 13.0406 8.65884C14.0403 9.30578 15.5397 9.14383 17.0391 7.203C17.8061 6.21024 18.8864 5.82579 19.7835 5.71989Z" fill="currentColor" />
               <path d="M21.9999 11.9998C21.9999 6.47694 17.5227 1.99979 11.9999 1.99979C6.47703 1.99979 1.99988 6.47694 1.99988 11.9998C1.99988 17.5226 6.47703 21.9998 11.9999 21.9998" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
@@ -166,9 +166,9 @@
               <path d="M19.8987 19.9286L21.9999 21.9998M21.1082 17.0457C21.1082 19.2803 19.2931 21.0917 17.054 21.0917C14.815 21.0917 12.9999 19.2803 12.9999 17.0457C12.9999 14.8112 14.815 12.9998 17.054 12.9998C19.2931 12.9998 21.1082 14.8112 21.1082 17.0457Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
             </svg>
             <span>Regions</span>
-          </Link>
+          </div>
           
-          <Link href="/admin/users" class="mobile-nav-link" :class="{ active: $page.url.startsWith('/admin/users') }" @click="closeMobileMenu">
+          <div class="mobile-nav-link disabled-link" :class="{ active: $page.url.startsWith('/admin/users') }">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" color="#000000" fill="none" class="nav-icon">
               <path opacity="0.4" d="M15 8C15 9.65685 13.6569 11 12 11C10.3431 11 9 9.65685 9 8C9 6.34315 10.3431 5 12 5C13.6569 5 15 6.34315 15 8Z" fill="currentColor" />
               <path opacity="0.4" d="M13.7143 14H10.2857C7.91876 14 5.99998 15.9188 5.99998 18.2857C5.99998 19.2325 6.76749 20 7.71426 20H16.2857C17.2325 20 18 19.2325 18 18.2857C18 15.9188 16.0812 14 13.7143 14Z" fill="currentColor" />
@@ -180,7 +180,7 @@
               <path d="M3.71429 19C2.76751 19 2 18.2325 2 17.2857C2 14.9188 3.91878 13 6.28571 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
             </svg>
             <span>Users</span>
-          </Link>
+          </div>
 
           <Link :href="route('logout')" method="post" class="mobile-nav-link" @click="closeMobileMenu">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" color="#000000" fill="none" class="nav-icon">
@@ -520,5 +520,23 @@ export default {
     .mobile-menu-toggle {
         display: block;
     }
+}
+
+.nav-link.disabled-link {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.nav-link.disabled-link:hover {
+    color: #4b5563;
+}
+
+.mobile-nav-link.disabled-link {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.mobile-nav-link.disabled-link:hover {
+  color: #4b5563;
 }
 </style>

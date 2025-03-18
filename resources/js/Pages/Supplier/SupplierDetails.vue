@@ -1,10 +1,10 @@
 <script setup>
-import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head } from "@inertiajs/vue3";
 import BankAccountList from "@/Components/Supplier/BankAccountList.vue";
 import WarehouseList from "@/Components/Supplier/WarehouseList.vue";
 import DeliveryRegionList from "@/Components/Supplier/DeliveryRegionList.vue";
 import ProductList from "@/Components/Supplier/ProductList.vue";
+import AdminNavbar from "@/Components/AdminNavbar.vue";
 
 defineProps({
   supplier: Object,
@@ -13,8 +13,9 @@ defineProps({
 </script>
 
 <template>
-  <AuthenticatedLayout>
+  <div>
     <Head :title="`Supplier #${supplier.id}`" />
+    <AdminNavbar />
 
     <div class="py-6">
       <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
@@ -121,7 +122,7 @@ defineProps({
         </div>
       </div>
     </div>
-  </AuthenticatedLayout>
+  </div>
 </template>
 
 <script>
