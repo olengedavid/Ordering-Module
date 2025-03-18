@@ -75,7 +75,7 @@ class CompanyController extends Controller
         ]);
 
         return redirect()
-            ->route('suppliers.index')
+            ->route('admin.suppliers.index')
             ->with('success', 'New Company has been created!');
     }
 }

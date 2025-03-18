@@ -102,7 +102,7 @@ class ProductController extends Controller
             'status' => 'active'
         ]);
 
-        return redirect()->route('products.index')
+        return redirect()->back()
             ->with('success', 'Product created successfully');
     }
 }

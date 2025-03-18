@@ -20,7 +20,7 @@ const warehouses = ref([]);
 const loading = ref(true);
 
 const form = useForm({
-  company_id: 1,
+  company_id: user.company_id,
   product_id: "",
   warehouse_id: "",
   cost_price: "",
@@ -41,6 +41,7 @@ const createInventory = () => {
     onSuccess: () => {
       closeModal();
       form.reset();
+      fetchInventories();
     },
   });
 };
@@ -48,7 +49,7 @@ const createInventory = () => {
 const fetchProducts = async () => {
   try {
     const response = await axios.get(
-      route("supplier.products.index", {
+      route("supplier.products.list", {
         uuid: supplier_uuid,
       })
     );
@@ -61,7 +62,7 @@ const fetchProducts = async () => {
 const fetchWarehouses = async () => {
   try {
     const response = await axios.get(
-      route("supplier.warehouses.index", {
+      route("supplier.warehouses.list", {
         uuid: supplier_uuid,
       })
     );

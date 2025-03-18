@@ -10,7 +10,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Companies\Company;
-use Illuminate\Support\Facades\Log;
+// use Illuminate\Support\Facades\Log;
 
 class UserPermissionController extends BaseController
 {
@@ -52,6 +52,7 @@ class UserPermissionController extends BaseController
                 'status' => $validated['status'],
                 'company_id' => $validated['company_id'],
                 'warehouse_id' => $validated['warehouse_id'],
+                'user_type' => $validated['entity_type'],
             ]);
 
             // echo "User created successfully. ++";
@@ -71,34 +72,34 @@ class UserPermissionController extends BaseController
                 ->with('success', 'User and permissions created successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('User creation failed: ' . $e->getMessage());  // Add logging
+            // Log::error('User creation failed: ' . $e->getMessage());  // Add logging
             return redirect()->back()
-            ->with('error', 'Failed to create user and permissions: ' . $e->getMessage());
+                ->with('error', 'Failed to create user and permissions: ' . $e->getMessage());
         }
     }
 
     public function getSupplierUsers(Request $request)
     {
         $company = Company::where('uuid', $request->uuid)->firstOrFail();
-        
+
         $users = User::where('company_id', $company->id)
             ->with([
-                'warehouse' => function($q) {
+                'warehouse' => function ($q) {
                     $q->select('id', 'name', 'status', 'uuid');
                 },
-                'userPermissions' => function($query) {
+                'userPermissions' => function ($query) {
                     $query->select('id', 'user_id', 'permissions', 'entity_type');
                 }
             ])
-            ->when($request->search, function($query, $search) {
-                $query->where(function($q) use ($search) {
+            ->when($request->search, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('email', 'like', "%{$search}%");
+                        ->orWhere('email', 'like', "%{$search}%");
                 });
             })
             ->select('id', 'name', 'email', 'company_id', 'warehouse_id', 'status')
             ->paginate($request->perPage ?? 10);
-    
+
         return response()->json($users);
     }
 }

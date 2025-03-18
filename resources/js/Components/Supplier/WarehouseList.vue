@@ -21,7 +21,7 @@ const fetchWarehouses = async () => {
   loading.value = true;
   try {
     const response = await axios.get(
-      route("supplier.warehouses.index", { uuid: props.supplier.uuid })
+      route("supplier.warehouses.list", { uuid: props.supplier.uuid })
     );
     warehouses.value = response.data;
   } catch (error) {

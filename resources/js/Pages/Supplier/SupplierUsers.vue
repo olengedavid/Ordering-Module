@@ -26,7 +26,7 @@ const form = useForm({
   status: "active",
   created_by: user.id,
   updated_by: user.id,
-  company_id: 1,
+  company_id: user.company_id,
   entity_type: "supplier",
   status: "active",
 });
@@ -55,7 +55,7 @@ const createUser = () => {
 const fetchWarehouses = async () => {
   try {
     const response = await axios.get(
-      route("supplier.warehouses.index", {
+      route("supplier.warehouses.list", {
         uuid: supplier_uuid,
       })
     );
