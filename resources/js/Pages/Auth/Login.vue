@@ -1,5 +1,4 @@
 <script setup>
-import Checkbox from '@/Components/Checkbox.vue';
 import InputError from '@/Components/InputError.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
@@ -103,13 +102,6 @@ const togglePasswordVisibility = () => {
                     <InputError class="mt-2" :message="form.errors.password" />
                 </div>
 
-                <div class="mt-4 block">
-                    <label class="flex items-center">
-                        <Checkbox name="remember" v-model:checked="form.remember" />
-                        <span class="ms-2 text-sm text-gray-600">Remember me</span>
-                    </label>
-                </div>
-
                 <button type="submit" class="signup-button" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
                     Sign In
                 </button>
@@ -140,30 +132,32 @@ const togglePasswordVisibility = () => {
     border-radius: 16px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     width: 100%;
-    max-width: 400px;
+    max-width: 500px;
 }
 
 .logo-container {
     display: flex;
     justify-content: center;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
 }
 
 h1 {
     color: #2d3748;
-    font-size: 32px;
-    margin-bottom: 16px;
+    font-size: 34px;
+    margin-bottom: 12px;
     text-align: center;
+    font-weight: bold;
 }
 
 .subtitle {
     color: #718096;
     text-align: center;
-    margin-bottom: 32px;
+    margin-bottom: 24px;
+    font-size: 16px;
 }
 
 .form-group {
-    margin-bottom: 16px;
+    margin-bottom: 12px;
     position: relative;
 }
 
@@ -172,7 +166,7 @@ h1 {
     padding: 12px 16px;
     border: 1px solid #e2e8f0;
     border-radius: 8px;
-    font-size: 16px;
+    font-size: 17px;
     outline: none;
     transition: border-color 0.2s;
     box-sizing: border-box;
@@ -221,6 +215,23 @@ h1 {
     display: block;
 }
 
+.mt-4 {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.block {
+    display: block;
+    margin-bottom: 16px;
+}
+
+:deep(.form-checkbox) {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    border: 1px solid #e2e8f0;
+}
+
 .signup-button {
     width: 100%;
     padding: 12px;
@@ -228,10 +239,10 @@ h1 {
     color: white;
     border: none;
     border-radius: 8px;
-    font-size: 16px;
+    font-size: 17px;
     cursor: pointer;
-    margin-top: 24px;
-    margin-bottom: 16px;
+    margin-top: 10px;
+    margin-bottom: 24px;
     transition: opacity 0.2s;
 }
 
@@ -247,14 +258,33 @@ h1 {
     text-align: center;
     color: #718096;
     margin-bottom: 0;
+    font-size: 15px;
 }
 
 .login-link {
     color: #4299e1;
     text-decoration: none;
+    font-weight: 500;
 }
 
 .login-link:hover {
     color: #2b6cb0;
+}
+
+.items-center {
+    display: flex;
+    align-items: center;
+}
+
+.ms-2 {
+    margin-left: 8px;
+    font-size: 15px;
+    color: #64748b;
+}
+
+:deep(.mt-2) {
+    margin-top: 4px;
+    font-size: 12px;
+    color: #e53e3e;
 }
 </style>
