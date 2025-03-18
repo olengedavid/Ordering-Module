@@ -9,6 +9,7 @@ use Illuminate\Notifications\Notifiable;
 use App\Enums\UserType;
 use Illuminate\Support\Str;
 use App\Models\Companies\Company;
+use App\Models\Companies\Warehouse;
 
 
 class User extends Authenticatable
@@ -26,7 +27,8 @@ class User extends Authenticatable
         'email',
         'password',
         'user_type',
-        'company_id'
+        'company_id',
+        'warehouse_id'
     ];
 
     /**
@@ -69,6 +71,11 @@ class User extends Authenticatable
     public function company()
     {
         return $this->belongsTo(Company::class);
+    }
+
+    public function warehouse()
+    {
+        return $this->belongsTo(Warehouse::class, 'warehouse_id');
     }
 
     public function userPermissions()

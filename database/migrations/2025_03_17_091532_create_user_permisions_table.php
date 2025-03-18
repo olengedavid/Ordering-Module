@@ -17,14 +17,13 @@ return new class extends Migration
             $table->uuid('uuid')->unique();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->json('permissions');
-            $table->foreignId('warehouse_id')->nullable()->constrained('warehouses');
             $table->string('entity_type');
             $table->foreignId('created_by')->constrained('users');
             $table->foreignId('updated_by')->constrained('users');
             $table->timestamps();
 
             // Ensure unique combination of user, warehouse, and company
-            $table->unique(['user_id', 'warehouse_id', 'entity_type'], 'unique_user_permission');
+            $table->unique(['user_id', 'entity_type'], 'unique_user_permission');
         });
     }
 

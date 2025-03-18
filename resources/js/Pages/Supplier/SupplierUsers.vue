@@ -47,6 +47,7 @@ const createUser = () => {
     onSuccess: () => {
       closeModal();
       form.reset();
+      fetchSupplierUsers();
     },
   });
 };
@@ -170,7 +171,7 @@ const closeModal = () => {
                       {{ user.warehouse?.name }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                      {{ user.permissions_count }} permissions granted
+                        {{ JSON.parse(user.user_permissions?.[0]?.permissions || '[]').length }} permissions granted
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                       <span

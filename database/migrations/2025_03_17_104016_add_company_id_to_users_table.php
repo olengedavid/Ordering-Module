@@ -13,6 +13,8 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->foreignId('company_id')->nullable()->constrained('companies');
+            $table->foreignId('warehouse_id')->nullable()->constrained('warehouses');
+            $table->string('status')->default('active');
         });
     }
 
@@ -22,7 +24,10 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
+            $table->dropColumn('status');
             $table->dropForeign(['company_id']);
+            $table->dropForeign(['warehouse_id']);
+            $table->dropColumn('warehouse_id');
             $table->dropColumn('company_id');
         });
     }

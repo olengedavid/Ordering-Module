@@ -51,6 +51,7 @@ class UserPermissionController extends BaseController
                 'password' => Hash::make($validated['password']),
                 'status' => $validated['status'],
                 'company_id' => $validated['company_id'],
+                'warehouse_id' => $validated['warehouse_id'],
             ]);
 
             // echo "User created successfully. ++";
@@ -59,7 +60,6 @@ class UserPermissionController extends BaseController
             userPermission::create([
                 'user_id' => $user->id,
                 'permissions' => json_encode($validated['permissions']),
-                'warehouse_id' => $validated['warehouse_id'],
                 'entity_type' => $validated['entity_type'],
                 'created_by' => $validated['created_by'],
                 'updated_by' => $validated['updated_by'],
@@ -82,19 +82,21 @@ class UserPermissionController extends BaseController
         $company = Company::where('uuid', $request->uuid)->firstOrFail();
         
         $users = User::where('company_id', $company->id)
-            ->with(['userPermissions' => function($query) {
-                $query->select('id', 'user_id', 'permissions', 'warehouse_id', 'entity_type')
-                    ->with(['warehouse' => function($q) {
-                        $q->select('id', 'name', 'uuid');
-                    }]);
-            }])
+            ->with([
+                'warehouse' => function($q) {
+                    $q->select('id', 'name', 'status', 'uuid');
+                },
+                'userPermissions' => function($query) {
+                    $query->select('id', 'user_id', 'permissions', 'entity_type');
+                }
+            ])
             ->when($request->search, function($query, $search) {
                 $query->where(function($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
                       ->orWhere('email', 'like', "%{$search}%");
                 });
             })
-            ->select('id', 'name', 'email', 'company_id')
+            ->select('id', 'name', 'email', 'company_id', 'warehouse_id', 'status')
             ->paginate($request->perPage ?? 10);
     
         return response()->json($users);

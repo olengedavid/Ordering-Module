@@ -5,8 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
-use App\Models\Companies\Company;
-use App\Models\Companies\Warehouse;
+
 
 class userPermission extends Model
 {
@@ -43,11 +42,4 @@ class userPermission extends Model
     {
         return $this->belongsTo(\App\Models\User::class, 'updated_by');
     }
-
-    public function warehouse()
-    {
-        return $this->belongsTo(Warehouse::class, 'warehouse_id');
-    }
-
-    
 }
