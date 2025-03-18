@@ -229,287 +229,275 @@ onBeforeUnmount(() => {
 
 <template>
   <AuthenticatedLayout>
-    <template #header>
-      <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-        Suppliers
-      </h2>
-    </template>
-
-    <div class="py-12">
-      <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-        <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-          <div class="p-6 bg-white">
-            <div class="page-container">
-              <div class="content-container">
-                <h1 class="page-title">Suppliers</h1>
-                
-                <!-- Tabs -->
-                <div class="tabs-container">
-                  <ul class="tabs">
-                    <li v-for="tab in tabs" :key="tab.id" 
-                        :class="['tab', { active: activeTab === tab.id }]"
-                        @click="setActiveTab(tab.id)">
-                      {{ tab.name }}
-                      <span class="tab-count" v-if="tab.count">{{ tab.count }}</span>
-                    </li>
-                  </ul>
-                </div>
-                
-                <!-- Table Controls - Search and Add Button -->
-                <div class="table-controls">
-                  <div class="search-container">
-                    <div class="search-icon">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" color="#000000" fill="none">
-                        <path opacity="0.4" fill-rule="evenodd" clip-rule="evenodd" d="M16.7929 16.7929C17.1834 16.4024 17.8166 16.4024 18.2071 16.7929L22.7071 21.2929C23.0976 21.6834 23.0976 22.3166 22.7071 22.7071C22.3166 23.0976 21.6834 23.0976 21.2929 22.7071L16.7929 18.2071C16.4024 17.8166 16.4024 17.1834 16.7929 16.7929Z" fill="currentColor" />
-                        <path fill-rule="evenodd" clip-rule="evenodd" d="M1 11C1 5.47715 5.47715 1 11 1C16.5228 1 21 5.47715 21 11C21 16.5228 16.5228 21 11 21C5.47715 21 1 16.5228 1 11ZM11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3Z" fill="currentColor" />
-                      </svg>
-                    </div>
-                    <input type="text" class="search-input" placeholder="Search suppliers..." v-model="searchQuery">
-                  </div>
-                  <button @click="openModal" class="add-supplier-btn">
-                    <span class="plus-icon">+</span>
-                    Add New Supplier
-                  </button>
-                </div>
-                
-                <!-- Suppliers Table with Horizontal Scroll -->
-                <div class="table-wrapper">
-                  <div class="table-responsive">
-                    <table class="suppliers-table">
-                      <thead>
-                        <tr>
-                          <th @click="sortBy('company_name')" class="sortable">
-                            Company Name <i :class="getSortIcon('company_name')"></i>
-                          </th>
-                          <th @click="sortBy('office_address')" class="sortable">
-                            Office Address <i :class="getSortIcon('office_address')"></i>
-                          </th>
-                          <th @click="sortBy('contact_person')" class="sortable">
-                            Contact Person <i :class="getSortIcon('contact_person')"></i>
-                          </th>
-                          <th @click="sortBy('email')" class="sortable">
-                            Email Address <i :class="getSortIcon('email')"></i>
-                          </th>
-                          <th @click="sortBy('phone_number')" class="sortable">
-                            Phone Number <i :class="getSortIcon('phone_number')"></i>
-                          </th>
-                          <th @click="sortBy('krapin')" class="sortable">
-                            KRA PIN <i :class="getSortIcon('krapin')"></i>
-                          </th>
-                          <th @click="sortBy('industry')" class="sortable">
-                            Industry <i :class="getSortIcon('industry')"></i>
-                          </th>
-                          <th @click="sortBy('status')" class="sortable">
-                            Status <i :class="getSortIcon('status')"></i>
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr v-for="supplier in paginatedSuppliers" 
-                            :key="supplier.id" 
-                            @click="viewSupplierDetails(supplier)" 
-                            class="supplier-row">
-                          <td>{{ supplier.company_name }}</td>
-                          <td>{{ supplier.office_address || '' }}</td>
-                          <td>{{ supplier.contact_person }}</td>
-                          <td>{{ supplier.email }}</td>
-                          <td>{{ supplier.phone_number }}</td>
-                          <td>{{ supplier.krapin || '' }}</td>
-                          <td>{{ supplier.industry || '' }}</td>
-                          <td>{{ supplier.status || '' }}</td>
-                        </tr>
-                        <tr v-if="paginatedSuppliers.length === 0">
-                          <td colspan="8" class="empty-state">
-                            No suppliers found
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-                
-                <!-- Pagination -->
-                <div class="pagination-controls">
-                  <div class="per-page">
-                    <span>Show</span>
-                    <select v-model="perPage" @change="resetPagination" class="per-page-select">
-                      <option v-for="option in perPageOptions" :key="option" :value="option">
-                        {{ option }}
-                      </option>
-                    </select>
-                    <span>per page</span>
-                  </div>
-                  <div class="pagination-buttons">
-                    <button class="pagination-btn" :disabled="currentPage === 1" @click="prevPage">
-                      Previous
-                    </button>
-                    <div class="page-numbers">
-                      <span v-for="page in totalPages" :key="page"
-                          :class="['page-number', { active: currentPage === page }]"
-                          @click="goToPage(page)">
-                        {{ page }}
-                      </span>
-                    </div>
-                    <button class="pagination-btn" :disabled="currentPage === totalPages" @click="nextPage">
-                      Next
-                    </button>
-                  </div>
-                </div>
-              </div>
+    <Head title="Suppliers" />
+    
+    <div class="page-container">
+      <div class="content-container">
+        <h1 class="page-title">Suppliers</h1>
+        
+        <!-- Tabs -->
+        <div class="tabs-container">
+          <ul class="tabs">
+            <li v-for="tab in tabs" :key="tab.id" 
+                :class="['tab', { active: activeTab === tab.id }]"
+                @click="setActiveTab(tab.id)">
+              {{ tab.name }}
+              <span class="tab-count" v-if="tab.count">{{ tab.count }}</span>
+            </li>
+          </ul>
+        </div>
+        
+        <!-- Table Controls - Search and Add Button -->
+        <div class="table-controls">
+          <div class="search-container">
+            <div class="search-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" color="#000000" fill="none">
+                <path opacity="0.4" fill-rule="evenodd" clip-rule="evenodd" d="M16.7929 16.7929C17.1834 16.4024 17.8166 16.4024 18.2071 16.7929L22.7071 21.2929C23.0976 21.6834 23.0976 22.3166 22.7071 22.7071C22.3166 23.0976 21.6834 23.0976 21.2929 22.7071L16.7929 18.2071C16.4024 17.8166 16.4024 17.1834 16.7929 16.7929Z" fill="currentColor" />
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M1 11C1 5.47715 5.47715 1 11 1C16.5228 1 21 5.47715 21 11C21 16.5228 16.5228 21 11 21C5.47715 21 1 16.5228 1 11ZM11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3Z" fill="currentColor" />
+              </svg>
             </div>
-            
-            <!-- Add Supplier Modal -->
-            <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
-              <div class="modal-container">
-                <div class="modal-header">
-                  <h2>Add New Supplier</h2>
-                  <button class="close-btn" @click="closeModal">&times;</button>
-                </div>
-                <div class="modal-body">
-                  <form @submit.prevent="submit">
-                    <div class="form-group">
-                      <label for="company_name">Company Name <span class="required">*</span></label>
-                      <input 
-                        id="company_name" 
-                        type="text" 
-                        v-model="form.company_name"
-                        required
-                        placeholder="Enter company name"
-                      >
-                      <InputError :message="form.errors.company_name" />
-                    </div>
-
-                    <div class="form-group">
-                      <label for="office_address">Office Address <span class="required">*</span></label>
-                      <input 
-                        id="office_address" 
-                        type="text" 
-                        v-model="form.office_address"
-                        required
-                        placeholder="Enter office address"
-                      >
-                      <InputError :message="form.errors.office_address" />
-                    </div>
-
-                    <div class="form-group">
-                      <label for="contact_person">Contact Person Name <span class="required">*</span></label>
-                      <input 
-                        id="contact_person" 
-                        type="text" 
-                        v-model="form.contact_person"
-                        required
-                        placeholder="Enter contact person name"
-                      >
-                      <InputError :message="form.errors.contact_person" />
-                    </div>
-
-                    <div class="form-group">
-                      <label for="email">Business Email <span class="required">*</span></label>
-                      <input 
-                        id="email" 
-                        type="email" 
-                        v-model="form.email"
-                        required
-                        placeholder="Enter email address"
-                      >
-                      <InputError :message="form.errors.email" />
-                    </div>
-
-                    <div class="form-group">
-                      <label for="phone_number">Phone Number <span class="required">*</span></label>
-                      <input 
-                        id="phone_number" 
-                        type="tel" 
-                        v-model="form.phone_number"
-                        required
-                        placeholder="Enter phone number"
-                      >
-                      <InputError :message="form.errors.phone_number" />
-                    </div>
-
-                    <div class="form-group">
-                      <label for="krapin">KRA PIN <span class="required">*</span></label>
-                      <input 
-                        id="krapin" 
-                        type="text" 
-                        v-model="form.krapin"
-                        required
-                        placeholder="Enter KRA PIN"
-                      >
-                      <InputError :message="form.errors.krapin" />
-                    </div>
-
-                    <div class="form-group">
-                      <label for="industry">Industry <span class="required">*</span></label>
-                      <div class="custom-select-container">
-                        <div 
-                          class="custom-select-trigger" 
-                          @click="toggleIndustryDropdown"
-                          :class="{ 'active': isIndustryDropdownOpen }"
-                        >
-                          <span>{{ form.industry || 'Select an industry' }}</span>
-                          <svg 
-                            class="dropdown-arrow" 
-                            :class="{ 'open': isIndustryDropdownOpen }"
-                            xmlns="http://www.w3.org/2000/svg" 
-                            width="16" 
-                            height="16" 
-                            viewBox="0 0 24 24" 
-                            fill="none" 
-                            stroke="currentColor" 
-                            stroke-width="2" 
-                            stroke-linecap="round" 
-                            stroke-linejoin="round"
-                          >
-                            <polyline points="6 9 12 15 18 9"></polyline>
-                          </svg>
-                        </div>
-                        
-                        <div class="custom-select-dropdown" v-show="isIndustryDropdownOpen">
-                          <div class="search-box">
-                            <input
-                              type="text"
-                              v-model="industrySearch"
-                              @input="filterIndustries"
-                              placeholder="Search industry..."
-                              class="dropdown-search"
-                              @click.stop
-                            >
-                          </div>
-                          
-                          <div class="dropdown-options">
-                            <div
-                              v-for="industry in filteredIndustries"
-                              :key="industry"
-                              class="dropdown-option"
-                              @click="selectIndustry(industry)"
-                            >
-                              {{ industry }}
-                            </div>
-                            <div v-if="filteredIndustries.length === 0" class="no-results">
-                              No industries match your search
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <InputError :message="form.errors.industry" />
-                    </div>
-
-                    <div class="form-actions">
-                      <button type="button" class="cancel-btn" @click="closeModal">Cancel</button>
-                      <button 
-                        type="submit" 
-                        class="submit-btn"
-                        :disabled="form.processing"
-                      >
-                        {{ form.processing ? 'Creating...' : 'Create Supplier' }}
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            </div>
+            <input type="text" class="search-input" placeholder="Search suppliers..." v-model="searchQuery">
           </div>
+          <button @click="openModal" class="add-supplier-btn">
+            <span class="plus-icon">+</span>
+            Add New Supplier
+          </button>
+        </div>
+        
+        <!-- Suppliers Table with Horizontal Scroll -->
+        <div class="table-wrapper">
+          <div class="table-responsive">
+            <table class="suppliers-table">
+              <thead>
+                <tr>
+                  <th @click="sortBy('company_name')" class="sortable">
+                    Company Name <i :class="getSortIcon('company_name')"></i>
+                  </th>
+                  <th @click="sortBy('office_address')" class="sortable">
+                    Office Address <i :class="getSortIcon('office_address')"></i>
+                  </th>
+                  <th @click="sortBy('contact_person')" class="sortable">
+                    Contact Person <i :class="getSortIcon('contact_person')"></i>
+                  </th>
+                  <th @click="sortBy('email')" class="sortable">
+                    Email Address <i :class="getSortIcon('email')"></i>
+                  </th>
+                  <th @click="sortBy('phone_number')" class="sortable">
+                    Phone Number <i :class="getSortIcon('phone_number')"></i>
+                  </th>
+                  <th @click="sortBy('krapin')" class="sortable">
+                    KRA PIN <i :class="getSortIcon('krapin')"></i>
+                  </th>
+                  <th @click="sortBy('industry')" class="sortable">
+                    Industry <i :class="getSortIcon('industry')"></i>
+                  </th>
+                  <th @click="sortBy('status')" class="sortable">
+                    Status <i :class="getSortIcon('status')"></i>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="supplier in paginatedSuppliers" 
+                    :key="supplier.id" 
+                    @click="viewSupplierDetails(supplier)" 
+                    class="supplier-row">
+                  <td>{{ supplier.company_name }}</td>
+                  <td>{{ supplier.office_address || '' }}</td>
+                  <td>{{ supplier.contact_person }}</td>
+                  <td>{{ supplier.email }}</td>
+                  <td>{{ supplier.phone_number }}</td>
+                  <td>{{ supplier.krapin || '' }}</td>
+                  <td>{{ supplier.industry || '' }}</td>
+                  <td>{{ supplier.status || '' }}</td>
+                </tr>
+                <tr v-if="paginatedSuppliers.length === 0">
+                  <td colspan="8" class="empty-state">
+                    No suppliers found
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        <!-- Pagination -->
+        <div class="pagination-controls">
+          <div class="per-page">
+            <span>Show</span>
+            <select v-model="perPage" @change="resetPagination" class="per-page-select">
+              <option v-for="option in perPageOptions" :key="option" :value="option">
+                {{ option }}
+              </option>
+            </select>
+            <span>per page</span>
+          </div>
+          <div class="pagination-buttons">
+            <button class="pagination-btn" :disabled="currentPage === 1" @click="prevPage">
+              Previous
+            </button>
+            <div class="page-numbers">
+              <span v-for="page in totalPages" :key="page"
+                  :class="['page-number', { active: currentPage === page }]"
+                  @click="goToPage(page)">
+                {{ page }}
+              </span>
+            </div>
+            <button class="pagination-btn" :disabled="currentPage === totalPages" @click="nextPage">
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Add Supplier Modal -->
+    <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
+      <div class="modal-container">
+        <div class="modal-header">
+          <h2>Add New Supplier</h2>
+          <button class="close-btn" @click="closeModal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <form @submit.prevent="submit">
+            <div class="form-group">
+              <label for="company_name">Company Name <span class="required">*</span></label>
+              <input 
+                id="company_name" 
+                type="text" 
+                v-model="form.company_name"
+                required
+                placeholder="Enter company name"
+              >
+              <InputError :message="form.errors.company_name" />
+            </div>
+
+            <div class="form-group">
+              <label for="office_address">Office Address <span class="required">*</span></label>
+              <input 
+                id="office_address" 
+                type="text" 
+                v-model="form.office_address"
+                required
+                placeholder="Enter office address"
+              >
+              <InputError :message="form.errors.office_address" />
+            </div>
+
+            <div class="form-group">
+              <label for="contact_person">Contact Person Name <span class="required">*</span></label>
+              <input 
+                id="contact_person" 
+                type="text" 
+                v-model="form.contact_person"
+                required
+                placeholder="Enter contact person name"
+              >
+              <InputError :message="form.errors.contact_person" />
+            </div>
+
+            <div class="form-group">
+              <label for="email">Business Email <span class="required">*</span></label>
+              <input 
+                id="email" 
+                type="email" 
+                v-model="form.email"
+                required
+                placeholder="Enter email address"
+              >
+              <InputError :message="form.errors.email" />
+            </div>
+
+            <div class="form-group">
+              <label for="phone_number">Phone Number <span class="required">*</span></label>
+              <input 
+                id="phone_number" 
+                type="tel" 
+                v-model="form.phone_number"
+                required
+                placeholder="Enter phone number"
+              >
+              <InputError :message="form.errors.phone_number" />
+            </div>
+
+            <div class="form-group">
+              <label for="krapin">KRA PIN <span class="required">*</span></label>
+              <input 
+                id="krapin" 
+                type="text" 
+                v-model="form.krapin"
+                required
+                placeholder="Enter KRA PIN"
+              >
+              <InputError :message="form.errors.krapin" />
+            </div>
+
+            <div class="form-group">
+              <label for="industry">Industry <span class="required">*</span></label>
+              <div class="custom-select-container">
+                <div 
+                  class="custom-select-trigger" 
+                  @click="toggleIndustryDropdown"
+                  :class="{ 'active': isIndustryDropdownOpen }"
+                >
+                  <span>{{ form.industry || 'Select an industry' }}</span>
+                  <svg 
+                    class="dropdown-arrow" 
+                    :class="{ 'open': isIndustryDropdownOpen }"
+                    xmlns="http://www.w3.org/2000/svg" 
+                    width="16" 
+                    height="16" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    stroke-width="2" 
+                    stroke-linecap="round" 
+                    stroke-linejoin="round"
+                  >
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </div>
+                
+                <div class="custom-select-dropdown" v-show="isIndustryDropdownOpen">
+                  <div class="search-box">
+                    <input
+                      type="text"
+                      v-model="industrySearch"
+                      @input="filterIndustries"
+                      placeholder="Search industry..."
+                      class="dropdown-search"
+                      @click.stop
+                    >
+                  </div>
+                  
+                  <div class="dropdown-options">
+                    <div
+                      v-for="industry in filteredIndustries"
+                      :key="industry"
+                      class="dropdown-option"
+                      @click="selectIndustry(industry)"
+                    >
+                      {{ industry }}
+                    </div>
+                    <div v-if="filteredIndustries.length === 0" class="no-results">
+                      No industries match your search
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <InputError :message="form.errors.industry" />
+            </div>
+
+            <div class="form-actions">
+              <button type="button" class="cancel-btn" @click="closeModal">Cancel</button>
+              <button 
+                type="submit" 
+                class="submit-btn"
+                :disabled="form.processing"
+              >
+                {{ form.processing ? 'Creating...' : 'Create Supplier' }}
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
@@ -517,15 +505,30 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+/* Apply background to both the authenticated layout and our container */
+:deep(body),
+:deep(html),
+:deep(.bg-gray-100),
+:deep(.min-h-screen),
+:deep(main) {
+  background-color: #f5f7fa !important;
+}
+
+:deep(#app) {
+  background-color: #f5f7fa !important;
+  min-height: 100vh;
+}
+
 .page-container {
   display: flex;
   justify-content: center;
-  min-height: 100%;
+  width: 100%;
   font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
+  padding: 40px 20px;
 }
 
 .content-container {
-  width: 100%;
+  width: 1200px;
   max-width: 100%;
 }
 
