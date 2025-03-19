@@ -59,7 +59,7 @@ class CompanyController extends Controller
             'office_address' => 'required|string|max:255',
             'krapin' => 'required|string|max:10|unique:companies',
             'contact_person' => 'required|string|max:255',
-            // 'industry' => 'string|max:255',
+            'industry' => 'required|string|max:255',
         ]);
 
         Company::create([
@@ -70,7 +70,7 @@ class CompanyController extends Controller
             'registration_number' => $request->registration_number,
             'krapin' => $request->krapin,
             'contact_person' => $request->contact_person,
-            'industry' => "test industry",
+            'industry' => $request->industry,
             'created_by' => $request->created_by
         ]);
 
