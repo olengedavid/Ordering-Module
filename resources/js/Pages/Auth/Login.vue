@@ -22,7 +22,7 @@ const submit = () => {
     form.post(route('login'), {
         onFinish: () => form.reset('password'),
         onSuccess: () => {
-            window.location.href = route('suppliers.index');
+            window.location.href = route('admin.suppliers.index');
         },
     });
 };
