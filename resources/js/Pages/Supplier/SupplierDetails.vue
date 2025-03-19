@@ -1,375 +1,379 @@
 <template>
-    <div class="page-container">
-      <div class="content-container">
-        <div class="header-container">
-          <h1 class="page-title">Supplier Details</h1>
-          <button class="back-button" @click="goBack">
-            <span>←</span> Back to Suppliers
-          </button>
-        </div>
-        <div class="supplier-details-container" v-if="supplier">
-          <!-- Supplier Header with Status -->
-          <div class="order-header">
-            <div class="order-id">Supplier #{{ supplier.id }}</div>
-            <div class="status-container">
-              <div :class="['status-badge', supplier.status === 'active' ? 'status-active' : 'status-inactive']">
-                {{ supplier.status }}
-              </div>
-              <button 
-                v-if="supplier.status !== 'active'" 
-                class="activate-button" 
-                @click="activateSupplier">
-                Activate
-              </button>
-            </div>
+    <div>
+      <AdminNavbar />
+      <div class="page-container">
+        <Head :title="`Supplier #${supplier.id}`" />
+        <div class="content-container">
+          <div class="header-container">
+            <h1 class="page-title">Supplier Details</h1>
+            <button class="back-button" @click="goBack">
+              <span>←</span> Back to Suppliers
+            </button>
           </div>
-  
-          <!-- Supplier Details Panel -->
-          <div class="order-details-panel">
-            <div class="detail-row">
-              <span class="detail-label">Company Name:</span>
-              <span class="detail-value">{{ supplier.company_name }}</span>
-            </div>
-  
-            <div class="detail-row">
-              <span class="detail-label">Office Address:</span>
-              <span class="detail-value">{{ supplier.office_address }}</span>
-            </div>
-  
-            <div class="detail-row">
-              <span class="detail-label">Contact Person:</span>
-              <span class="detail-value">{{ supplier.contact_person }}</span>
-            </div>
-  
-            <div class="detail-row">
-              <span class="detail-label">Email Address:</span>
-              <span class="detail-value">{{ supplier.email }}</span>
-            </div>
-  
-            <div class="detail-row">
-              <span class="detail-label">Phone Number:</span>
-              <span class="detail-value">{{ supplier.phone_number }}</span>
-            </div>
-  
-            <div class="detail-row">
-              <span class="detail-label">KRA PIN:</span>
-              <span class="detail-value">{{ supplier.kra_pin }}</span>
-            </div>
-  
-            <div class="detail-row">
-              <span class="detail-label">Industry:</span>
-              <span class="detail-value">{{ supplier.industry }}</span>
-            </div>
-            
-            <!-- Edit Supplier Details Button -->
-            <div class="edit-details-container">
-              <button @click="openEditSupplierModal" class="edit-details-btn">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                </svg>
-                Edit Supplier Details
-              </button>
-            </div>
-          </div>
-  
-          <!-- Tabs Section -->
-          <div class="tabs-container">
-            <ul class="tabs">
-              <li 
-                v-for="tab in tabs" 
-                :key="tab.id" 
-                :class="['tab', { active: activeTab === tab.id }]"
-                @click="setActiveTab(tab.id)">
-                {{ tab.name }}
-              </li>
-            </ul>
-          </div>
-  
-          <!-- Bank Accounts Tab Content -->
-          <div v-if="activeTab === 'bankAccounts'" class="tab-content">
-            <div class="table-controls">
-              <div class="table-title">Bank Accounts</div>
-              <button @click="openAddBankAccountModal" class="add-btn">
-                <span class="plus-icon">+</span>
-                Add Bank Account
-              </button>
-            </div>
-            
-            <div class="table-container">
-              <div class="table-wrapper">
-                <table class="data-table">
-                  <thead>
-                    <tr>
-                      <th @click="sortBy('bankName')" class="sortable">
-                        Bank Name <i :class="getSortIcon('bankName')"></i>
-                      </th>
-                      <th @click="sortBy('branch')" class="sortable">
-                        Branch <i :class="getSortIcon('branch')"></i>
-                      </th>
-                      <th @click="sortBy('accountName')" class="sortable">
-                        Account Name <i :class="getSortIcon('accountName')"></i>
-                      </th>
-                      <th @click="sortBy('accountNumber')" class="sortable">
-                        Account Number <i :class="getSortIcon('accountNumber')"></i>
-                      </th>
-                      <th>Primary Account</th>
-                      <th class="actions-column">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="account in sortedBankAccounts" :key="account.id" class="data-row">
-                      <td>{{ account.bankName }}</td>
-                      <td>{{ account.branch }}</td>
-                      <td>{{ account.accountName }}</td>
-                      <td>{{ account.accountNumber }}</td>
-                      <td class="primary-column">
-                        <div v-if="account.isPrimary" class="primary-badge">
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="20 6 9 17 4 12"></polyline>
-                          </svg>
-                        </div>
-                        <button 
-                          v-else 
-                          @click="setPrimaryAccount(account.id)" 
-                          class="set-primary-btn"
-                        >
-                          Set as Primary
-                        </button>
-                      </td>
-                      <td class="actions-column">
-                        <button @click="editBankAccount(account)" class="action-btn edit-btn">
-                          Edit
-                        </button>
-                        <button @click="deleteBankAccount(account.id)" class="action-btn delete-btn">
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                    <tr v-if="bankAccounts.length === 0">
-                      <td colspan="6" class="empty-state">
-                        No bank accounts added yet
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+          <div class="supplier-details-container" v-if="supplier">
+            <!-- Supplier Header with Status -->
+            <div class="order-header">
+              <div class="order-id">Supplier #{{ supplier.id }}</div>
+              <div class="status-container">
+                <div :class="['status-badge', supplier.status === 'active' ? 'status-active' : 'status-inactive']">
+                  {{ supplier.status }}
+                </div>
+                <button 
+                  v-if="supplier.status !== 'active'" 
+                  class="activate-button" 
+                  @click="activateSupplier">
+                  Activate
+                </button>
               </div>
             </div>
-          </div>
-  
-          <!-- Warehouses Tab Content -->
-          <div v-if="activeTab === 'warehouses'" class="tab-content">
-            <div class="table-controls">
-              <div class="table-title">Warehouses</div>
-              <button @click="openAddWarehouseModal" class="add-btn">
-                <span class="plus-icon">+</span>
-                Add Warehouse
-              </button>
-            </div>
-            
-            <div class="table-container">
-              <div class="table-wrapper">
-                <table class="data-table">
-                  <thead>
-                    <tr>
-                      <th @click="sortBy('name')" class="sortable">
-                        Warehouse Name <i :class="getSortIcon('name')"></i>
-                      </th>
-                      <th @click="sortBy('contactPerson')" class="sortable">
-                        Contact Person <i :class="getSortIcon('contactPerson')"></i>
-                      </th>
-                      <th @click="sortBy('email')" class="sortable">
-                        Email <i :class="getSortIcon('email')"></i>
-                      </th>
-                      <th @click="sortBy('phone')" class="sortable">
-                        Phone <i :class="getSortIcon('phone')"></i>
-                      </th>
-                      <th @click="sortBy('address')" class="sortable">
-                        Address <i :class="getSortIcon('address')"></i>
-                      </th>
-                      <th @click="sortBy('kraPin')" class="sortable">
-                        KRA PIN <i :class="getSortIcon('kraPin')"></i>
-                      </th>
-                      <th @click="sortBy('country')" class="sortable">
-                        Country <i :class="getSortIcon('country')"></i>
-                      </th>
-                      <th @click="sortBy('region')" class="sortable">
-                        Region <i :class="getSortIcon('region')"></i>
-                      </th>
-                      <th @click="sortBy('gps')" class="sortable">
-                        GPS <i :class="getSortIcon('gps')"></i>
-                      </th>
-                      <th @click="sortBy('status')" class="sortable">
-                        Status <i :class="getSortIcon('status')"></i>
-                      </th>
-                      <th class="actions-column">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="warehouse in sortedWarehouses" :key="warehouse.id" class="data-row">
-                      <td>{{ warehouse.name }}</td>
-                      <td>{{ warehouse.contactPerson }}</td>
-                      <td>{{ warehouse.email }}</td>
-                      <td>{{ warehouse.phone }}</td>
-                      <td>{{ warehouse.address }}</td>
-                      <td>{{ warehouse.kraPin }}</td>
-                      <td>{{ warehouse.country }}</td>
-                      <td>{{ warehouse.region }}</td>
-                      <td>{{ warehouse.gps }}</td>
-                      <td>
-                        <span :class="['status-pill', warehouse.status === 'Active' ? 'status-active' : 'status-inactive']">
-                          {{ warehouse.status }}
-                        </span>
-                      </td>
-                      <td class="actions-column">
-                        <button @click="editWarehouse(warehouse)" class="action-btn edit-btn">
-                          Edit
-                        </button>
-                        <button @click="deleteWarehouse(warehouse.id)" class="action-btn delete-btn">
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                    <tr v-if="warehouses.length === 0">
-                      <td colspan="11" class="empty-state">
-                        No warehouses added yet
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+    
+            <!-- Supplier Details Panel -->
+            <div class="order-details-panel">
+              <div class="detail-row">
+                <span class="detail-label">Company Name:</span>
+                <span class="detail-value">{{ supplier.company_name }}</span>
+              </div>
+    
+              <div class="detail-row">
+                <span class="detail-label">Office Address:</span>
+                <span class="detail-value">{{ supplier.office_address }}</span>
+              </div>
+    
+              <div class="detail-row">
+                <span class="detail-label">Contact Person:</span>
+                <span class="detail-value">{{ supplier.contact_person }}</span>
+              </div>
+    
+              <div class="detail-row">
+                <span class="detail-label">Email Address:</span>
+                <span class="detail-value">{{ supplier.email }}</span>
+              </div>
+    
+              <div class="detail-row">
+                <span class="detail-label">Phone Number:</span>
+                <span class="detail-value">{{ supplier.phone_number }}</span>
+              </div>
+    
+              <div class="detail-row">
+                <span class="detail-label">KRA PIN:</span>
+                <span class="detail-value">{{ supplier.kra_pin }}</span>
+              </div>
+    
+              <div class="detail-row">
+                <span class="detail-label">Industry:</span>
+                <span class="detail-value">{{ supplier.industry }}</span>
+              </div>
+              
+              <!-- Edit Supplier Details Button -->
+              <div class="edit-details-container">
+                <button @click="openEditSupplierModal" class="edit-details-btn">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  </svg>
+                  Edit Supplier Details
+                </button>
               </div>
             </div>
-          </div>
-          
-          <!-- Delivery Regions Tab Content -->
-          <div v-if="activeTab === 'deliveryRegions'" class="tab-content">
-            <div class="table-controls">
-              <div class="table-title">Delivery Regions</div>
-              <button @click="openAddDeliveryRegionModal" class="add-btn">
-                <span class="plus-icon">+</span>
-                Add Delivery Region
-              </button>
+    
+            <!-- Tabs Section -->
+            <div class="tabs-container">
+              <ul class="tabs">
+                <li 
+                  v-for="tab in tabs" 
+                  :key="tab.id" 
+                  :class="['tab', { active: activeTab === tab.id }]"
+                  @click="setActiveTab(tab.id)">
+                  {{ tab.name }}
+                </li>
+              </ul>
             </div>
-            
-            <div class="table-container">
-              <div class="table-wrapper">
-                <table class="data-table">
-                  <thead>
-                    <tr>
-                      <th @click="sortBy('warehouseName')" class="sortable">
-                        Warehouse Name <i :class="getSortIcon('warehouseName')"></i>
-                      </th>
-                      <th @click="sortBy('deliverTo')" class="sortable">
-                        Deliver To <i :class="getSortIcon('deliverTo')"></i>
-                      </th>
-                      <th @click="sortBy('deliveryFee')" class="sortable">
-                        Delivery Fee <i :class="getSortIcon('deliveryFee')"></i>
-                      </th>
-                      <th @click="sortBy('status')" class="sortable">
-                        Status <i :class="getSortIcon('status')"></i>
-                      </th>
-                      <th class="actions-column">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="region in sortedDeliveryRegions" :key="region.id" class="data-row">
-                      <td>{{ region.warehouseName }}</td>
-                      <td>{{ region.deliverTo }}</td>
-                      <td>{{ region.deliveryFee }}</td>
-                      <td>
-                        <span :class="['status-pill', region.status === 'Active' ? 'status-active' : 'status-inactive']">
-                          {{ region.status }}
-                        </span>
-                      </td>
-                      <td class="actions-column">
-                        <button @click="editDeliveryRegion(region)" class="action-btn edit-btn">
-                          Edit
-                        </button>
-                        <button @click="deleteDeliveryRegion(region.id)" class="action-btn delete-btn">
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                    <tr v-if="deliveryRegions.length === 0">
-                      <td colspan="5" class="empty-state">
-                        No delivery regions added yet
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+    
+            <!-- Bank Accounts Tab Content -->
+            <div v-if="activeTab === 'bankAccounts'" class="tab-content">
+              <div class="table-controls">
+                <div class="table-title">Bank Accounts</div>
+                <button @click="openAddBankAccountModal" class="add-btn">
+                  <span class="plus-icon">+</span>
+                  Add Bank Account
+                </button>
+              </div>
+              
+              <div class="table-container">
+                <div class="table-wrapper">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th @click="sortBy('bankName')" class="sortable">
+                          Bank Name <i :class="getSortIcon('bankName')"></i>
+                        </th>
+                        <th @click="sortBy('branch')" class="sortable">
+                          Branch <i :class="getSortIcon('branch')"></i>
+                        </th>
+                        <th @click="sortBy('accountName')" class="sortable">
+                          Account Name <i :class="getSortIcon('accountName')"></i>
+                        </th>
+                        <th @click="sortBy('accountNumber')" class="sortable">
+                          Account Number <i :class="getSortIcon('accountNumber')"></i>
+                        </th>
+                        <th>Primary Account</th>
+                        <th class="actions-column">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="account in sortedBankAccounts" :key="account.id" class="data-row">
+                        <td>{{ account.bankName }}</td>
+                        <td>{{ account.branch }}</td>
+                        <td>{{ account.accountName }}</td>
+                        <td>{{ account.accountNumber }}</td>
+                        <td class="primary-column">
+                          <div v-if="account.isPrimary" class="primary-badge">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                          </div>
+                          <button 
+                            v-else 
+                            @click="setPrimaryAccount(account.id)" 
+                            class="set-primary-btn"
+                          >
+                            Set as Primary
+                          </button>
+                        </td>
+                        <td class="actions-column">
+                          <button @click="editBankAccount(account)" class="action-btn edit-btn">
+                            Edit
+                          </button>
+                          <button @click="deleteBankAccount(account.id)" class="action-btn delete-btn">
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                      <tr v-if="bankAccounts.length === 0">
+                        <td colspan="6" class="empty-state">
+                          No bank accounts added yet
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
-          </div>
-  
-          <!-- Products Tab Content -->
-          <div v-if="activeTab === 'products'" class="tab-content">
-            <div class="table-controls">
-              <div class="table-title">Products</div>
-              <button @click="openAddProductModal" class="add-btn">
-                <span class="plus-icon">+</span>
-                Add Product
-              </button>
+    
+            <!-- Warehouses Tab Content -->
+            <div v-if="activeTab === 'warehouses'" class="tab-content">
+              <div class="table-controls">
+                <div class="table-title">Warehouses</div>
+                <button @click="openAddWarehouseModal" class="add-btn">
+                  <span class="plus-icon">+</span>
+                  Add Warehouse
+                </button>
+              </div>
+              
+              <div class="table-container">
+                <div class="table-wrapper">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th @click="sortBy('name')" class="sortable">
+                          Warehouse Name <i :class="getSortIcon('name')"></i>
+                        </th>
+                        <th @click="sortBy('contactPerson')" class="sortable">
+                          Contact Person <i :class="getSortIcon('contactPerson')"></i>
+                        </th>
+                        <th @click="sortBy('email')" class="sortable">
+                          Email <i :class="getSortIcon('email')"></i>
+                        </th>
+                        <th @click="sortBy('phone')" class="sortable">
+                          Phone <i :class="getSortIcon('phone')"></i>
+                        </th>
+                        <th @click="sortBy('address')" class="sortable">
+                          Address <i :class="getSortIcon('address')"></i>
+                        </th>
+                        <th @click="sortBy('kraPin')" class="sortable">
+                          KRA PIN <i :class="getSortIcon('kraPin')"></i>
+                        </th>
+                        <th @click="sortBy('country')" class="sortable">
+                          Country <i :class="getSortIcon('country')"></i>
+                        </th>
+                        <th @click="sortBy('region')" class="sortable">
+                          Region <i :class="getSortIcon('region')"></i>
+                        </th>
+                        <th @click="sortBy('gps')" class="sortable">
+                          GPS <i :class="getSortIcon('gps')"></i>
+                        </th>
+                        <th @click="sortBy('status')" class="sortable">
+                          Status <i :class="getSortIcon('status')"></i>
+                        </th>
+                        <th class="actions-column">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="warehouse in sortedWarehouses" :key="warehouse.id" class="data-row">
+                        <td>{{ warehouse.name }}</td>
+                        <td>{{ warehouse.contactPerson }}</td>
+                        <td>{{ warehouse.email }}</td>
+                        <td>{{ warehouse.phone }}</td>
+                        <td>{{ warehouse.address }}</td>
+                        <td>{{ warehouse.kraPin }}</td>
+                        <td>{{ warehouse.country }}</td>
+                        <td>{{ warehouse.region }}</td>
+                        <td>{{ warehouse.gps }}</td>
+                        <td>
+                          <span :class="['status-pill', warehouse.status === 'Active' ? 'status-active' : 'status-inactive']">
+                            {{ warehouse.status }}
+                          </span>
+                        </td>
+                        <td class="actions-column">
+                          <button @click="editWarehouse(warehouse)" class="action-btn edit-btn">
+                            Edit
+                          </button>
+                          <button @click="deleteWarehouse(warehouse.id)" class="action-btn delete-btn">
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                      <tr v-if="warehouses.length === 0">
+                        <td colspan="11" class="empty-state">
+                          No warehouses added yet
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
             
-            <div class="table-container">
-              <div class="table-wrapper">
-                <table class="data-table">
-                  <thead>
-                    <tr>
-                      <th>Product</th>
-                      <th @click="sortBy('productName')" class="sortable">
-                        Name <i :class="getSortIcon('productName')"></i>
-                      </th>
-                      <th @click="sortBy('skuNumber')" class="sortable">
-                        SKU Number <i :class="getSortIcon('skuNumber')"></i>
-                      </th>
-                      <th @click="sortBy('category')" class="sortable">
-                        Category <i :class="getSortIcon('category')"></i>
-                      </th>
-                      <th @click="sortBy('unitOfMeasure')" class="sortable">
-                        Unit of Measure <i :class="getSortIcon('unitOfMeasure')"></i>
-                      </th>
-                      <th @click="sortBy('description')" class="sortable">
-                        Description <i :class="getSortIcon('description')"></i>
-                      </th>
-                      <th @click="sortBy('manufacturer')" class="sortable">
-                        Manufacturer <i :class="getSortIcon('manufacturer')"></i>
-                      </th>
-                      <th @click="sortBy('status')" class="sortable">
-                        Status <i :class="getSortIcon('status')"></i>
-                      </th>
-                      <th class="actions-column">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="product in sortedProducts" :key="product.id" class="data-row">
-                      <td>
-                        <img :src="product.imageUrl" alt="Product image" class="product-thumbnail">
-                      </td>
-                      <td>{{ product.productName }}</td>
-                      <td>{{ product.skuNumber }}</td>
-                      <td>{{ product.category }}</td>
-                      <td>{{ product.unitOfMeasure }}</td>
-                      <td class="description-cell">{{ product.description }}</td>
-                      <td>{{ product.manufacturer }}</td>
-                      <td>
-                        <span :class="['status-pill', product.status === 'Active' ? 'status-active' : 'status-inactive']">
-                          {{ product.status }}
-                        </span>
-                      </td>
-                      <td class="actions-column">
-                        <button @click="editProduct(product)" class="action-btn edit-btn">
-                          Edit
-                        </button>
-                      </td>
-                    </tr>
-                    <tr v-if="products.length === 0">
-                      <td colspan="9" class="empty-state">
-                        No products added yet
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+            <!-- Delivery Regions Tab Content -->
+            <div v-if="activeTab === 'deliveryRegions'" class="tab-content">
+              <div class="table-controls">
+                <div class="table-title">Delivery Regions</div>
+                <button @click="openAddDeliveryRegionModal" class="add-btn">
+                  <span class="plus-icon">+</span>
+                  Add Delivery Region
+                </button>
+              </div>
+              
+              <div class="table-container">
+                <div class="table-wrapper">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th @click="sortBy('warehouseName')" class="sortable">
+                          Warehouse Name <i :class="getSortIcon('warehouseName')"></i>
+                        </th>
+                        <th @click="sortBy('deliverTo')" class="sortable">
+                          Deliver To <i :class="getSortIcon('deliverTo')"></i>
+                        </th>
+                        <th @click="sortBy('deliveryFee')" class="sortable">
+                          Delivery Fee <i :class="getSortIcon('deliveryFee')"></i>
+                        </th>
+                        <th @click="sortBy('status')" class="sortable">
+                          Status <i :class="getSortIcon('status')"></i>
+                        </th>
+                        <th class="actions-column">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="region in sortedDeliveryRegions" :key="region.id" class="data-row">
+                        <td>{{ region.warehouseName }}</td>
+                        <td>{{ region.deliverTo }}</td>
+                        <td>{{ region.deliveryFee }}</td>
+                        <td>
+                          <span :class="['status-pill', region.status === 'Active' ? 'status-active' : 'status-inactive']">
+                            {{ region.status }}
+                          </span>
+                        </td>
+                        <td class="actions-column">
+                          <button @click="editDeliveryRegion(region)" class="action-btn edit-btn">
+                            Edit
+                          </button>
+                          <button @click="deleteDeliveryRegion(region.id)" class="action-btn delete-btn">
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                      <tr v-if="deliveryRegions.length === 0">
+                        <td colspan="5" class="empty-state">
+                          No delivery regions added yet
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+    
+            <!-- Products Tab Content -->
+            <div v-if="activeTab === 'products'" class="tab-content">
+              <div class="table-controls">
+                <div class="table-title">Products</div>
+                <button @click="openAddProductModal" class="add-btn">
+                  <span class="plus-icon">+</span>
+                  Add Product
+                </button>
+              </div>
+              
+              <div class="table-container">
+                <div class="table-wrapper">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th>Product</th>
+                        <th @click="sortBy('productName')" class="sortable">
+                          Name <i :class="getSortIcon('productName')"></i>
+                        </th>
+                        <th @click="sortBy('skuNumber')" class="sortable">
+                          SKU Number <i :class="getSortIcon('skuNumber')"></i>
+                        </th>
+                        <th @click="sortBy('category')" class="sortable">
+                          Category <i :class="getSortIcon('category')"></i>
+                        </th>
+                        <th @click="sortBy('unitOfMeasure')" class="sortable">
+                          Unit of Measure <i :class="getSortIcon('unitOfMeasure')"></i>
+                        </th>
+                        <th @click="sortBy('description')" class="sortable">
+                          Description <i :class="getSortIcon('description')"></i>
+                        </th>
+                        <th @click="sortBy('manufacturer')" class="sortable">
+                          Manufacturer <i :class="getSortIcon('manufacturer')"></i>
+                        </th>
+                        <th @click="sortBy('status')" class="sortable">
+                          Status <i :class="getSortIcon('status')"></i>
+                        </th>
+                        <th class="actions-column">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="product in sortedProducts" :key="product.id" class="data-row">
+                        <td>
+                          <img :src="product.imageUrl" alt="Product image" class="product-thumbnail">
+                        </td>
+                        <td>{{ product.productName }}</td>
+                        <td>{{ product.skuNumber }}</td>
+                        <td>{{ product.category }}</td>
+                        <td>{{ product.unitOfMeasure }}</td>
+                        <td class="description-cell">{{ product.description }}</td>
+                        <td>{{ product.manufacturer }}</td>
+                        <td>
+                          <span :class="['status-pill', product.status === 'Active' ? 'status-active' : 'status-inactive']">
+                            {{ product.status }}
+                          </span>
+                        </td>
+                        <td class="actions-column">
+                          <button @click="editProduct(product)" class="action-btn edit-btn">
+                            Edit
+                          </button>
+                        </td>
+                      </tr>
+                      <tr v-if="products.length === 0">
+                        <td colspan="9" class="empty-state">
+                          No products added yet
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>
@@ -1485,8 +1489,15 @@
   </template>
   
   <script>
+  import { Head } from "@inertiajs/vue3";
+  import AdminNavbar from "@/Components/AdminNavbar.vue";
+  
   export default {
     name: 'SupplierDetails',
+    components: {
+      Head,
+      AdminNavbar
+    },
     props: {
       supplier: {
         type: Object,
@@ -2080,7 +2091,7 @@
         }
       },
       goBack() {
-        this.$router.go(-1);
+        window.history.back();
       },
       activateSupplier() {
         // Implement the logic to activate supplier
