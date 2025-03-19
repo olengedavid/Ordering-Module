@@ -12,6 +12,8 @@ Route::middleware('auth')->group(function () {
     Route::get('suppliers/create', [CompanyController::class, 'create'])->name('suppliers.create');
     Route::post('suppliers/create', [CompanyController::class, 'api_store_company']);
     Route::get('admin/suppliers/show', [CompanyController::class, 'show'])->name('suppliers.show');
+    Route::post('admin/suppliers/update', [CompanyController::class, 'update'])->name('admin.suppliers.update');
+    Route::post('admin/suppliers/activate', [CompanyController::class, 'activate'])->name('admin.suppliers.activate');
     Route::post('supplier/bank-accounts', [CompanyBankAccountController::class, 'store'])->name('supplier.bank-accounts.store');
     Route::put('supplier/bank-accounts', [CompanyBankAccountController::class, 'update'])->name('supplier.bank-accounts.update');
     Route::delete('supplier/bank-accounts', [CompanyBankAccountController::class, 'destroy'])->name('supplier.bank-accounts.destroy');

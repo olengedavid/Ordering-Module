@@ -2141,19 +2141,25 @@
       },
       activateSupplier() {
         try {
-          // In a real application, you would make an API call here
-          // axios.post(`/api/suppliers/${this.supplier.id}/activate`)
-          //   .then(response => {
-          //     this.supplier.status = 'active';
-          //     alert('Supplier activated successfully');
-          //   })
-          //   .catch(error => {
-          //     alert('Error activating supplier: ' + error.message);
-          //   });
+          // Prepare data for API call
+          const supplierData = {
+            uuid: this.supplier.uuid,
+            status: 'active'
+          };
           
-          // For now, we'll just update the local supplier object
-          this.supplier.status = 'active';
+          console.log('Activating supplier:', supplierData);
+          
+          // Use Inertia router to activate the supplier
+          router.post('/admin/suppliers/activate', supplierData, {
+            preserveScroll: true,
+            onError: (errors) => {
+              alert('Error activating supplier');
+              console.error(errors);
+            }
+          });
         } catch (error) {
+          alert('Error activating supplier: ' + error.message);
+          console.error('Error in activateSupplier:', error);
         }
       },
       setActiveTab(tabId) {
@@ -2541,19 +2547,31 @@
       
       // Supplier edit methods
       openEditSupplierModal() {
-        // Clone supplier data to avoid direct modification
-        // Map database field names to form field names
-        this.editedSupplier = {
-          companyName: this.supplier.company_name,
-          officeAddress: this.supplier.office_address,
-          contactPerson: this.supplier.contact_person,
-          email: this.supplier.email,
-          phoneNumber: this.supplier.phone_number,
-          kraPin: this.supplier.krapin || this.supplier.kra_pin,
-          industry: this.supplier.industry
-        };
-        this.showSupplierModal = true;
-        this.isIndustryDropdownOpen = false;
+        try {
+          console.log('Opening edit supplier modal for supplier:', this.supplier);
+          
+          // Clone supplier data to avoid direct modification
+          // Map database field names to form field names
+          this.editedSupplier = {
+            companyName: this.supplier.company_name,
+            officeAddress: this.supplier.office_address,
+            contactPerson: this.supplier.contact_person,
+            email: this.supplier.email,
+            phoneNumber: this.supplier.phone_number,
+            kraPin: this.supplier.krapin || this.supplier.kra_pin,
+            industry: this.supplier.industry
+          };
+          
+          this.showSupplierModal = true;
+          this.isIndustryDropdownOpen = false;
+          
+          // Initialize filtered industries if not already done
+          if (this.filteredIndustries.length === 0) {
+            this.filteredIndustries = [...this.industries];
+          }
+        } catch (error) {
+          alert('Error opening edit supplier modal');
+        }
       },
       
       closeSupplierModal() {
@@ -2581,35 +2599,34 @@
         }
         
         try {
-          // Map form field names back to database field names
-          this.supplier.company_name = this.editedSupplier.companyName;
-          this.supplier.office_address = this.editedSupplier.officeAddress;
-          this.supplier.contact_person = this.editedSupplier.contactPerson;
-          this.supplier.email = this.editedSupplier.email;
-          this.supplier.phone_number = this.editedSupplier.phoneNumber;
-          this.supplier.krapin = this.editedSupplier.kraPin;
-          this.supplier.industry = this.editedSupplier.industry;
+          // Prepare data for API call, mapping form fields to database fields
+          const supplierData = {
+            uuid: this.supplier.uuid,
+            company_name: this.editedSupplier.companyName,
+            office_address: this.editedSupplier.officeAddress,
+            contact_person: this.editedSupplier.contactPerson,
+            email: this.editedSupplier.email,
+            phone_number: this.editedSupplier.phoneNumber,
+            krapin: this.editedSupplier.kraPin,
+            industry: this.editedSupplier.industry
+          };
           
-          // Here you would typically call an API to update the supplier
-          // axios.put(`/api/suppliers/${this.supplier.id}`, {
-          //   company_name: this.editedSupplier.companyName,
-          //   office_address: this.editedSupplier.officeAddress,
-          //   contact_person: this.editedSupplier.contactPerson,
-          //   email: this.editedSupplier.email,
-          //   phone_number: this.editedSupplier.phoneNumber,
-          //   krapin: this.editedSupplier.kraPin,
-          //   industry: this.editedSupplier.industry
-          // }).then(response => {
-          //   // Update the local supplier object
-          //   this.supplier = response.data;
-          //   this.closeSupplierModal();
-          // }).catch(error => {
-          //   alert('Error updating supplier: ' + error.message);
-          // });
+          console.log('Updating supplier with data:', supplierData);
           
-          // Close the modal
-          this.closeSupplierModal();
+          // Use Inertia router to update the supplier
+          router.post('/admin/suppliers/update', supplierData, {
+            preserveScroll: true,
+            onSuccess: () => {
+              this.closeSupplierModal();
+            },
+            onError: (errors) => {
+              alert('Error updating supplier details');
+              console.error(errors);
+            }
+          });
         } catch (error) {
+          alert('Error updating supplier: ' + error.message);
+          console.error('Error in saveSupplierDetails:', error);
         }
       },
       

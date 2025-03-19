@@ -78,4 +78,67 @@ class CompanyController extends Controller
             ->route('admin.suppliers.index')
             ->with('success', 'New Company has been created!');
     }
+
+    /**
+     * Update the specified company.
+     */
+    public function update(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'uuid' => 'required|exists:companies,uuid',
+            'company_name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255',
+            'phone_number' => 'required|string|max:20',
+            'office_address' => 'required|string|max:255',
+            'krapin' => 'required|string|max:10',
+            'contact_person' => 'required|string|max:255',
+            'industry' => 'required|string|max:255',
+        ]);
+
+        $company = Company::where('uuid', $request->uuid)->firstOrFail();
+        
+        // Check if email is unique (except for this company)
+        if ($company->email !== $request->email) {
+            $request->validate([
+                'email' => 'unique:companies,email'
+            ]);
+        }
+        
+        // Check if krapin is unique (except for this company)
+        if ($company->krapin !== $request->krapin) {
+            $request->validate([
+                'krapin' => 'unique:companies,krapin'
+            ]);
+        }
+
+        $company->update([
+            'company_name' => $request->company_name,
+            'email' => $request->email,
+            'phone_number' => $request->phone_number,
+            'office_address' => $request->office_address,
+            'krapin' => $request->krapin,
+            'contact_person' => $request->contact_person,
+            'industry' => $request->industry,
+        ]);
+
+        return redirect()->back()->with('success', 'Company information updated successfully');
+    }
+
+    /**
+     * Activate the specified company.
+     */
+    public function activate(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'uuid' => 'required|exists:companies,uuid',
+            'status' => 'required|string|in:active'
+        ]);
+
+        $company = Company::where('uuid', $request->uuid)->firstOrFail();
+        $company->update([
+            'status' => $request->status
+        ]);
+
+        return redirect()->back()->with('success', 'Company activated successfully');
+    }
 }
