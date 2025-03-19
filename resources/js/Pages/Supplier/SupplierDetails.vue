@@ -1492,7 +1492,6 @@
   import { Head } from "@inertiajs/vue3";
   import AdminNavbar from "@/Components/AdminNavbar.vue";
   import Modal from '@/Components/Modal.vue';
-  import { ref } from 'vue';
   import { router } from '@inertiajs/vue3';
   
   export default {
@@ -1534,6 +1533,18 @@
       } catch (error) {
         console.error('Error normalizing bank accounts:', error);
       }
+      
+      // Initialize filtered industries list
+      this.filteredIndustries = [...this.industries];
+      
+      // Initialize sortedKey for tables
+      this.sortedKey = '';
+      this.sortedDir = 'asc';
+      
+      // Add event listener for closing dropdowns when clicking outside
+      document.addEventListener('click', this.closeDropdownsOnClickOutside);
+      
+      console.log('Supplier component mounted with data:', this.supplier);
     },
     data() {
       return {
@@ -1960,14 +1971,9 @@
       document.addEventListener('click', this.closeDeliverToDropdownOutside);
     },
     
-    beforeUnmount() {
-      // Clean up the event listeners
-      document.removeEventListener('click', this.closeBankDropdownOutside);
-      document.removeEventListener('click', this.closeCountryDropdownOutside);
-      document.removeEventListener('click', this.closeRegionDropdownOutside);
-      document.removeEventListener('click', this.closeIndustryDropdownOutside);
-      document.removeEventListener('click', this.closeWarehouseDropdownOutside);
-      document.removeEventListener('click', this.closeDeliverToDropdownOutside);
+    beforeDestroy() {
+      // Remove event listener when component is destroyed
+      document.removeEventListener('click', this.closeDropdownsOnClickOutside);
     },
     
     // Product Modal Methods
@@ -2134,9 +2140,21 @@
         window.history.back();
       },
       activateSupplier() {
-        // Implement the logic to activate supplier
-        this.supplier.status = 'active';
-        // Here you would typically call an API to update the supplier status
+        try {
+          // In a real application, you would make an API call here
+          // axios.post(`/api/suppliers/${this.supplier.id}/activate`)
+          //   .then(response => {
+          //     this.supplier.status = 'active';
+          //     alert('Supplier activated successfully');
+          //   })
+          //   .catch(error => {
+          //     alert('Error activating supplier: ' + error.message);
+          //   });
+          
+          // For now, we'll just update the local supplier object
+          this.supplier.status = 'active';
+        } catch (error) {
+        }
       },
       setActiveTab(tabId) {
         this.activeTab = tabId;
@@ -2524,7 +2542,16 @@
       // Supplier edit methods
       openEditSupplierModal() {
         // Clone supplier data to avoid direct modification
-        this.editedSupplier = { ...this.supplier };
+        // Map database field names to form field names
+        this.editedSupplier = {
+          companyName: this.supplier.company_name,
+          officeAddress: this.supplier.office_address,
+          contactPerson: this.supplier.contact_person,
+          email: this.supplier.email,
+          phoneNumber: this.supplier.phone_number,
+          kraPin: this.supplier.krapin || this.supplier.kra_pin,
+          industry: this.supplier.industry
+        };
         this.showSupplierModal = true;
         this.isIndustryDropdownOpen = false;
       },
@@ -2534,13 +2561,56 @@
       },
       
       saveSupplierDetails() {
-        // Update supplier details
-        this.supplier = { ...this.editedSupplier };
+        // Validate required fields
+        if (!this.editedSupplier.companyName || 
+            !this.editedSupplier.officeAddress || 
+            !this.editedSupplier.contactPerson ||
+            !this.editedSupplier.email ||
+            !this.editedSupplier.phoneNumber ||
+            !this.editedSupplier.kraPin ||
+            !this.editedSupplier.industry) {
+          alert('Please fill in all required fields');
+          return;
+        }
         
-        // Here you would typically call an API to update the supplier
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(this.editedSupplier.email)) {
+          alert('Please enter a valid email address');
+          return;
+        }
         
-        // Close the modal
-        this.closeSupplierModal();
+        try {
+          // Map form field names back to database field names
+          this.supplier.company_name = this.editedSupplier.companyName;
+          this.supplier.office_address = this.editedSupplier.officeAddress;
+          this.supplier.contact_person = this.editedSupplier.contactPerson;
+          this.supplier.email = this.editedSupplier.email;
+          this.supplier.phone_number = this.editedSupplier.phoneNumber;
+          this.supplier.krapin = this.editedSupplier.kraPin;
+          this.supplier.industry = this.editedSupplier.industry;
+          
+          // Here you would typically call an API to update the supplier
+          // axios.put(`/api/suppliers/${this.supplier.id}`, {
+          //   company_name: this.editedSupplier.companyName,
+          //   office_address: this.editedSupplier.officeAddress,
+          //   contact_person: this.editedSupplier.contactPerson,
+          //   email: this.editedSupplier.email,
+          //   phone_number: this.editedSupplier.phoneNumber,
+          //   krapin: this.editedSupplier.kraPin,
+          //   industry: this.editedSupplier.industry
+          // }).then(response => {
+          //   // Update the local supplier object
+          //   this.supplier = response.data;
+          //   this.closeSupplierModal();
+          // }).catch(error => {
+          //   alert('Error updating supplier: ' + error.message);
+          // });
+          
+          // Close the modal
+          this.closeSupplierModal();
+        } catch (error) {
+        }
       },
       
       // Industry dropdown methods
@@ -2581,14 +2651,10 @@
       },
       
       filterIndustries() {
-        if (this.industrySearch.trim() === '') {
-          this.filteredIndustries = [...this.industries];
-        } else {
-          const query = this.industrySearch.toLowerCase();
-          this.filteredIndustries = this.industries.filter(
-            industry => industry.toLowerCase().includes(query)
-          );
-        }
+        const search = this.industrySearch.toLowerCase();
+        this.filteredIndustries = this.industries.filter(industry => 
+          industry.toLowerCase().includes(search)
+        );
       },
       
       selectIndustry(industry) {
@@ -2841,7 +2907,18 @@
           isPrimary: Boolean(account.is_primary || account.isPrimary),
           is_primary: Boolean(account.is_primary || account.isPrimary)
         };
-      }
+      },
+      closeDropdownsOnClickOutside(event) {
+        // Close industry dropdown if clicking outside
+        if (this.isIndustryDropdownOpen) {
+          const container = document.querySelector('.industry-select-container');
+          if (container && !container.contains(event.target)) {
+            this.isIndustryDropdownOpen = false;
+          }
+        }
+        
+        // Close other dropdowns similarly if needed
+      },
     }
   }
   </script>
