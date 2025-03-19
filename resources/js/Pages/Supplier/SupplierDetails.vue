@@ -122,12 +122,12 @@
                     </thead>
                     <tbody>
                       <tr v-for="account in sortedBankAccounts" :key="account.id" class="data-row">
-                        <td>{{ account.bankName }}</td>
+                        <td>{{ account.bank_name || account.bankName }}</td>
                         <td>{{ account.branch }}</td>
-                        <td>{{ account.accountName }}</td>
-                        <td>{{ account.accountNumber }}</td>
+                        <td>{{ account.account_name || account.accountName }}</td>
+                        <td>{{ account.account_number || account.accountNumber }}</td>
                         <td class="primary-column">
-                          <div v-if="account.isPrimary" class="primary-badge">
+                          <div v-if="account.is_primary || account.isPrimary" class="primary-badge">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                               <polyline points="20 6 9 17 4 12"></polyline>
                             </svg>
@@ -1491,12 +1491,16 @@
   <script>
   import { Head } from "@inertiajs/vue3";
   import AdminNavbar from "@/Components/AdminNavbar.vue";
+  import Modal from '@/Components/Modal.vue';
+  import { ref } from 'vue';
+  import { router } from '@inertiajs/vue3';
   
   export default {
     name: 'SupplierDetails',
     components: {
       Head,
-      AdminNavbar
+      AdminNavbar,
+      Modal
     },
     props: {
       supplier: {
@@ -1506,6 +1510,29 @@
       bankAccounts: {
         type: Array,
         default: () => []
+      }
+    },
+    mounted() {
+      // Initialize the filteredBanks with all banks
+      this.filteredBanks = [...this.banks];
+      
+      // Normalize bank accounts data
+      try {
+        if (this.bankAccounts && Array.isArray(this.bankAccounts) && this.bankAccounts.length > 0) {
+          // Make a deep copy to avoid mutating props directly
+          const normalizedAccounts = this.bankAccounts.map(account => this.normalizeBankAccount(account));
+          
+          // Assign IDs if missing
+          normalizedAccounts.forEach((account, index) => {
+            if (!account.id) {
+              account.id = index + 1;
+            }
+          });
+          
+          this.bankAccounts = normalizedAccounts;
+        }
+      } catch (error) {
+        console.error('Error normalizing bank accounts:', error);
       }
     },
     data() {
@@ -1823,9 +1850,22 @@
         const accounts = [...this.bankAccounts];
         accounts.sort((a, b) => {
           let modifier = this.sortDir === 'asc' ? 1 : -1;
-          let aValue = a[this.sortKey];
-          let bValue = b[this.sortKey];
+          // Handle different property name formats
+          let aValue, bValue;
           
+          // Convert sortKey to both formats
+          const camelKey = this.sortKey; // e.g. 'bankName'
+          const snakeKey = this.sortKey.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`); // e.g. 'bank_name'
+          
+          // Try to get value in both formats
+          aValue = a[camelKey] !== undefined ? a[camelKey] : a[snakeKey];
+          bValue = b[camelKey] !== undefined ? b[camelKey] : b[snakeKey];
+          
+          // Handle undefined or null values
+          if (aValue === undefined || aValue === null) aValue = '';
+          if (bValue === undefined || bValue === null) bValue = '';
+          
+          // Sort based on value types
           if (typeof aValue === 'number' && typeof bValue === 'number') {
             return aValue < bValue ? -1 * modifier : 1 * modifier;
           } else {
@@ -2097,7 +2137,6 @@
         // Implement the logic to activate supplier
         this.supplier.status = 'active';
         // Here you would typically call an API to update the supplier status
-        console.log('Supplier activated:', this.supplier.id);
       },
       setActiveTab(tabId) {
         this.activeTab = tabId;
@@ -2129,59 +2168,143 @@
       },
       closeBankAccountModal() {
         this.showBankAccountModal = false;
+        this.editingBankAccount = false;
+        this.editingBankAccountId = null;
+        this.newBankAccount = {
+          bankName: '',
+          branch: '',
+          accountName: '',
+          accountNumber: '',
+          isPrimary: false
+        };
+        this.isBankDropdownOpen = false;
       },
       editBankAccount(account) {
+        // Basic validation to prevent errors
+        if (!account || !account.id) {
+          alert('Cannot edit: Invalid bank account');
+          return;
+        }
+        
         this.editingBankAccount = true;
         this.editingBankAccountId = account.id;
-        this.newBankAccount = { ...account };
-        this.showBankAccountModal = true;
+        
+        try {
+          const normalizedAccount = this.normalizeBankAccount(account);
+          this.newBankAccount = {
+            uuid: normalizedAccount.uuid,
+            bankName: normalizedAccount.bankName,
+            branch: normalizedAccount.branch,
+            accountName: normalizedAccount.accountName,
+            accountNumber: normalizedAccount.accountNumber,
+            isPrimary: normalizedAccount.isPrimary
+          };
+          this.showBankAccountModal = true;
+        } catch (error) {
+          console.error('Error preparing bank account for editing:', error);
+          alert('An error occurred while preparing the bank account for editing');
+          this.editingBankAccount = false;
+          this.editingBankAccountId = null;
+        }
       },
       saveBankAccount() {
-        if (this.newBankAccount.isPrimary) {
-          // If this account is set as primary, update all others to non-primary
-          this.bankAccounts.forEach(account => {
-            account.isPrimary = false;
-          });
-        } else if (this.bankAccounts.length === 0 || (this.editingBankAccount && this.bankAccounts.find(a => a.id === this.editingBankAccountId)?.isPrimary)) {
-          // If this is the first account or the only primary account is being edited to non-primary,
-          // force it to be primary
-          this.newBankAccount.isPrimary = true;
-        }
-        
-        if (this.editingBankAccount) {
-          // Update existing account
-          const index = this.bankAccounts.findIndex(account => account.id === this.editingBankAccountId);
-          if (index !== -1) {
-            this.bankAccounts.splice(index, 1, { ...this.newBankAccount, id: this.editingBankAccountId });
+        try {
+          // Prepare the bank account data to send to the server
+          const bankAccountData = {
+            bank_name: this.newBankAccount.bankName,
+            branch: this.newBankAccount.branch,
+            account_name: this.newBankAccount.accountName,
+            account_number: this.newBankAccount.accountNumber,
+            is_primary: this.newBankAccount.isPrimary,
+            company_uuid: this.supplier.uuid,
+            created_by: this.supplier.created_by || 1 // Default to 1 if missing
+          };
+  
+          // Basic validation to ensure we have all required fields
+          if (!bankAccountData.bank_name || !bankAccountData.branch || 
+              !bankAccountData.account_name || !bankAccountData.account_number || 
+              !bankAccountData.company_uuid) {
+            // If any required field is missing, don't proceed
+            alert('Please fill in all required fields');
+            return;
           }
-        } else {
-          // Add new account
-          const maxId = this.bankAccounts.length > 0 ? Math.max(...this.bankAccounts.map(a => a.id)) : 0;
-          this.bankAccounts.push({
-            ...this.newBankAccount,
-            id: maxId + 1
-          });
+  
+          if (this.editingBankAccount) {
+            // If editing an existing bank account, include its UUID
+            bankAccountData.uuid = this.newBankAccount.uuid;
+            
+            // Use the update endpoint
+            router.put(route('supplier.bank-accounts.update'), bankAccountData, {
+              preserveScroll: true,
+              onSuccess: () => {
+                this.closeBankAccountModal();
+              },
+              onError: (errors) => {
+                alert('Error updating bank account');
+                console.error(errors);
+              }
+            });
+          } else {
+            // Use the store endpoint to save new bank account
+            router.post(route('supplier.bank-accounts.store'), bankAccountData, {
+              preserveScroll: true,
+              onSuccess: () => {
+                this.closeBankAccountModal();
+              },
+              onError: (errors) => {
+                alert('Error creating bank account');
+                console.error(errors);
+              }
+            });
+          }
+        } catch (error) {
+          console.error('Error in saveBankAccount:', error);
+          alert('An unexpected error occurred when saving the bank account');
         }
-        
-        this.closeBankAccountModal();
       },
       setPrimaryAccount(accountId) {
-        // Update all accounts to be non-primary
-        this.bankAccounts.forEach(account => {
-          account.isPrimary = account.id === accountId;
+        // Get the account object to find its UUID
+        const account = this.bankAccounts.find(acc => acc.id === accountId);
+        if (!account || !account.uuid) {
+          alert('Could not find bank account to set as primary');
+          return;
+        }
+        
+        // Use the update endpoint to set this account as primary
+        router.put(route('supplier.bank-accounts.update'), {
+          uuid: account.uuid,
+          bank_name: account.bank_name || account.bankName,
+          branch: account.branch,
+          account_name: account.account_name || account.accountName,
+          account_number: account.account_number || account.accountNumber,
+          is_primary: true
+        }, {
+          preserveScroll: true,
+          onError: (errors) => {
+            // Handle errors to prevent unresponsiveness
+            alert('Error setting bank account as primary');
+            console.error(errors);
+          }
         });
       },
       deleteBankAccount(accountId) {
-        const accountToDelete = this.bankAccounts.find(account => account.id === accountId);
-        const isPrimary = accountToDelete && accountToDelete.isPrimary;
-        
-        // Remove the account
-        this.bankAccounts = this.bankAccounts.filter(account => account.id !== accountId);
-        
-        // If we deleted the primary account and there are remaining accounts, make the first one primary
-        if (isPrimary && this.bankAccounts.length > 0) {
-          this.bankAccounts[0].isPrimary = true;
+        // Get the account object to find its UUID
+        const account = this.bankAccounts.find(acc => acc.id === accountId);
+        if (!account || !account.uuid) {
+          alert('Could not find bank account to delete');
+          return;
         }
+        
+        // Use the delete endpoint to remove the bank account
+        router.delete(route('supplier.bank-accounts.destroy'), {
+          data: { uuid: account.uuid },
+          preserveScroll: true,
+          onError: (errors) => {
+            // Handle errors to prevent unresponsiveness
+            alert('Error deleting bank account');
+            console.error(errors);
+          }
+        });
       },
       // Bank dropdown methods
       toggleBankDropdown() {
@@ -2415,7 +2538,6 @@
         this.supplier = { ...this.editedSupplier };
         
         // Here you would typically call an API to update the supplier
-        console.log('Supplier details updated:', this.supplier);
         
         // Close the modal
         this.closeSupplierModal();
@@ -2687,6 +2809,38 @@
           // Format the number with commas for thousands
           this.newDeliveryRegion.deliveryFee = numValue.toLocaleString('en-US');
         }
+      },
+      // Utility method to normalize bank account data
+      normalizeBankAccount(account) {
+        if (!account) {
+          return {
+            id: null,
+            uuid: null,
+            bankName: '',
+            bank_name: '',
+            branch: '',
+            accountName: '',
+            account_name: '',
+            accountNumber: '',
+            account_number: '',
+            isPrimary: false,
+            is_primary: false
+          };
+        }
+        
+        return {
+          id: account.id || null,
+          uuid: account.uuid || null,
+          bankName: account.bank_name || account.bankName || '',
+          bank_name: account.bank_name || account.bankName || '',
+          branch: account.branch || '',
+          accountName: account.account_name || account.accountName || '',
+          account_name: account.account_name || account.accountName || '',
+          accountNumber: account.account_number || account.accountNumber || '',
+          account_number: account.account_number || account.accountNumber || '',
+          isPrimary: Boolean(account.is_primary || account.isPrimary),
+          is_primary: Boolean(account.is_primary || account.isPrimary)
+        };
       }
     }
   }
