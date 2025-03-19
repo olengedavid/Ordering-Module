@@ -41,7 +41,7 @@ const fetchDeliveryRegions = async () => {
 const fetchWarehouses = async () => {
   try {
     const response = await axios.get(
-    route("supplier.warehouses.index", { uuid: props.supplier.uuid })
+    route("supplier.warehouses.list", { uuid: props.supplier.uuid })
     );
     warehouses.value = response.data;
   } catch (error) {

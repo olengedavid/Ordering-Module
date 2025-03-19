@@ -19,13 +19,16 @@ const form = useForm({
   primary_image: null,
   secondary_images: [],
   created_by: user.id,
-  company_id: 1
+  company_id: user.company_id
 });
 
 const submit = () => {
   form.post(route("products.store"), {
     preserveScroll: true,
-    onSuccess: () => form.reset(),
+    onSuccess: () => {
+      form.reset();
+      route('products.index');
+    },
   });
 };
 
