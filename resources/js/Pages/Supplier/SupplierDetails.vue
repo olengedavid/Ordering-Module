@@ -56,7 +56,7 @@
     
               <div class="detail-row">
                 <span class="detail-label">KRA PIN:</span>
-                <span class="detail-value">{{ supplier.kra_pin }}</span>
+                <span class="detail-value">{{ supplier.krapin || supplier.kra_pin }}</span>
               </div>
     
               <div class="detail-row">
