@@ -215,7 +215,7 @@ export default {
     const perPageOptions = [5, 10, 20, 50];
     
     // Data from API
-    const supplier_uuid = "a0405292-dc2c-44ad-88c4-302caad40239";
+    const supplier_uuid = "b2fb3c14-d542-4e6a-baf4-42b472e7c22d";
     
     // Form for creating/editing users
     const newUser = ref({
