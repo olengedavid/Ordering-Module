@@ -8,6 +8,10 @@ use App\Models\Companies\Company;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Models\User;
+use App\Models\userPermission;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 
 class CompanyController extends Controller
@@ -20,11 +24,11 @@ class CompanyController extends Controller
         $validated = $request->validate([
             'uuid' => 'required|exists:companies,uuid'
         ]);
-    
+
         $supplier = Company::where('uuid', $validated['uuid'])
             ->with(['bankAccounts'])
             ->firstOrFail();
-        
+
         return Inertia::render('Supplier/SupplierDetails', [
             'supplier' => $supplier,
             'bankAccounts' => $supplier->bankAccounts
@@ -62,21 +66,60 @@ class CompanyController extends Controller
             'industry' => 'required|string|max:255',
         ]);
 
-        Company::create([
-            'company_name' => $request->company_name,
-            'email' => $request->email,
-            'phone_number' => $request->phone_number,
-            'office_address' => $request->office_address,
-            'registration_number' => $request->registration_number,
-            'krapin' => $request->krapin,
-            'contact_person' => $request->contact_person,
-            'industry' => $request->industry,
-            'created_by' => $request->created_by
-        ]);
+        try {
+            DB::beginTransaction();
 
-        return redirect()
-            ->route('admin.suppliers.index')
-            ->with('success', 'New Company has been created!');
+            // Create company
+            $company = Company::create([
+                'company_name' => $request->company_name,
+                'email' => $request->email,
+                'phone_number' => $request->phone_number,
+                'office_address' => $request->office_address,
+                'registration_number' => $request->registration_number,
+                'krapin' => $request->krapin,
+                'contact_person' => $request->contact_person,
+                'industry' => $request->industry,
+                'created_by' => $request->created_by
+            ]);
+
+            // Create user for the company
+            $user = User::create([
+                'name' => $request->contact_person,
+                'email' => $request->email,
+                'password' => Hash::make('password123'), // You might want to generate this or get it from the request
+                'status' => 'active',
+                'company_id' => $company->id,
+            ]);
+
+            // Create user permissions with all available permissions
+            userPermission::create([
+                'user_id' => $user->id,
+                'permissions' => json_encode([
+                    'manage_users',
+                    'manage_orders',
+                    'manage_warehouses',
+                    'manage_products',
+                    'manage_inventory',
+                    'cancel_orders',
+                    'confirm_deliveries'
+                ]),
+                'entity_type' => 'supplier',
+                'company_id' => $company->id,
+                'created_by' => $request->created_by,
+                'updated_by' => $request->created_by
+            ]);
+
+            DB::commit();
+
+            return redirect()
+                ->route('admin.suppliers.index')
+                ->with('success', 'New Company and admin user have been created!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()
+                ->back()
+                ->with('error', 'Failed to create company: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -96,14 +139,14 @@ class CompanyController extends Controller
         ]);
 
         $company = Company::where('uuid', $request->uuid)->firstOrFail();
-        
+
         // Check if email is unique (except for this company)
         if ($company->email !== $request->email) {
             $request->validate([
                 'email' => 'unique:companies,email'
             ]);
         }
-        
+
         // Check if krapin is unique (except for this company)
         if ($company->krapin !== $request->krapin) {
             $request->validate([
