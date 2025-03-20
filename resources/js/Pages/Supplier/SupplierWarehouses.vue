@@ -312,6 +312,7 @@ import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import { Head, Link, useForm, usePage } from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 
+
 const props = defineProps({
   warehouses: {
     type: Array,
@@ -370,7 +371,8 @@ const form = useForm({
   country: 'Kenya',
   region: '',
   gps: '',
-  supplier_id: 1,
+  company_id: 1,
+  created_by: user.id
 });
 
 // Computed properties for filtering and sorting

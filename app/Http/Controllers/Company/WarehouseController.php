@@ -21,8 +21,6 @@ class WarehouseController extends Controller{
 
      public function api_store_warehouse(Request $request)
      {
-         // Log all request data
-        \Illuminate\Support\Facades\Log::info('request:', $request->all());
     
          $validated = $request->validate([
              'name' => 'required|string|max:255',
@@ -32,14 +30,9 @@ class WarehouseController extends Controller{
              'address' =>'required|string|max:255',
              'email' =>'required|string|email|max:255|unique:warehouses',
              'krapin' =>'required|string|max:10|unique:warehouses',
-             'supplier_id' =>'required|integer|exists:companies,id',
+             'company_id' =>'required|integer|exists:companies,id',
+             'created_by' => 'required|integer|exists:users,id'
          ]);
-     
-         // Map supplier_id to company_id if needed
-         if (isset($validated['supplier_id']) && !isset($validated['supplier_id'])) {
-             $validated['company_id'] = $validated['supplier_id'];
-             unset($validated['supplier_id']); // Remove supplier_id so it doesn't conflict
-         }
      
          Warehouse::create($validated + ['status' => 'active']);
      
