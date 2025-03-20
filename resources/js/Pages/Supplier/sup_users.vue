@@ -1,0 +1,1264 @@
+<template>
+    <div class="page-container">
+      <div class="content-container">
+        <div class="header-container">
+          <h1 class="page-title">Supplier Users</h1>
+        </div>
+        
+        <div class="table-controls">
+          <div class="search-container">
+            <div class="search-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" color="#000000" fill="none">
+                <path opacity="0.4" fill-rule="evenodd" clip-rule="evenodd" d="M16.7929 16.7929C17.1834 16.4024 17.8166 16.4024 18.2071 16.7929L22.7071 21.2929C23.0976 21.6834 23.0976 22.3166 22.7071 22.7071C22.3166 23.0976 21.6834 23.0976 21.2929 22.7071L16.7929 18.2071C16.4024 17.8166 16.4024 17.1834 16.7929 16.7929Z" fill="currentColor" />
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M1 11C1 5.47715 5.47715 1 11 1C16.5228 1 21 5.47715 21 11C21 16.5228 16.5228 21 11 21C5.47715 21 1 16.5228 1 11ZM11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3Z" fill="currentColor" />
+              </svg>
+            </div>
+            <input type="text" class="search-input" placeholder="Search users..." v-model="searchQuery">
+          </div>
+          <button @click="openAddUserModal" class="add-btn">
+            <span class="plus-icon">+</span>
+            Add User
+          </button>
+        </div>
+        
+        <div class="table-container">
+          <div class="table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th @click="sortBy('username')" class="sortable">
+                    Username <i :class="getSortIcon('username')"></i>
+                  </th>
+                  <th @click="sortBy('email')" class="sortable">
+                    Email Address <i :class="getSortIcon('email')"></i>
+                  </th>
+                  <th @click="sortBy('password')" class="sortable">
+                    Password <i :class="getSortIcon('password')"></i>
+                  </th>
+                  <th @click="sortBy('warehouse')" class="sortable">
+                    Warehouse <i :class="getSortIcon('warehouse')"></i>
+                  </th>
+                  <th @click="sortBy('permissions')" class="sortable">
+                    Permissions <i :class="getSortIcon('permissions')"></i>
+                  </th>
+                  <th @click="sortBy('status')" class="sortable">
+                    Status <i :class="getSortIcon('status')"></i>
+                  </th>
+                  <th class="actions-column">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="user in paginatedUsers" :key="user.id" class="data-row">
+                  <td>{{ user.username }}</td>
+                  <td>{{ user.email }}</td>
+                  <td>{{ user.displayPassword }}</td>
+                  <td>{{ user.warehouse }}</td>
+                  <td>{{ getPermissionsDisplayText(user.permissions) }}</td>
+                  <td>
+                    <span :class="['status-pill', user.status === 'Active' ? 'status-active' : 'status-inactive']">
+                      {{ user.status }}
+                    </span>
+                  </td>
+                  <td class="actions-column">
+                    <button @click="editUser(user)" class="action-btn edit-btn">
+                      Edit
+                    </button>
+                  </td>
+                </tr>
+                <tr v-if="filteredUsers.length === 0">
+                  <td colspan="7" class="empty-state">
+                    No users found
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        <!-- Pagination -->
+        <div class="pagination-controls">
+          <div class="per-page">
+            <span>Show</span>
+            <select v-model="perPage" @change="resetPagination" class="per-page-select">
+              <option v-for="option in perPageOptions" :key="option" :value="option">
+                {{ option }}
+              </option>
+            </select>
+            <span>per page</span>
+          </div>
+          <div class="pagination-buttons">
+            <button class="pagination-btn" :disabled="currentPage === 1" @click="prevPage">
+              Previous
+            </button>
+            <div class="page-numbers">
+              <span v-for="page in totalPages" :key="page"
+                   :class="['page-number', { active: currentPage === page }]"
+                   @click="goToPage(page)">
+                {{ page }}
+              </span>
+            </div>
+            <button class="pagination-btn" :disabled="currentPage === totalPages" @click="nextPage">
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Add/Edit User Modal -->
+      <div v-if="showUserModal" class="modal-overlay" @click.self="closeUserModal">
+        <div class="modal-container">
+          <div class="modal-header">
+            <h2>{{ editingUser ? 'Edit User' : 'Add New User' }}</h2>
+            <button class="close-btn" @click="closeUserModal">&times;</button>
+          </div>
+          <div class="modal-body">
+            <form @submit.prevent="saveUser">
+              <!-- Username Field -->
+              <div class="form-group">
+                <label for="username">Username <span class="required">*</span></label>
+                <input type="text" id="username" v-model="newUser.username" required>
+              </div>
+              
+              <!-- Email Field -->
+              <div class="form-group">
+                <label for="email">Email Address <span class="required">*</span></label>
+                <input type="email" id="email" v-model="newUser.email" required>
+              </div>
+              
+              <!-- Password Field with show/hide toggle -->
+              <div class="form-group">
+                <label for="password">Password <span class="required">*</span></label>
+                <div class="password-input-container">
+                  <input :type="showPassword ? 'text' : 'password'" id="password" v-model="newUser.password" required>
+                  <button type="button" class="password-toggle-btn" @click="togglePasswordVisibility">
+                    <!-- Eye Close Icon (shown when password is hidden) -->
+                    <svg v-if="!showPassword" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" color="#000000" fill="none">
+                      <path d="M19.439 15.439C21 14 22 12 22 12C20.5 9 16.6892 5 12 5C11.0922 5 10.2294 5.15476 9.41827 5.41827M17 17.4186C15.5657 18.3368 13.8793 19 12 19C7.31078 19 3.5 15 2 12C2 12 3.5 9 6.5 6.91847" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                      <path d="M9.85786 10C9.32783 10.53 9 11.2623 9 12.0711C9 13.6887 10.3113 15 11.9289 15C12.7377 15 13.47 14.6722 14 14.1421" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                      <path d="M3 3L21 21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <!-- Eye Open Icon (shown when password is visible) -->
+                    <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" color="#000000" fill="none">
+                      <path d="M15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15C13.6569 15 15 13.6569 15 12Z" stroke="currentColor" stroke-width="1.5" />
+                      <path d="M12 5C17.5228 5 22 12 22 12C22 12 17.5228 19 12 19C6.47715 19 2 12 2 12C2 12 6.47715 5 12 5Z" stroke="currentColor" stroke-width="1.5" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              
+              <!-- Warehouse Dropdown -->
+              <div class="form-group">
+                <label for="warehouse">Warehouse <span class="required">*</span></label>
+                <select id="warehouse" v-model="newUser.warehouse" required>
+                  <option value="">Select a Warehouse</option>
+                  <option v-for="warehouse in warehouses" :key="warehouse" :value="warehouse">
+                    {{ warehouse }}
+                  </option>
+                </select>
+              </div>
+              
+              <!-- Permissions Checkboxes -->
+              <div class="form-group">
+                <label>Permissions <span class="required">*</span></label>
+                <div class="permissions-container">
+                  <div v-for="(permission, key) in availablePermissions" :key="key" class="permission-checkbox">
+                    <input 
+                      type="checkbox" 
+                      :id="key" 
+                      v-model="newUser.permissions[key]"
+                    >
+                    <label :for="key">{{ permission }}</label>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Status Dropdown -->
+              <div class="form-group">
+                <label for="status">Status <span class="required">*</span></label>
+                <select id="status" v-model="newUser.status" required>
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                </select>
+              </div>
+              
+              <div class="form-actions">
+                <button type="button" class="cancel-btn" @click="closeUserModal">Cancel</button>
+                <button type="submit" class="submit-btn">Save User</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+  
+  <script>
+  export default {
+    name: 'SupplierUsersPage',
+    data() {
+      return {
+        showPassword: false,
+        warehouses: [
+          'Eldoret Storage Facility',
+          'Kisumu Lakeside Depot',
+          'Mombasa Distribution Center',
+          'Nairobi Central Warehouse',
+          'Nakuru Regional Hub'
+        ],
+        availablePermissions: {
+          canManageUsers: 'Can Manage Users',
+          canManageOrders: 'Can Manage Orders',
+          canManageWarehouses: 'Can Manage Warehouses',
+          canManageProducts: 'Can Manage Products',
+          canManageInventory: 'Can Manage Inventory',
+          canCancelOrderRequests: 'Can Cancel Order Requests',
+          canCancelConfirmedOrders: 'Can Cancel Confirmed Orders',
+          canConfirmDeliveries: 'Can Confirm Deliveries'
+        },
+        users: [
+          { 
+            id: 1, 
+            username: 'James Smith', 
+            email: 'james.smith@gmail.com', 
+            password: 'securepass1', 
+            displayPassword: '••••••••', 
+            warehouse: 'Nairobi Central Warehouse',
+            permissions: {
+              canManageUsers: true,
+              canManageOrders: true,
+              canManageWarehouses: true,
+              canManageProducts: true,
+              canManageInventory: true,
+              canCancelOrderRequests: true,
+              canCancelConfirmedOrders: true,
+              canConfirmDeliveries: true
+            }, 
+            status: 'Active' 
+          },
+          { 
+            id: 2, 
+            username: 'Sarah Johnson', 
+            email: 'sarah.johnson@gmail.com', 
+            password: 'securepass2', 
+            displayPassword: '••••••••', 
+            warehouse: 'Mombasa Distribution Center',
+            permissions: {
+              canManageUsers: false,
+              canManageOrders: true,
+              canManageWarehouses: false,
+              canManageProducts: true,
+              canManageInventory: true,
+              canCancelOrderRequests: true,
+              canCancelConfirmedOrders: false,
+              canConfirmDeliveries: true
+            }, 
+            status: 'Active' 
+          },
+          { 
+            id: 3, 
+            username: 'Michael Brown', 
+            email: 'michael.brown@gmail.com', 
+            password: 'securepass3', 
+            displayPassword: '••••••••', 
+            warehouse: 'Kisumu Lakeside Depot',
+            permissions: {
+              canManageUsers: false,
+              canManageOrders: true,
+              canManageWarehouses: true,
+              canManageProducts: true,
+              canManageInventory: true,
+              canCancelOrderRequests: true,
+              canCancelConfirmedOrders: false,
+              canConfirmDeliveries: true
+            }, 
+            status: 'Active' 
+          },
+          { 
+            id: 4, 
+            username: 'Emily Davis', 
+            email: 'emily.davis@gmail.com', 
+            password: 'securepass4', 
+            displayPassword: '••••••••', 
+            warehouse: 'Eldoret Storage Facility',
+            permissions: {
+              canManageUsers: false,
+              canManageOrders: false,
+              canManageWarehouses: false,
+              canManageProducts: true,
+              canManageInventory: true,
+              canCancelOrderRequests: false,
+              canCancelConfirmedOrders: false,
+              canConfirmDeliveries: false
+            }, 
+            status: 'Inactive' 
+          },
+          { 
+            id: 5, 
+            username: 'Robert Wilson', 
+            email: 'robert.wilson@gmail.com', 
+            password: 'securepass5', 
+            displayPassword: '••••••••', 
+            warehouse: 'Nakuru Regional Hub',
+            permissions: {
+              canManageUsers: false,
+              canManageOrders: true,
+              canManageWarehouses: false,
+              canManageProducts: false,
+              canManageInventory: true,
+              canCancelOrderRequests: true,
+              canCancelConfirmedOrders: false,
+              canConfirmDeliveries: true
+            }, 
+            status: 'Active' 
+          }
+        ],
+        searchQuery: '',
+        showUserModal: false,
+        newUser: {
+          username: '',
+          email: '',
+          password: '',
+          warehouse: '',
+          permissions: {
+            canManageUsers: false,
+            canManageOrders: false,
+            canManageWarehouses: false,
+            canManageProducts: false,
+            canManageInventory: false,
+            canCancelOrderRequests: false,
+            canCancelConfirmedOrders: false,
+            canConfirmDeliveries: false
+          },
+          status: 'Active'
+        },
+        editingUser: false,
+        editingUserId: null,
+        sortKey: 'username',
+        sortDir: 'asc',
+        currentPage: 1,
+        perPage: 10,
+        perPageOptions: [5, 10, 20, 50]
+      }
+    },
+    computed: {
+      filteredUsers() {
+        if (this.searchQuery.trim() === '') {
+          return this.users;
+        }
+        
+        const query = this.searchQuery.toLowerCase();
+        return this.users.filter(user => {
+          return Object.values(user).some(value => {
+            if (value === null || value === undefined) return false;
+            if (typeof value === 'object') {
+              // For permissions object, check if any permission name matches
+              return Object.entries(value).some(([key]) => {
+                return this.availablePermissions[key]?.toLowerCase().includes(query) || false;
+              });
+            }
+            return String(value).toLowerCase().includes(query);
+          });
+        });
+      },
+      totalPages() {
+        return Math.ceil(this.filteredUsers.length / this.perPage);
+      },
+      paginatedUsers() {
+        const startIndex = (this.currentPage - 1) * this.perPage;
+        const endIndex = startIndex + this.perPage;
+        
+        // Sort the users first
+        const sortedUsers = [...this.filteredUsers];
+        sortedUsers.sort((a, b) => {
+          let modifier = this.sortDir === 'asc' ? 1 : -1;
+          
+          // Special handling for permissions
+          if (this.sortKey === 'permissions') {
+            // Count enabled permissions as a simple sorting metric
+            const aPermCount = Object.values(a.permissions).filter(p => p).length;
+            const bPermCount = Object.values(b.permissions).filter(p => p).length;
+            return (aPermCount < bPermCount ? -1 : 1) * modifier;
+          }
+          
+          let aValue = a[this.sortKey];
+          let bValue = b[this.sortKey];
+          
+          // Handle undefined or null values
+          if (aValue === undefined || aValue === null) {
+            aValue = '';
+          }
+          if (bValue === undefined || bValue === null) {
+            bValue = '';
+          }
+          
+          if (typeof aValue === 'number' && typeof bValue === 'number') {
+            return aValue < bValue ? -1 * modifier : 1 * modifier;
+          } else {
+            return aValue.toString().localeCompare(bValue.toString()) * modifier;
+          }
+        });
+        
+        return sortedUsers.slice(startIndex, endIndex);
+      }
+    },
+    methods: {
+      sortBy(key) {
+        if (this.sortKey === key) {
+          this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
+        } else {
+          this.sortKey = key;
+          this.sortDir = 'asc';
+        }
+      },
+      getSortIcon(key) {
+        if (this.sortKey !== key) return 'sort-icon sort-none';
+        return this.sortDir === 'asc' ? 'sort-icon sort-asc' : 'sort-icon sort-desc';
+      },
+      getPermissionsDisplayText(permissions) {
+        const enabledPermissions = Object.entries(permissions)
+          .filter(([, enabled]) => enabled)
+          .map(([key]) => this.availablePermissions[key]);
+        
+        if (enabledPermissions.length === 0) {
+          return 'No permissions';
+        } else if (enabledPermissions.length <= 2) {
+          return enabledPermissions.join(', ');
+        } else {
+          return `${enabledPermissions.length} permissions granted`;
+        }
+      },
+      openAddUserModal() {
+        this.editingUser = false;
+        this.editingUserId = null;
+        this.newUser = {
+          username: '',
+          email: '',
+          password: '',
+          warehouse: '',
+          permissions: {
+            canManageUsers: false,
+            canManageOrders: false,
+            canManageWarehouses: false,
+            canManageProducts: false,
+            canManageInventory: false,
+            canCancelOrderRequests: false,
+            canCancelConfirmedOrders: false,
+            canConfirmDeliveries: false
+          },
+          status: 'Active'
+        };
+        this.showUserModal = true;
+        this.showPassword = false; // Reset password visibility when opening add modal
+      },
+      closeUserModal() {
+        this.showUserModal = false;
+        this.showPassword = false;
+      },
+      togglePasswordVisibility() {
+        this.showPassword = !this.showPassword;
+      },
+      editUser(user) {
+        this.editingUser = true;
+        this.editingUserId = user.id;
+        this.newUser = {
+          username: user.username,
+          email: user.email,
+          password: user.password, // Use actual password, not display password
+          warehouse: user.warehouse,
+          permissions: JSON.parse(JSON.stringify(user.permissions)), // Deep copy permissions
+          status: user.status
+        };
+        this.showUserModal = true;
+        this.showPassword = false; // Reset password visibility when opening edit modal
+      },
+      saveUser() {
+        if (this.editingUser) {
+          // Update existing user
+          const index = this.users.findIndex(user => user.id === this.editingUserId);
+          if (index !== -1) {
+            this.users[index] = {
+              ...this.users[index],
+              username: this.newUser.username,
+              email: this.newUser.email,
+              password: this.newUser.password,
+              displayPassword: '••••••••', // Reset display password
+              warehouse: this.newUser.warehouse,
+              permissions: JSON.parse(JSON.stringify(this.newUser.permissions)), // Deep copy permissions
+              status: this.newUser.status
+            };
+          }
+        } else {
+          // Create new user
+          const maxId = this.users.length > 0 ? Math.max(...this.users.map(u => u.id)) : 0;
+          
+          const user = {
+            id: maxId + 1,
+            username: this.newUser.username,
+            email: this.newUser.email,
+            password: this.newUser.password,
+            displayPassword: '••••••••', // Add display password
+            warehouse: this.newUser.warehouse,
+            permissions: JSON.parse(JSON.stringify(this.newUser.permissions)), // Deep copy permissions
+            status: this.newUser.status
+          };
+          
+          this.users.push(user);
+        }
+        
+        this.closeUserModal();
+      },
+      // Pagination methods
+      prevPage() {
+        if (this.currentPage > 1) {
+          this.currentPage--;
+        }
+      },
+      nextPage() {
+        if (this.currentPage < this.totalPages) {
+          this.currentPage++;
+        }
+      },
+      goToPage(page) {
+        this.currentPage = page;
+      },
+      resetPagination() {
+        this.currentPage = 1;
+      }
+    }
+  }
+  </script>
+  
+  <style scoped>
+  .page-container {
+    display: flex;
+    justify-content: center;
+    background-color: #f5f7fa;
+    min-height: 100vh;
+    padding: 40px 20px;
+    font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
+  }
+  
+  .content-container {
+    width: 1200px;
+    max-width: 100%;
+    border-radius: 12px;
+    padding: 24px;
+  }
+  
+  .header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+  
+  .page-title {
+    font-size: 1.8rem;
+    color: #1e293b;
+    font-weight: 600;
+    margin: 0;
+  }
+  
+  /* Table Controls */
+  .table-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  
+  /* Search Container */
+  .search-container {
+    position: relative;
+    width: 300px;
+  }
+  
+  .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #64748b;
+  }
+  
+  .search-input {
+    width: 100%;
+    padding: 10px 10px 10px 40px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 0.9rem;
+  }
+  
+  .search-input:focus {
+    outline: none;
+    border-color: #0E64A5;
+    box-shadow: 0 0 0 2px rgba(14, 100, 165, 0.1);
+  }
+  
+  .add-btn {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    background-color: #0E64A5;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  
+  .add-btn:hover {
+    background-color: #0a4f83;
+  }
+  
+  .plus-icon {
+    font-size: 1.2rem;
+    margin-right: 8px;
+    font-weight: bold;
+  }
+  
+  /* Table styles */
+  .table-container {
+    position: relative;
+    width: 100%;
+    background-color: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    margin-bottom: 24px;
+  }
+  
+  .table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    /* Enable smooth scrolling */
+    scroll-behavior: smooth;
+    /* Add some padding for better appearance on mobile */
+    padding-bottom: 6px;
+    /* Hide scrollbar for WebKit browsers */
+    scrollbar-width: thin;
+  }
+  
+  /* Customize scrollbar for Webkit browsers */
+  .table-wrapper::-webkit-scrollbar {
+    height: 8px;
+  }
+  
+  .table-wrapper::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+  }
+  
+  .table-wrapper::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 4px;
+  }
+  
+  .table-wrapper::-webkit-scrollbar-thumb:hover {
+    background-color: #94a3b8;
+  }
+  
+  /* Make sure the table takes full width of its container */
+  .data-table {
+    width: 100%;
+    min-width: 750px; /* Minimum width to ensure horizontal scroll appears when needed */
+    table-layout: auto; /* Allow table to adjust column width based on content */
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.95rem;
+  }
+  
+  /* Ensure the table headers and data cells have proper min-width */
+  .data-table th, 
+  .data-table td {
+    white-space: nowrap; /* Prevent text wrapping */
+    min-width: 120px; /* Minimum width for each column */
+  }
+  
+  /* Actions column should be narrower and fixed */
+  .actions-column {
+    min-width: 90px;
+    width: 90px;
+  }
+  
+  /* Add a visible indicator for horizontal scroll on mobile */
+  @media (max-width: 768px) {
+    .table-container::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 20px;
+      height: 100%;
+      background: linear-gradient(to right, rgba(255, 255, 255, 0), rgba(230, 230, 230, 0.3));
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+  
+    .table-container:hover::after {
+      opacity: 1;
+    }
+  }
+  
+  .data-table th {
+    background-color: #f8fafc;
+    color: #64748b;
+    font-weight: 600;
+    text-align: left;
+    padding: 14px 15px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  .data-table th.sortable {
+    cursor: pointer;
+    user-select: none;
+  }
+  
+  .sort-icon {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    background-repeat: no-repeat;
+    background-position: center;
+    margin-left: 4px;
+    vertical-align: text-bottom;
+  }
+  
+  .sort-none::after {
+    content: '⇵';
+    opacity: 0.3;
+    font-size: 12px;
+  }
+  
+  .sort-asc::after {
+    content: '↑';
+    color: #2563eb;
+    font-size: 12px;
+  }
+  
+  .sort-desc::after {
+    content: '↓';
+    color: #2563eb;
+    font-size: 12px;
+  }
+  
+  .data-table td {
+    padding: 14px 15px;
+    border-bottom: 1px solid #e5e7eb;
+    color: #334155;
+    text-align: left;
+  }
+  
+  .data-table tr:last-child td {
+    border-bottom: none;
+  }
+  
+  .data-row:hover td {
+    background-color: #f8fafc;
+  }
+  
+  /* Status Pills */
+  .status-pill {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+  
+  .status-active {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: #047857;
+  }
+  
+  .status-inactive {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+  }
+  
+  /* Action Buttons */
+  .action-btn {
+    background: none;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 0.85rem;
+    margin-right: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .edit-btn {
+    color: #0E64A5;
+    border-color: #0E64A5;
+  }
+  
+  .edit-btn:hover {
+    background-color: rgba(14, 100, 165, 0.05);
+  }
+  
+  .empty-state {
+    text-align: center;
+    color: #64748b;
+    padding: 30px;
+    font-style: italic;
+  }
+  
+  /* Pagination Controls */
+  .pagination-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 24px;
+  }
+  
+  .per-page {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #64748b;
+    font-size: 0.9rem;
+  }
+  
+  .per-page-select {
+    padding: 6px 8px;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    background-color: white;
+    color: #1e293b;
+    font-size: 0.9rem;
+  }
+  
+  .pagination-buttons {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .pagination-btn {
+    padding: 6px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    background-color: white;
+    color: #1e293b;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .pagination-btn:hover:not(:disabled) {
+    background-color: #f1f5f9;
+  }
+  
+  .pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  .page-numbers {
+    display: flex;
+    gap: 4px;
+  }
+  
+  .page-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .page-number:hover {
+    background-color: #f1f5f9;
+  }
+  
+  .page-number.active {
+    background-color: #0E64A5;
+    color: white;
+  }
+  
+  /* Modal Styles */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  .modal-container {
+    background-color: white;
+    border-radius: 8px;
+    width: 500px;
+    max-width: 90%;
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  .modal-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: #1e293b;
+    font-weight: 600;
+  }
+  
+  .close-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #64748b;
+    cursor: pointer;
+  }
+  
+  .modal-body {
+    padding: 24px;
+    text-align: left;
+    overflow-y: auto;
+    max-height: 70vh;
+  }
+  
+  .form-group {
+    margin-bottom: 16px;
+    text-align: left;
+    width: 100%;
+    box-sizing: border-box;
+    position: relative;
+    overflow: visible;
+  }
+  
+  .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #334155;
+    text-align: left;
+  }
+  
+  .required {
+    color: #ef4444;
+    margin-left: 2px;
+  }
+  
+  .form-group input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    color: #1e293b;
+    background-color: white;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+  }
+  
+  .form-group input:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  }
+  
+  .form-group select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    color: #1e293b;
+    background-color: white;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+  }
+  
+  .form-group select:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  }
+  
+  /* Permissions container styles */
+  .permissions-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    background-color: #f8fafc;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 16px;
+  }
+  
+  .permission-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .permission-checkbox input[type="checkbox"] {
+    width: auto;
+    margin-right: 8px;
+    cursor: pointer;
+  }
+  
+  .permission-checkbox label {
+    margin-bottom: 0;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+  
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+  }
+  
+  .cancel-btn {
+    padding: 10px 16px;
+    background-color: white;
+    color: #64748b;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .cancel-btn:hover {
+    background-color: #f1f5f9;
+    border-color: #cbd5e1;
+  }
+  
+  .submit-btn {
+    padding: 10px 16px;
+    background-color: #0E64A5;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .submit-btn:hover {
+    background-color: #0a4f83;
+  }
+  
+  /* Password Input Container Styles */
+  .password-input-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  
+  .password-input-container input {
+    width: 100%;
+    padding-right: 40px; /* Make room for the eye icon */
+  }
+  
+  .password-toggle-btn {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    padding: 0;
+    color: #64748b;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+  }
+  
+  .password-toggle-btn:hover {
+    color: #0E64A5;
+  }
+  
+  .password-toggle-btn svg {
+    display: block;
+  }
+  
+  /* Responsive styles */
+  @media (max-width: 768px) {
+    .header-container {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+    }
+    
+    .table-controls {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+    }
+    
+    .add-btn {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    background-color: #0E64A5;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  
+  .add-btn:hover {
+    background-color: #0a4f83;
+  }
+  
+  .plus-icon {
+    font-size: 1.2rem;
+    margin-right: 8px;
+    font-weight: bold;
+  }
+    
+    .search-container {
+      width: 100%;
+    }
+    
+    /* Pagination Controls */
+  .pagination-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 24px;
+  }
+  
+  .per-page {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #64748b;
+    font-size: 0.9rem;
+  }
+  
+  .per-page-select {
+    padding: 6px 8px;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    background-color: white;
+    color: #1e293b;
+    font-size: 0.9rem;
+  }
+  
+  .pagination-buttons {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .pagination-btn {
+    padding: 6px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    background-color: white;
+    color: #1e293b;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .pagination-btn:hover:not(:disabled) {
+    background-color: #f1f5f9;
+  }
+  
+  .pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  .page-numbers {
+    display: flex;
+    gap: 4px;
+  }
+  
+  .page-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .page-number:hover {
+    background-color: #f1f5f9;
+  }
+  
+  .page-number.active {
+    background-color: #0E64A5;
+    color: white;
+  }
+    
+    .permissions-container {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  @media (max-width: 640px) {
+    .page-container {
+      padding: 20px 16px;
+    }
+    
+    .content-container {
+      padding: 16px;
+    }
+    
+    .actions-column {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .action-btn {
+      margin-right: 0;
+    }
+    
+    .table-container {
+      border-radius: 6px;
+    }
+    
+    .table-wrapper {
+      padding-bottom: 4px;
+    }
+    
+    .page-numbers {
+      display: none;
+    }
+  }
+  </style>
