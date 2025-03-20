@@ -5,7 +5,7 @@
     <div class="page-container">
       <div class="content-container">
         <div class="header-container">
-          <h1 class="page-title">Warehouses</h1>
+          <h1 class="page-title">Warehouses </h1>
         </div>
         
         <!-- Table Controls with Search Bar -->
@@ -313,12 +313,13 @@ import { Head, Link, useForm, usePage } from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 
 
-const props = defineProps({
-  warehouses: {
-    type: Array,
-    default: () => [],
-  },
-});
+// const props = defineProps({
+//   warehouses: {
+//     type: Array,
+//     default: () => [],
+//   },
+// });
+const warehouses = ref([]);
 
 const page = usePage();
 const user = page.props.auth.user;
@@ -358,7 +359,7 @@ const regions = ref([
   'Uasin Gishu', 'Vihiga', 'Wajir', 'West Pokot'
 ]);
 const filteredRegions = ref([...regions.value]);
-
+const supplier_uuid = page.props.auth.user.company.uuid;
 // Form for warehouse
 const form = useForm({
   name: '',
@@ -371,18 +372,18 @@ const form = useForm({
   country: 'Kenya',
   region: '',
   gps: '',
-  company_id: 1,
+  company_id: user.company_id,
   created_by: user.id
 });
 
 // Computed properties for filtering and sorting
 const filteredWarehouses = computed(() => {
   if (searchQuery.value.trim() === '') {
-    return props.warehouses;
+    return warehouses.value;
   }
   
   const query = searchQuery.value.toLowerCase();
-  return props.warehouses.filter(warehouse => {
+  return warehouses.value.filter(warehouse => {
     return Object.values(warehouse).some(value => {
       if (value === null || value === undefined) return false;
       return String(value).toLowerCase().includes(query);
@@ -505,6 +506,7 @@ const saveWarehouse = () => {
       preserveScroll: true,
       onSuccess: () => {
         closeWarehouseModal();
+        fetchSupplierWarehouses();
       },
     });
   } else {
@@ -512,8 +514,23 @@ const saveWarehouse = () => {
       preserveScroll: true,
       onSuccess: () => {
         closeWarehouseModal();
+        fetchSupplierWarehouses();
       },
     });
+  }
+};
+
+
+const fetchSupplierWarehouses = async () => {
+  try {
+    const response = await axios.get(
+      route("supplier.warehouses.list", {
+        uuid: supplier_uuid,
+      })
+    );
+    warehouses.value = response.data;
+  } catch (error) {
+    console.error("Error fetching warehouses:", error);
   }
 };
 
@@ -654,6 +671,7 @@ const resetPagination = () => {
 // Lifecycle hooks
 onMounted(() => {
   // Initialize filtered countries and regions
+  fetchSupplierWarehouses();
   filteredCountries.value = [...countries.value];
   filteredRegions.value = [...regions.value];
   

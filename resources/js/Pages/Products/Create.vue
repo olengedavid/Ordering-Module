@@ -27,7 +27,7 @@ const submit = () => {
     preserveScroll: true,
     onSuccess: () => {
       form.reset();
-      route('products.index');
+      window.location.href = route("products.index");
     },
   });
 };

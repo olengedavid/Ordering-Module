@@ -1,4 +1,5 @@
 <template>
+  <AuthenticatedLayout>
     <div class="page-container">
       <div class="content-container">
         <div class="header-container">
@@ -190,14 +191,19 @@
         </div>
       </div>
     </div>
+  </AuthenticatedLayout>
 </template>
   
 <script>
 import { ref, onMounted, computed } from "vue";
 import { usePage, useForm } from "@inertiajs/vue3";
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 
 export default {
   name: 'SupplierUsersPage',
+  components: {
+    AuthenticatedLayout
+  },
   setup() {
     const page = usePage();
     const user = page.props.auth.user;
@@ -215,7 +221,7 @@ export default {
     const perPageOptions = [5, 10, 20, 50];
     
     // Data from API
-    const supplier_uuid = "b2fb3c14-d542-4e6a-baf4-42b472e7c22d";
+    const supplier_uuid = page.props.auth.user.company.uuid;
     
     // Form for creating/editing users
     const newUser = ref({

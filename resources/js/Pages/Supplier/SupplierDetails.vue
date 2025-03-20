@@ -163,7 +163,7 @@
             <!-- Warehouses Tab Content -->
             <div v-if="activeTab === 'warehouses'" class="tab-content">
               <div class="table-controls">
-                <div class="table-title">Warehouses</div>
+                <div class="table-title">Warehouses </div>
                 <button @click="openAddWarehouseModal" class="add-btn">
                   <span class="plus-icon">+</span>
                   Add Warehouse

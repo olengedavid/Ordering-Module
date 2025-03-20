@@ -1,14 +1,33 @@
 <script setup>
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, Link } from "@inertiajs/vue3";
+import { ref, onMounted } from "vue";
+import { useForm, router, usePage} from "@inertiajs/vue3";
 
-defineProps({
-  products: {
-    type: Array,
-    required: true,
-  },
-});
+// defineProps({
+//   products: {
+//     type: Array,
+//     required: true,
+//   },
+// });
+const page = usePage();
+const user = page.props.auth.user;
+const supplier_uuid = page.props.auth.user.company.uuid;
+const products = ref([]);
 
+const fetchSupplierProducts = async () => {
+  // loading.value = true;
+  try {
+    const response = await axios.get(
+      route("supplier.products.list", {
+        uuid: supplier_uuid,
+      })
+    );
+    products.value = response.data;
+  } catch (error) {
+    console.error("Error fetching products:", error);
+  }
+};
 
 const getPrimaryImagePath = (product) => {
   const images = typeof product.images === 'string' 
@@ -17,6 +36,10 @@ const getPrimaryImagePath = (product) => {
     
   return images?.find(img => img.type === 'primary')?.path || '';
 };
+
+onMounted(() => {
+  fetchSupplierProducts();
+});
 </script>
 
 <template>

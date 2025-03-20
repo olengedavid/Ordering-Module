@@ -35,11 +35,9 @@ class ProductController extends Controller
 
     public function index(): \Inertia\Response
     {
-        $products = Product::latest()->get();
+        // $products = Product::latest()->get();
 
-        return Inertia::render('Products/Index', [
-            'products' => $products
-        ]);
+        return Inertia::render('Products/Index');
     }
 
     public function getProductsBySupplier(Request $request)

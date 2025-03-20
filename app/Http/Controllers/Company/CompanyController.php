@@ -88,6 +88,7 @@ class CompanyController extends Controller
                 'email' => $request->email,
                 'password' => Hash::make('password123'), // You might want to generate this or get it from the request
                 'status' => 'active',
+                'user_type' => 'supplier',
                 'company_id' => $company->id,
             ]);
 

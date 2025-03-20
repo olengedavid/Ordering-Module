@@ -12,7 +12,7 @@ import axios from "axios";
 const showingModal = ref(false);
 const page = usePage();
 const user = page.props.auth.user;
-const supplier_uuid = "a0405292-dc2c-44ad-88c4-302caad40239";
+const supplier_uuid = page.props.auth.user.company.uuid;
 
 const inventories = ref([]);
 const products = ref([]);

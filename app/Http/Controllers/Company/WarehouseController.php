@@ -10,13 +10,18 @@ use Inertia\Response;
 
 class WarehouseController extends Controller{
 
-    public function index() : Response
-     {
-        $warehouses = Warehouse::latest()->get();
+    // public function index() : Response
+    //  {
+    //     $warehouses = Warehouse::latest()->get();
 
-        return Inertia::render('Supplier/SupplierWarehouses', [
-            'warehouses' => $warehouses
-        ]);
+    //     return Inertia::render('Supplier/SupplierWarehouses', [
+    //         'warehouses' => $warehouses
+    //     ]);
+    //  }
+
+     public function index()
+     {
+        return Inertia::render('Supplier/SupplierWarehouses');
      }
 
      public function api_store_warehouse(Request $request)
