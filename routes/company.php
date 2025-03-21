@@ -17,6 +17,7 @@ Route::middleware('auth')->group(function () {
     Route::post('supplier/bank-accounts', [CompanyBankAccountController::class, 'store'])->name('supplier.bank-accounts.store');
     Route::put('supplier/bank-accounts', [CompanyBankAccountController::class, 'update'])->name('supplier.bank-accounts.update');
     Route::delete('supplier/bank-accounts', [CompanyBankAccountController::class, 'destroy'])->name('supplier.bank-accounts.destroy');
+    Route::get('supplier/bank-accounts/list', [CompanyBankAccountController::class, 'getByCompany'])->name('supplier.bank-accounts.list');
 
     #Delivery Regions Routes
     Route::get('supplier/delivery-regions', [DeliveryRegionController::class, 'getDeliveryRegionsByCompany'])->name('supplier.delivery-regions.index');

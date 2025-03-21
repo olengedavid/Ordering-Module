@@ -188,6 +188,8 @@ export default {
       isBankDropdownOpen: false,
       bankSearch: '',
       filteredBanks: [],
+      localBankAccounts: [],
+      loading: false,
       banks: [
         'Absa Bank Kenya',
         'Access Bank Kenya',
@@ -229,7 +231,7 @@ export default {
   },
   computed: {
     sortedBankAccounts() {
-      const accounts = [...this.bankAccounts];
+      const accounts = [...this.getBankAccounts()];
       accounts.sort((a, b) => {
         let modifier = this.sortDir === 'asc' ? 1 : -1;
         // Handle different property name formats
@@ -264,12 +266,72 @@ export default {
     
     // Add event listener for closing dropdowns when clicking outside
     document.addEventListener('click', this.closeBankDropdownOutside);
+    
+    // Load bank accounts if not provided through props
+    this.loadBankAccounts();
   },
   beforeDestroy() {
     // Remove event listener when component is destroyed
     document.removeEventListener('click', this.closeBankDropdownOutside);
   },
   methods: {
+    getBankAccounts() {
+      // Return props.bankAccounts if it has data, otherwise use local data
+      return (this.bankAccounts && this.bankAccounts.length > 0) ? this.bankAccounts : this.localBankAccounts;
+    },
+    loadBankAccounts() {
+      // If bank accounts already provided by props, just process them
+      if (this.bankAccounts && this.bankAccounts.length > 0) {
+        this.processReceivedAccounts(this.bankAccounts);
+        return;
+      }
+      
+      // Otherwise, fetch the bank accounts
+      if (!this.supplier || !this.supplier.uuid) {
+        console.error('Cannot load bank accounts: No supplier UUID provided');
+        return;
+      }
+      
+      this.loading = true;
+      
+      // Use fetch API to get the bank accounts data
+      fetch(route('supplier.bank-accounts.list') + '?company_uuid=' + this.supplier.uuid)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok: ' + response.statusText);
+          }
+          return response.json();
+        })
+        .then(data => {
+          if (data.bankAccounts) {
+            this.processReceivedAccounts(data.bankAccounts);
+          }
+          this.loading = false;
+        })
+        .catch(error => {
+          console.error('Error fetching bank accounts:', error);
+          this.loading = false;
+        });
+    },
+    processReceivedAccounts(accounts) {
+      try {
+        if (accounts && Array.isArray(accounts) && accounts.length > 0) {
+          // Make a deep copy to avoid mutating props directly
+          const normalizedAccounts = accounts.map(account => this.normalizeBankAccount(account));
+          
+          // Assign IDs if missing
+          normalizedAccounts.forEach((account, index) => {
+            if (!account.id) {
+              account.id = index + 1;
+            }
+          });
+          
+          this.localBankAccounts = normalizedAccounts;
+        }
+      } catch (error) {
+        console.error('Error processing bank accounts:', error);
+      }
+    },
     openAddBankAccountModal() {
       this.editingBankAccount = false;
       this.editingBankAccountId = null;
@@ -278,7 +340,7 @@ export default {
         branch: '',
         accountName: this.supplier ? this.supplier.companyName : '',
         accountNumber: '',
-        isPrimary: this.bankAccounts.length === 0 // Set as primary if it's the first account
+        isPrimary: this.getBankAccounts().length === 0 // Set as primary if it's the first account
       };
       this.showBankAccountModal = true;
       this.isBankDropdownOpen = false;
@@ -367,6 +429,7 @@ export default {
             preserveScroll: true,
             onSuccess: () => {
               this.closeBankAccountModal();
+              this.loadBankAccounts();
             },
             onError: (errors) => {
               alert('Error updating bank account');
@@ -379,6 +442,7 @@ export default {
             preserveScroll: true,
             onSuccess: () => {
               this.closeBankAccountModal();
+              this.loadBankAccounts();
             },
             onError: (errors) => {
               alert('Error creating bank account');
@@ -393,7 +457,7 @@ export default {
     },
     setPrimaryAccount(accountId) {
       // Get the account object to find its UUID
-      const account = this.bankAccounts.find(acc => acc.id === accountId);
+      const account = this.getBankAccounts().find(acc => acc.id === accountId);
       if (!account || !account.uuid) {
         alert('Could not find bank account to set as primary');
         return;
@@ -409,6 +473,9 @@ export default {
         is_primary: true
       }, {
         preserveScroll: true,
+        onSuccess: () => {
+          this.loadBankAccounts();
+        },
         onError: (errors) => {
           // Handle errors to prevent unresponsiveness
           alert('Error setting bank account as primary');
@@ -418,7 +485,7 @@ export default {
     },
     deleteBankAccount(accountId) {
       // Get the account object to find its UUID
-      const account = this.bankAccounts.find(acc => acc.id === accountId);
+      const account = this.getBankAccounts().find(acc => acc.id === accountId);
       if (!account || !account.uuid) {
         alert('Could not find bank account to delete');
         return;
@@ -428,6 +495,9 @@ export default {
       router.delete(route('supplier.bank-accounts.destroy'), {
         data: { uuid: account.uuid },
         preserveScroll: true,
+        onSuccess: () => {
+          this.loadBankAccounts();
+        },
         onError: (errors) => {
           // Handle errors to prevent unresponsiveness
           alert('Error deleting bank account');
