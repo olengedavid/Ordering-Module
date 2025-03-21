@@ -1,0 +1,212 @@
+@layer components {
+  .page-container {
+    @apply flex justify-center bg-[#f5f7fa] min-h-screen p-10 font-['Inter','Segoe_UI',Roboto,sans-serif];
+  }
+
+  .content-container {
+    @apply w-[1200px] max-w-full rounded-xl p-6;
+  }
+
+  .header-container {
+    @apply flex justify-between items-center mb-6;
+  }
+
+  .page-title {
+    @apply text-[1.8rem] text-[#1e293b] font-semibold m-0;
+  }
+
+  .table-controls {
+    @apply flex justify-between items-center mb-4;
+  }
+
+  .search-container {
+    @apply relative w-[300px];
+  }
+
+  .search-icon {
+    @apply absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b];
+  }
+
+  .search-input {
+    @apply w-full py-2.5 px-10 border border-[#e2e8f0] rounded-md text-sm text-[#1e293b] bg-white transition-colors;
+  }
+
+  .search-input:focus {
+    @apply outline-none border-[#0E64A5] shadow-[0_0_0_2px_rgba(14,100,165,0.1)];
+  }
+
+  .add-btn {
+    @apply flex items-center px-4 py-2.5 bg-[#0E64A5] text-white border-0 rounded-md text-[0.95rem] font-medium cursor-pointer transition-colors;
+  }
+
+  .add-btn:hover {
+    @apply bg-[#0a4f83];
+  }
+
+  .plus-icon {
+    @apply text-lg mr-2 font-bold;
+  }
+
+  .product-image-cell {
+    @apply min-w-[80px] w-[80px] p-[5px];
+  }
+
+  .product-image {
+    @apply w-[60px] h-[60px] object-contain rounded;
+  }
+
+  .status-pill {
+    @apply inline-block px-2 py-1 rounded-xl text-xs font-medium;
+  }
+
+  .status-in-stock {
+    @apply bg-green-100/10 text-green-700;
+  }
+
+  .status-replenish {
+    @apply bg-yellow-100/10 text-yellow-700;
+  }
+
+  .status-out-of-stock {
+    @apply bg-red-100/10 text-red-700;
+  }
+
+  .action-btn {
+    @apply bg-transparent border border-gray-200 rounded px-2.5 py-1.5 text-sm mr-1.5 cursor-pointer transition-all;
+  }
+
+  .edit-btn {
+    @apply text-[#0E64A5] border-[#0E64A5];
+  }
+
+  .edit-btn:hover {
+    @apply bg-[rgba(14,100,165,0.05)];
+  }
+
+  .delete-btn {
+    @apply text-red-500 border-red-500;
+  }
+
+  .delete-btn:hover {
+    @apply bg-[rgba(239,68,68,0.05)];
+  }
+
+  .empty-state {
+    @apply text-center text-gray-500 py-8 italic;
+  }
+
+  .pagination-controls {
+    @apply flex justify-between items-center mt-6;
+  }
+
+  .per-page {
+    @apply flex items-center gap-2 text-gray-500 text-sm;
+  }
+
+  .per-page-select {
+    @apply py-1.5 px-2 border border-gray-200 rounded text-sm;
+  }
+
+  .table-container {
+    @apply relative w-full bg-white rounded-lg overflow-hidden shadow-[0_2px_6px_rgba(0,0,0,0.05)] mb-6;
+  }
+  .table-wrapper {
+    @apply w-full overflow-x-auto pb-1.5;
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+  }
+
+  /* Customize scrollbar for Webkit browsers */
+  .table-wrapper::-webkit-scrollbar {
+    @apply h-2;
+  }
+
+  .table-wrapper::-webkit-scrollbar-track {
+    @apply bg-gray-100 rounded;
+  }
+
+  .table-wrapper::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 rounded hover:bg-gray-400;
+  }
+
+  .data-table {
+    @apply w-full border-separate border-spacing-0 text-[0.95rem];
+    min-width: 900px;
+    table-layout: auto;
+  }
+
+  .data-table th,
+  .data-table td {
+    @apply whitespace-nowrap;
+    min-width: 120px;
+  }
+
+  .data-table th.sortable {
+    @apply cursor-pointer select-none;
+  }
+}
+
+@layer components {
+  .navbar {
+    @apply bg-white border-b border-gray-100;
+  }
+
+  .navbar-container {
+    @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+
+  .logo-container {
+    @apply flex shrink-0 items-center;
+  }
+
+  .logo-link {
+    @apply flex items-center;
+  }
+
+  .nav-link {
+    @apply px-4 py-2 inline-flex items-center text-sm font-medium transition-colors duration-200;
+  }
+
+  .nav-link-active {
+    @apply text-[#2263ab] border-b-2 border-[#2263ab];
+  }
+
+  .nav-link-disabled {
+    @apply opacity-50 cursor-not-allowed pointer-events-none;
+  }
+
+  .nav-icon {
+    @apply w-5 h-5 mr-2;
+  }
+
+  
+}
+
+@layer components {
+  /* Table header styles */
+  .table-header {
+    @apply bg-[#f8fafc] text-[#64748b] font-semibold text-left px-[15px] py-[14px] border-b border-[#e5e7eb];
+  }
+
+  .table-header-sortable {
+    @apply cursor-pointer select-none;
+  }
+
+  .table-header-text {
+    @apply uppercase text-xs;
+  }
+
+  /* Table cell styles */
+  .table-cell {
+    @apply px-[15px] py-[14px] border-b border-[#e5e7eb] text-[#334155] text-left;
+  }
+
+  /* Status pill variations */
+  .status-pill-active {
+    @apply px-2 py-1 text-xs rounded-full bg-green-100 text-green-800;
+  }
+
+  .status-pill-inactive {
+    @apply px-2 py-1 text-xs rounded-full bg-red-100 text-red-800;
+  }
+}
