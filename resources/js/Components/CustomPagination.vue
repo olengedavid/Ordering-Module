@@ -56,7 +56,7 @@ const changePage = (page) => {
         Previous
       </button>
 
-      <span class="px-3 py-1 text-sm bg-blue-500 text-white rounded">
+      <span class="px-3 py-1 text-sm bg-primary-blue text-white rounded">
         {{ currentPage }}
       </span>
 

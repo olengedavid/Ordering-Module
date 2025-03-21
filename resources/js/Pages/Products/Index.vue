@@ -14,7 +14,7 @@ const products = ref([]);
 const showingModal = ref(false);
 
 const currentPage = ref(1);
-const perPage = ref(3);
+const perPage = ref(10);
 const lastPage = ref(1);
 
 const form = useForm({
