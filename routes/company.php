@@ -24,6 +24,7 @@ Route::middleware('auth')->group(function () {
 
     #Product Routes
     Route::get('supplier/products', [ProductController::class, 'index'])->name('products.index');
+    Route::get('supplier/products/paginate', [ProductController::class, 'getPaginatedProductsBySupplier'])->name('supplier.products.paginate');
     Route::get('supplier/products/list', [ProductController::class, 'getProductsBySupplier'])->name('supplier.products.list');
     Route::get('products/create', [ProductController::class, 'create'])->name('products.create');
     Route::post('products/create', [ProductController::class, 'store'])->name('products.store');

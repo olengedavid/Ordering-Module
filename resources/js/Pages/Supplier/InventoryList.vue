@@ -11,7 +11,7 @@ import axios from "axios";
 import CustomPagination from "@/Components/CustomPagination.vue";
 
 const currentPage = ref(1);
-const perPage = ref(1);
+const perPage = ref(10);
 const lastPage = ref(1);
 
 const showingModal = ref(false);
@@ -81,13 +81,13 @@ const fetchWarehouses = async () => {
   }
 };
 
-const fetchInventories = async (page = 1) => {
+const fetchInventories = async () => {
   loading.value = true;
   try {
     const response = await axios.get(
       route("supplier.inventories.list", {
         uuid: supplier_uuid,
-        page: page,
+        page: currentPage.value,
         per_page: perPage.value,
       })
     );
