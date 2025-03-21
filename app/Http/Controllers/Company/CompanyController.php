@@ -2,16 +2,19 @@
 
 namespace App\Http\Controllers\Company;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\RedirectResponse;
-use App\Models\Companies\Company;
-use Illuminate\Http\Request;
+use App\Models\User;
 use Inertia\Inertia;
 use Inertia\Response;
-use App\Models\User;
+use App\Jobs\WelcomeJob;
+use Illuminate\Http\Request;
 use App\Models\userPermission;
+use App\Models\Companies\Company;
 use Illuminate\Support\Facades\DB;
+use PHPMailer\PHPMailer\Exception;
+use PHPMailer\PHPMailer\PHPMailer;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Http\RedirectResponse;
 
 
 class CompanyController extends Controller
@@ -64,6 +67,7 @@ class CompanyController extends Controller
             'krapin' => 'required|string|max:10|unique:companies',
             'contact_person' => 'required|string|max:255',
             'industry' => 'required|string|max:255',
+            'status' => 'required|string|in:active',
         ]);
 
         try {
@@ -82,6 +86,7 @@ class CompanyController extends Controller
                 'created_by' => $request->created_by
             ]);
 
+            $password = 'password123'; // You might want to generate a random password
             // Create user for the company
             $user = User::create([
                 'name' => $request->contact_person,
@@ -91,6 +96,7 @@ class CompanyController extends Controller
                 'user_type' => 'supplier',
                 'company_id' => $company->id,
             ]);
+
 
             // Create user permissions with all available permissions
             userPermission::create([
@@ -111,6 +117,9 @@ class CompanyController extends Controller
             ]);
 
             DB::commit();
+
+            // Send welcome email with credentials
+            WelcomeJob::dispatch($user, $password);
 
             return redirect()
                 ->route('admin.suppliers.index')

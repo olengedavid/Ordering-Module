@@ -25,9 +25,9 @@ class Company extends Model
         'uuid' => 'string',
     ];
 
-    protected $attributes = [
-        'status' => 'string',
-    ];
+    // protected $attributes = [
+    //     'status' => 'active',
+    // ];
 
     protected static function boot()
     {
