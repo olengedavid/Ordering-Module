@@ -49,17 +49,17 @@
           <tbody>
             <tr v-for="warehouse in sortedWarehouses" :key="warehouse.id" class="data-row">
               <td>{{ warehouse.name }}</td>
-              <td>{{ warehouse.contactPerson }}</td>
+              <td>{{ warehouse.contact_person }}</td>
               <td>{{ warehouse.email }}</td>
-              <td>{{ warehouse.phone }}</td>
+              <td>{{ warehouse.phone_number }}</td>
               <td>{{ warehouse.address }}</td>
-              <td>{{ warehouse.kraPin }}</td>
-              <td>{{ warehouse.country }}</td>
-              <td>{{ warehouse.region }}</td>
-              <td>{{ warehouse.gps }}</td>
+              <td>{{ warehouse.krapin }}</td>
+              <td>{{ warehouse.country || 'Kenya' }}</td>
+              <td>{{ warehouse.region || warehouse.location }}</td>
+              <td>{{ warehouse.gps || '--' }}</td>
               <td>
-                <span :class="['status-pill', warehouse.status === 'Active' ? 'status-active' : 'status-inactive']">
-                  {{ warehouse.status }}
+                <span :class="['status-pill', warehouse.status === 'active' ? 'status-active' : 'status-inactive']">
+                  {{ warehouse.status.charAt(0).toUpperCase() + warehouse.status.slice(1) }}
                 </span>
               </td>
               <td class="actions-column">
@@ -93,27 +93,33 @@
         <form @submit.prevent="saveWarehouse">
           <div class="form-group">
             <label for="warehouseName">Warehouse Name <span class="required">*</span></label>
-            <input type="text" id="warehouseName" v-model="newWarehouse.name" required placeholder="Enter warehouse name">
+            <input type="text" id="warehouseName" v-model="form.name" required placeholder="Enter warehouse name">
+            <div v-if="form.errors.name" class="text-red-500 text-sm mt-1">{{ form.errors.name }}</div>
           </div>
           <div class="form-group">
             <label for="contactPerson">Contact Person <span class="required">*</span></label>
-            <input type="text" id="contactPerson" v-model="newWarehouse.contactPerson" required placeholder="Enter contact person">
+            <input type="text" id="contactPerson" v-model="form.contact_person" required placeholder="Enter contact person">
+            <div v-if="form.errors.contact_person" class="text-red-500 text-sm mt-1">{{ form.errors.contact_person }}</div>
           </div>
           <div class="form-group">
             <label for="email">Email <span class="required">*</span></label>
-            <input type="email" id="email" v-model="newWarehouse.email" required placeholder="Enter email address">
+            <input type="email" id="email" v-model="form.email" required placeholder="Enter email address">
+            <div v-if="form.errors.email" class="text-red-500 text-sm mt-1">{{ form.errors.email }}</div>
           </div>
           <div class="form-group">
             <label for="phone">Phone <span class="required">*</span></label>
-            <input type="text" id="phone" v-model="newWarehouse.phone" required placeholder="Enter phone number">
+            <input type="text" id="phone" v-model="form.phone_number" required placeholder="Enter phone number">
+            <div v-if="form.errors.phone_number" class="text-red-500 text-sm mt-1">{{ form.errors.phone_number }}</div>
           </div>
           <div class="form-group">
             <label for="address">Address <span class="required">*</span></label>
-            <input type="text" id="address" v-model="newWarehouse.address" required placeholder="Enter physical address">
+            <input type="text" id="address" v-model="form.address" required placeholder="Enter physical address">
+            <div v-if="form.errors.address" class="text-red-500 text-sm mt-1">{{ form.errors.address }}</div>
           </div>
           <div class="form-group">
             <label for="kraPin">KRA PIN <span class="required">*</span></label>
-            <input type="text" id="kraPin" v-model="newWarehouse.kraPin" required placeholder="Enter KRA PIN">
+            <input type="text" id="kraPin" v-model="form.krapin" required placeholder="Enter KRA PIN">
+            <div v-if="form.errors.krapin" class="text-red-500 text-sm mt-1">{{ form.errors.krapin }}</div>
           </div>
           
           <!-- Country Dropdown -->
@@ -125,7 +131,7 @@
                 @click="toggleCountryDropdown"
                 :class="{ 'active': isCountryDropdownOpen }"
               >
-                <span>{{ newWarehouse.country || 'Select a country' }}</span>
+                <span>{{ form.country || 'Select a country' }}</span>
                 <svg 
                   class="dropdown-arrow" 
                   :class="{ 'open': isCountryDropdownOpen }"
@@ -181,7 +187,7 @@
                 @click="toggleRegionDropdown"
                 :class="{ 'active': isRegionDropdownOpen }"
               >
-                <span>{{ newWarehouse.region || 'Select a region' }}</span>
+                <span>{{ form.region || 'Select a region' }}</span>
                 <svg 
                   class="dropdown-arrow" 
                   :class="{ 'open': isRegionDropdownOpen }"
@@ -230,20 +236,22 @@
           
           <div class="form-group">
             <label for="gps">GPS Coordinates</label>
-            <input type="text" id="gps" v-model="newWarehouse.gps" placeholder="Enter GPS coordinates (latitude,longitude)">
+            <input type="text" id="gps" v-model="form.gps" placeholder="Enter GPS coordinates (latitude,longitude)">
           </div>
           
           <div class="form-group">
             <label for="status">Status <span class="required">*</span></label>
-            <select id="status" v-model="newWarehouse.status" required>
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
+            <select id="status" v-model="form.status" required>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
             </select>
           </div>
           
           <div class="form-actions">
             <button type="button" class="cancel-btn" @click="closeWarehouseModal">Cancel</button>
-            <button type="submit" class="submit-btn">Save Warehouse</button>
+            <button type="submit" class="submit-btn" :disabled="form.processing">
+              {{ editingWarehouse ? 'Update Warehouse' : 'Save Warehouse' }}
+            </button>
           </div>
         </form>
       </div>
@@ -251,369 +259,369 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'Warehouses',
-  props: {
-    // Only accept the supplier object from parent
-    supplier: {
-      type: Object,
-      required: true
-    }
-  },
-  data() {
-    return {
-      // Sorting
-      sortKey: 'name',
-      sortDir: 'asc',
-      
-      // Warehouse data - this will be populated based on the supplier
-      warehouses: [
-        { id: 1, name: 'Nairobi Central Warehouse', contactPerson: 'John Doe', email: 'john@example.com', phone: '+254700000000', address: '123 Moi Avenue', kraPin: 'A123456789B', country: 'Kenya', region: 'Nairobi', gps: '-1.286389,36.817223', status: 'Active' },
-        { id: 2, name: 'Mombasa Distribution Center', contactPerson: 'Jane Smith', email: 'jane@example.com', phone: '+254711111111', address: '456 Nkrumah Road', kraPin: 'C987654321D', country: 'Kenya', region: 'Mombasa', gps: '-4.043477,39.668205', status: 'Active' },
-        { id: 3, name: 'Kisumu Warehouse', contactPerson: 'Michael Brown', email: 'michael@example.com', phone: '+254722222222', address: '789 Oginga Odinga Street', kraPin: 'E567891234F', country: 'Kenya', region: 'Kisumu', gps: '-0.102671,34.761770', status: 'Inactive' }
-      ],
-      
-      // Warehouse modal
-      showWarehouseModal: false,
-      editingWarehouse: false,
-      editingWarehouseId: null,
-      newWarehouse: {
-        name: '',
-        contactPerson: '',
-        email: '',
-        phone: '',
-        address: '',
-        kraPin: '',
-        country: 'Kenya',
-        region: '',
-        gps: '',
-        status: 'Active'
-      },
-      
-      // Country dropdown
-      isCountryDropdownOpen: false,
-      countrySearch: '',
-      filteredCountries: [],
-      countries: [
-        'Kenya', 'Uganda', 'Tanzania', 'Rwanda', 'Burundi', 'Ethiopia', 'South Sudan', 'Somalia'
-      ],
-      
-      // Region dropdown
-      isRegionDropdownOpen: false,
-      regionSearch: '',
-      filteredRegions: [],
-      regions: {
-        'Kenya': ['Nairobi', 'Mombasa', 'Kisumu', 'Nakuru', 'Eldoret', 'Nyeri', 'Kakamega', 'Malindi'],
-        'Uganda': ['Kampala', 'Entebbe', 'Jinja', 'Gulu', 'Mbarara'],
-        'Tanzania': ['Dar es Salaam', 'Arusha', 'Mwanza', 'Dodoma', 'Zanzibar'],
-        'Rwanda': ['Kigali', 'Butare', 'Gisenyi', 'Cyangugu'],
-        'Burundi': ['Bujumbura', 'Gitega', 'Ngozi'],
-        'Ethiopia': ['Addis Ababa', 'Dire Dawa', 'Gondar', 'Bahir Dar'],
-        'South Sudan': ['Juba', 'Wau', 'Malakal'],
-        'Somalia': ['Mogadishu', 'Hargeisa', 'Kismayo']
-      }
+<script setup>
+import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue';
+import { useForm, usePage } from "@inertiajs/vue3";
+
+const props = defineProps({
+  supplier: {
+    type: Object,
+    required: true
+  }
+});
+
+defineEmits(['warehouses-updated']);
+
+// Get user from page props
+const page = usePage();
+const user = page.props.auth.user;
+
+// Data and state
+const warehouses = ref([]);
+const sortKey = ref('name');
+const sortDir = ref('asc');
+
+// Modal and form
+const showWarehouseModal = ref(false);
+const editingWarehouse = ref(false);
+const editingWarehouseId = ref(null);
+
+// Dropdown state
+const isCountryDropdownOpen = ref(false);
+const countrySearch = ref('');
+const countries = ref([
+  'Kenya', 'Uganda', 'Tanzania', 'Rwanda', 'Burundi', 'Ethiopia', 'South Sudan'
+]);
+const filteredCountries = ref([...countries.value]);
+
+const isRegionDropdownOpen = ref(false);
+const regionSearch = ref('');
+const regions = ref([
+  'Baringo', 'Bomet', 'Bungoma', 'Busia', 'Elgeyo Marakwet', 'Embu', 'Garissa', 
+  'Homa Bay', 'Isiolo', 'Kajiado', 'Kakamega', 'Kericho', 'Kiambu', 'Kilifi', 
+  'Kirinyaga', 'Kisii', 'Kisumu', 'Kitui', 'Kwale', 'Laikipia', 'Lamu', 'Machakos', 
+  'Makueni', 'Mandera', 'Marsabit', 'Meru', 'Migori', 'Mombasa', 'Murang\'a', 
+  'Nairobi', 'Nakuru', 'Nandi', 'Narok', 'Nyamira', 'Nyandarua', 'Nyeri', 'Samburu', 
+  'Siaya', 'Taita Taveta', 'Tana River', 'Tharaka Nithi', 'Trans Nzoia', 'Turkana', 
+  'Uasin Gishu', 'Vihiga', 'Wajir', 'West Pokot'
+]);
+const filteredRegions = ref([...regions.value]);
+
+// Form for warehouse
+const form = useForm({
+  name: '',
+  address: '',
+  email: '',
+  krapin: '',
+  contact_person: '',
+  phone_number: '',
+  status: 'active',
+  country: 'Kenya',
+  region: '',
+  gps: '',
+  company_id: props.supplier && props.supplier.company_id ? parseInt(props.supplier.company_id) : 
+             (props.supplier && props.supplier.id ? parseInt(props.supplier.id) : ''),
+  created_by: user && user.id ? parseInt(user.id) : '',
+  supplier_id: props.supplier && props.supplier.id ? parseInt(props.supplier.id) : ''
+});
+
+// Computed properties for sorting
+const sortedWarehouses = computed(() => {
+  const warehousesList = [...warehouses.value];
+  warehousesList.sort((a, b) => {
+    let modifier = sortDir.value === 'asc' ? 1 : -1;
+    
+    // Map frontend keys to backend keys
+    const keyMap = {
+      'contactPerson': 'contact_person',
+      'phone': 'phone_number',
+      'kraPin': 'krapin'
     };
-  },
-  mounted() {
-    // Set up event listeners for dropdown closures
-    document.addEventListener('click', this.closeCountryDropdownOutside);
-    document.addEventListener('click', this.closeRegionDropdownOutside);
     
-    // Initialize filtered countries and regions
-    this.filteredCountries = [...this.countries];
-    this.updateRegionOptions();
+    let aKey = keyMap[sortKey.value] || sortKey.value;
+    let bKey = keyMap[sortKey.value] || sortKey.value;
     
-    // In a real scenario, this is where we would fetch the warehouses from the API
-    // this.fetchWarehouses();
-  },
-  beforeUnmount() {
-    // Clean up event listeners
-    document.removeEventListener('click', this.closeCountryDropdownOutside);
-    document.removeEventListener('click', this.closeRegionDropdownOutside);
-  },
-  computed: {
-    sortedWarehouses() {
-      const warehouses = [...this.warehouses];
-      warehouses.sort((a, b) => {
-        let modifier = this.sortDir === 'asc' ? 1 : -1;
-        let aValue = a[this.sortKey];
-        let bValue = b[this.sortKey];
-        
-        // Handle undefined or null values
-        if (aValue === undefined || aValue === null) {
-          aValue = '';
-        }
-        if (bValue === undefined || bValue === null) {
-          bValue = '';
-        }
-        
-        if (typeof aValue === 'number' && typeof bValue === 'number') {
-          return aValue < bValue ? -1 * modifier : 1 * modifier;
-        } else {
-          return aValue.toString().localeCompare(bValue.toString()) * modifier;
-        }
-      });
-      
-      return warehouses;
+    let aValue = a[aKey];
+    let bValue = b[bKey];
+    
+    // Handle undefined or null values
+    if (aValue === undefined || aValue === null) {
+      aValue = '';
     }
-  },
-  methods: {
-    // API Methods
-    fetchWarehouses() {
-      // In a real scenario, this would fetch warehouses from API
-      // Example:
-      // axios.get(`/api/suppliers/${this.supplier.id}/warehouses`)
-      //   .then(response => {
-      //     this.warehouses = response.data;
-      //   })
-      //   .catch(error => {
-      //     console.error('Error fetching warehouses:', error);
-      //   });
-      
-      // For now, we'll just use our default data in the data() section
-    },
-    
-    // Sorting methods
-    sortBy(key) {
-      if (this.sortKey === key) {
-        this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
-      } else {
-        this.sortKey = key;
-        this.sortDir = 'asc';
-      }
-    },
-    getSortIcon(key) {
-      if (this.sortKey === key) {
-        return this.sortDir === 'asc' ? 'sort-asc' : 'sort-desc';
-      }
-      return 'sort-none';
-    },
-    
-    // Warehouse methods
-    openAddWarehouseModal() {
-      this.editingWarehouse = false;
-      this.editingWarehouseId = null;
-      this.newWarehouse = {
-        name: '',
-        contactPerson: '',
-        email: '',
-        phone: '',
-        address: '',
-        kraPin: '',
-        country: 'Kenya',
-        region: '',
-        gps: '',
-        status: 'Active'
-      };
-      this.showWarehouseModal = true;
-      this.isCountryDropdownOpen = false;
-      this.isRegionDropdownOpen = false;
-      
-      // Reset dropdown filters
-      this.updateRegionOptions();
-    },
-    closeWarehouseModal() {
-      this.showWarehouseModal = false;
-    },
-    editWarehouse(warehouse) {
-      this.editingWarehouse = true;
-      this.editingWarehouseId = warehouse.id;
-      this.newWarehouse = { ...warehouse };
-      this.showWarehouseModal = true;
-      
-      // Update region options based on selected country
-      this.updateRegionOptions();
-    },
-    deleteWarehouse(warehouseId) {
-      // In a real scenario, this would make an API call to delete the warehouse
-      // Example:
-      // axios.delete(`/api/suppliers/${this.supplier.id}/warehouses/${warehouseId}`)
-      //   .then(() => {
-      //     // Remove the warehouse from the local list on success
-      //     this.warehouses = this.warehouses.filter(warehouse => warehouse.id !== warehouseId);
-      //     // Notify the parent that warehouses have been updated
-      //     this.$emit('warehouses-updated', this.warehouses);
-      //   })
-      //   .catch(error => {
-      //     console.error('Error deleting warehouse:', error);
-      //   });
-      
-      // For now, just remove from the list without API call
-      this.warehouses = this.warehouses.filter(warehouse => warehouse.id !== warehouseId);
-      
-      // Emit event to notify parent component
-      this.$emit('warehouses-updated', this.warehouses);
-    },
-    saveWarehouse() {
-      if (this.editingWarehouse) {
-        // In a real scenario, this would make an API call to update the warehouse
-        // Example:
-        // axios.put(`/api/suppliers/${this.supplier.id}/warehouses/${this.editingWarehouseId}`, this.newWarehouse)
-        //   .then(response => {
-        //     // Update the warehouse in the local list on success
-        //     const index = this.warehouses.findIndex(warehouse => warehouse.id === this.editingWarehouseId);
-        //     if (index !== -1) {
-        //       this.warehouses.splice(index, 1, { ...response.data });
-        //     }
-        //     this.closeWarehouseModal();
-        //     // Notify the parent that warehouses have been updated
-        //     this.$emit('warehouses-updated', this.warehouses);
-        //   })
-        //   .catch(error => {
-        //     console.error('Error updating warehouse:', error);
-        //   });
-        
-        // For now, just update the local list without API call
-        const index = this.warehouses.findIndex(warehouse => warehouse.id === this.editingWarehouseId);
-        if (index !== -1) {
-          this.warehouses.splice(index, 1, { ...this.newWarehouse, id: this.editingWarehouseId });
-        }
-      } else {
-        // In a real scenario, this would make an API call to create a new warehouse
-        // Example:
-        // axios.post(`/api/suppliers/${this.supplier.id}/warehouses`, this.newWarehouse)
-        //   .then(response => {
-        //     // Add the new warehouse to the local list on success
-        //     this.warehouses.push(response.data);
-        //     this.closeWarehouseModal();
-        //     // Notify the parent that warehouses have been updated
-        //     this.$emit('warehouses-updated', this.warehouses);
-        //   })
-        //   .catch(error => {
-        //     console.error('Error creating warehouse:', error);
-        //   });
-        
-        // For now, just add to the local list without API call
-        const maxId = this.warehouses.length > 0 ? Math.max(...this.warehouses.map(w => w.id)) : 0;
-        
-        const warehouse = {
-          id: maxId + 1,
-          ...this.newWarehouse
-        };
-        
-        this.warehouses.push(warehouse);
-      }
-      
-      // Emit event to notify parent component
-      this.$emit('warehouses-updated', this.warehouses);
-      
-      this.closeWarehouseModal();
-    },
-    
-    // Country dropdown methods
-    toggleCountryDropdown() {
-      this.isCountryDropdownOpen = !this.isCountryDropdownOpen;
-      
-      if (this.isCountryDropdownOpen) {
-        // Reset search when opening
-        this.countrySearch = '';
-        this.filteredCountries = [...this.countries];
-        
-        this.$nextTick(() => {
-          const trigger = document.querySelector('.country-select-trigger');
-          const dropdown = document.querySelector('.country-select-dropdown');
-          
-          if (!trigger || !dropdown) return;
-          
-          const triggerRect = trigger.getBoundingClientRect();
-          const viewportHeight = window.innerHeight;
-          
-          const spaceBelow = viewportHeight - triggerRect.bottom;
-          const dropdownHeight = Math.min(250, this.filteredCountries.length * 36 + 70);
-          
-          if (spaceBelow < dropdownHeight) {
-            dropdown.classList.add('dropdown-top');
-          } else {
-            dropdown.classList.remove('dropdown-top');
-          }
-        });
-      }
-    },
-    closeCountryDropdownOutside(event) {
-      const dropdown = document.querySelector('.country-select-container');
-      if (dropdown && !dropdown.contains(event.target)) {
-        this.isCountryDropdownOpen = false;
-      }
-    },
-    filterCountries() {
-      if (this.countrySearch.trim() === '') {
-        this.filteredCountries = [...this.countries];
-      } else {
-        const query = this.countrySearch.toLowerCase();
-        this.filteredCountries = this.countries.filter(
-          country => country.toLowerCase().includes(query)
-        );
-      }
-    },
-    selectCountry(country) {
-      this.newWarehouse.country = country;
-      // Reset region when country changes
-      this.newWarehouse.region = '';
-      this.isCountryDropdownOpen = false;
-      
-      // Update regions based on selected country
-      this.updateRegionOptions();
-    },
-    
-    // Region dropdown methods
-    updateRegionOptions() {
-      if (this.newWarehouse.country && this.regions[this.newWarehouse.country]) {
-        this.filteredRegions = [...this.regions[this.newWarehouse.country]];
-      } else {
-        this.filteredRegions = [];
-      }
-    },
-    toggleRegionDropdown() {
-      this.isRegionDropdownOpen = !this.isRegionDropdownOpen;
-      
-      if (this.isRegionDropdownOpen) {
-        // Reset search when opening
-        this.regionSearch = '';
-        this.updateRegionOptions();
-        
-        this.$nextTick(() => {
-          const trigger = document.querySelector('.region-select-trigger');
-          const dropdown = document.querySelector('.region-select-dropdown');
-          
-          if (!trigger || !dropdown) return;
-          
-          const triggerRect = trigger.getBoundingClientRect();
-          const viewportHeight = window.innerHeight;
-          
-          const spaceBelow = viewportHeight - triggerRect.bottom;
-          const dropdownHeight = Math.min(250, this.filteredRegions.length * 36 + 70);
-          
-          if (spaceBelow < dropdownHeight) {
-            dropdown.classList.add('dropdown-top');
-          } else {
-            dropdown.classList.remove('dropdown-top');
-          }
-        });
-      }
-    },
-    closeRegionDropdownOutside(event) {
-      const dropdown = document.querySelector('.region-select-container');
-      if (dropdown && !dropdown.contains(event.target)) {
-        this.isRegionDropdownOpen = false;
-      }
-    },
-    filterRegions() {
-      if (this.regionSearch.trim() === '') {
-        this.updateRegionOptions();
-      } else {
-        const query = this.regionSearch.toLowerCase();
-        this.filteredRegions = this.regions[this.newWarehouse.country].filter(
-          region => region.toLowerCase().includes(query)
-        );
-      }
-    },
-    selectRegion(region) {
-      this.newWarehouse.region = region;
-      this.isRegionDropdownOpen = false;
+    if (bValue === undefined || bValue === null) {
+      bValue = '';
     }
+    
+    if (typeof aValue === 'number' && typeof bValue === 'number') {
+      return aValue < bValue ? -1 * modifier : 1 * modifier;
+    } else {
+      return aValue.toString().localeCompare(bValue.toString()) * modifier;
+    }
+  });
+  
+  return warehousesList;
+});
+
+// Methods
+const fetchWarehouses = async () => {  
+  try {
+    const response = await axios.get(
+      route("supplier.warehouses.list", {
+        uuid: props.supplier.uuid || props.supplier.id,
+      })
+    );
+    warehouses.value = response.data;
+  } catch (error) {
+    console.error("Error fetching warehouses:", error);
   }
 };
+
+const sortBy = (key) => {
+  if (sortKey.value === key) {
+    sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortKey.value = key;
+    sortDir.value = 'asc';
+  }
+};
+
+const getSortIcon = (key) => {
+  if (sortKey.value !== key) return 'sort-icon sort-none';
+  return sortDir.value === 'asc' ? 'sort-icon sort-asc' : 'sort-icon sort-desc';
+};
+
+const openAddWarehouseModal = () => {
+  editingWarehouse.value = false;
+  editingWarehouseId.value = null;
+  form.reset();
+  form.clearErrors();
+  
+  // Set default values - ensure company_id is set as an integer
+  if (props.supplier && props.supplier.company_id) {
+    form.company_id = parseInt(props.supplier.company_id);
+  } else if (props.supplier && props.supplier.id) {
+    // If company_id is missing but supplier id exists, try using supplier id
+    form.company_id = parseInt(props.supplier.id);
+  }
+  
+  form.created_by = parseInt(user.id) || '';
+  form.supplier_id = parseInt(props.supplier.id) || '';
+  form.country = 'Kenya';
+  form.status = 'active';
+  
+  showWarehouseModal.value = true;
+  isCountryDropdownOpen.value = false;
+  isRegionDropdownOpen.value = false;
+};
+
+const closeWarehouseModal = () => {
+  showWarehouseModal.value = false;
+  form.reset();
+  form.clearErrors();
+};
+
+const editWarehouse = (warehouse) => {
+  editingWarehouse.value = true;
+  editingWarehouseId.value = warehouse.id;
+  
+  // Map warehouse fields to form
+  form.name = warehouse.name;
+  form.contact_person = warehouse.contact_person;
+  form.email = warehouse.email;
+  form.phone_number = warehouse.phone_number;
+  form.address = warehouse.address;
+  form.krapin = warehouse.krapin;
+  form.country = warehouse.country || 'Kenya';
+  form.region = warehouse.region || warehouse.location;
+  form.gps = warehouse.gps || '';
+  form.status = warehouse.status;
+  
+  showWarehouseModal.value = true;
+  isCountryDropdownOpen.value = false;
+  isRegionDropdownOpen.value = false;
+};
+
+const deleteWarehouse = (warehouseId) => {
+  if (confirm('Are you sure you want to delete this warehouse?')) {
+    useForm().delete(route('supplierwarehouse.delete', warehouseId), {
+      preserveScroll: true,
+      onSuccess: () => {
+        // Message will be handled by the inertia success flash message
+        fetchWarehouses();
+      },
+    });
+  }
+};
+
+const saveWarehouse = () => {
+  // Fix the company_id format issue - backend expects integer
+  if (props.supplier && props.supplier.company_id) {
+    form.company_id = parseInt(props.supplier.company_id);
+  } else if (props.supplier && props.supplier.id) {
+    // If company_id is missing but supplier id exists, try using supplier id
+    form.company_id = parseInt(props.supplier.id);
+  } 
+  
+  
+  if (editingWarehouse.value) {
+    form.put(route('supplierwarehouse.update', editingWarehouseId.value), {
+      preserveScroll: true,
+      onSuccess: (response) => {
+        closeWarehouseModal();
+        fetchWarehouses();
+      },
+      onError: (errors) => {
+        console.error('Update failed with errors:', errors);
+      }
+    });
+  } else {
+
+    
+    form.post(route('supplierwarehouse.create'), {
+      preserveScroll: true,
+      onSuccess: (response) => {
+        closeWarehouseModal();
+        fetchWarehouses();
+      },
+      onError: (errors) => {
+        console.error('Creation failed with errors:', errors);
+      }
+    });
+  }
+};
+
+// Dropdown methods
+const toggleCountryDropdown = () => {
+  isCountryDropdownOpen.value = !isCountryDropdownOpen.value;
+  
+  if (isCountryDropdownOpen.value) {
+    // Reset search when opening
+    countrySearch.value = '';
+    filteredCountries.value = [...countries.value];
+    
+    // Close the other dropdown if open
+    isRegionDropdownOpen.value = false;
+    
+    // Calculate dropdown position
+    nextTick(() => {
+      const trigger = document.querySelector('.country-select-trigger');
+      const dropdown = document.querySelector('.country-select-dropdown');
+      
+      if (!trigger || !dropdown) return;
+      
+      const triggerRect = trigger.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      
+      const spaceBelow = viewportHeight - triggerRect.bottom;
+      const dropdownHeight = Math.min(250, filteredCountries.value.length * 36 + 70);
+      
+      if (spaceBelow < dropdownHeight) {
+        dropdown.classList.add('dropdown-top');
+      } else {
+        dropdown.classList.remove('dropdown-top');
+      }
+    });
+  }
+};
+
+const closeCountryDropdownOutside = (event) => {
+  const dropdown = document.querySelector('.country-select-container');
+  if (dropdown && !dropdown.contains(event.target)) {
+    isCountryDropdownOpen.value = false;
+  }
+};
+
+const filterCountries = () => {
+  if (countrySearch.value.trim() === '') {
+    filteredCountries.value = [...countries.value];
+  } else {
+    const query = countrySearch.value.toLowerCase();
+    filteredCountries.value = countries.value.filter(
+      country => country.toLowerCase().includes(query)
+    );
+  }
+};
+
+const selectCountry = (country) => {
+  form.country = country;
+  isCountryDropdownOpen.value = false;
+};
+
+const toggleRegionDropdown = () => {
+  isRegionDropdownOpen.value = !isRegionDropdownOpen.value;
+  
+  if (isRegionDropdownOpen.value) {
+    // Reset search when opening
+    regionSearch.value = '';
+    filteredRegions.value = [...regions.value];
+    
+    // Close the other dropdown if open
+    isCountryDropdownOpen.value = false;
+    
+    // Calculate dropdown position
+    nextTick(() => {
+      const trigger = document.querySelector('.region-select-trigger');
+      const dropdown = document.querySelector('.region-select-dropdown');
+      
+      if (!trigger || !dropdown) return;
+      
+      const triggerRect = trigger.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      
+      const spaceBelow = viewportHeight - triggerRect.bottom;
+      const dropdownHeight = Math.min(250, filteredRegions.value.length * 36 + 70);
+      
+      if (spaceBelow < dropdownHeight) {
+        dropdown.classList.add('dropdown-top');
+      } else {
+        dropdown.classList.remove('dropdown-top');
+      }
+    });
+  }
+};
+
+const closeRegionDropdownOutside = (event) => {
+  const dropdown = document.querySelector('.region-select-container');
+  if (dropdown && !dropdown.contains(event.target)) {
+    isRegionDropdownOpen.value = false;
+  }
+};
+
+const filterRegions = () => {
+  if (regionSearch.value.trim() === '') {
+    filteredRegions.value = [...regions.value];
+  } else {
+    const query = regionSearch.value.toLowerCase();
+    filteredRegions.value = regions.value.filter(
+      region => region.toLowerCase().includes(query)
+    );
+  }
+};
+
+const selectRegion = (region) => {
+  form.region = region;
+  isRegionDropdownOpen.value = false;
+};
+
+// Lifecycle hooks
+onMounted(() => {  
+  // Fetch warehouses data
+  fetchWarehouses();
+  
+  // Initialize filtered countries and regions
+  filteredCountries.value = [...countries.value];
+  filteredRegions.value = [...regions.value];
+  
+  // Add click outside listener for dropdowns
+  document.addEventListener('click', closeCountryDropdownOutside);
+  document.addEventListener('click', closeRegionDropdownOutside);
+});
+
+onBeforeUnmount(() => {
+  // Clean up the event listeners
+  document.removeEventListener('click', closeCountryDropdownOutside);
+  document.removeEventListener('click', closeRegionDropdownOutside);
+});
 </script>
 
 <style scoped>
