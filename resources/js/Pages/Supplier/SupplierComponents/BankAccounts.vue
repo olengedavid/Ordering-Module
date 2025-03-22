@@ -275,9 +275,9 @@ export default {
       // Only use local data since we're fully independent now
       return this.localBankAccounts;
     },
-    loadBankAccounts() {
-      // If bank accounts already provided by props, just process them
-      if (this.localBankAccounts && this.localBankAccounts.length > 0) {
+    loadBankAccounts(forceRefresh = false) {
+      // If bank accounts already provided by props and we're not forcing a refresh, just process them
+      if (!forceRefresh && this.localBankAccounts && this.localBankAccounts.length > 0) {
         this.processReceivedAccounts(this.localBankAccounts);
         return;
       }
@@ -334,7 +334,7 @@ export default {
       this.newBankAccount = {
         bankName: '',
         branch: '',
-        accountName: this.supplier ? this.supplier.companyName : '',
+        accountName: this.supplier ? (this.supplier.company_name || this.supplier.companyName || '') : '',
         accountNumber: '',
         isPrimary: this.getBankAccounts().length === 0 // Set as primary if it's the first account
       };
@@ -425,7 +425,7 @@ export default {
             preserveScroll: true,
             onSuccess: () => {
               this.closeBankAccountModal();
-              this.loadBankAccounts();
+              this.loadBankAccounts(true);
             },
             onError: (errors) => {
               alert('Error updating bank account');
@@ -438,7 +438,7 @@ export default {
             preserveScroll: true,
             onSuccess: () => {
               this.closeBankAccountModal();
-              this.loadBankAccounts();
+              this.loadBankAccounts(true);
             },
             onError: (errors) => {
               alert('Error creating bank account');
@@ -470,7 +470,7 @@ export default {
       }, {
         preserveScroll: true,
         onSuccess: () => {
-          this.loadBankAccounts();
+          this.loadBankAccounts(true);
         },
         onError: (errors) => {
           // Handle errors to prevent unresponsiveness
@@ -492,7 +492,7 @@ export default {
         data: { uuid: account.uuid },
         preserveScroll: true,
         onSuccess: () => {
-          this.loadBankAccounts();
+          this.loadBankAccounts(true);
         },
         onError: (errors) => {
           // Handle errors to prevent unresponsiveness
