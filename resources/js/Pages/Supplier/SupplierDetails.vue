@@ -183,62 +183,10 @@
             
             <!-- Delivery Regions Tab Content -->
             <div v-if="activeTab === 'deliveryRegions'" class="tab-content">
-              <div class="table-controls">
-                <div class="table-title">Delivery Regions</div>
-                <button @click="openAddDeliveryRegionModal" class="add-btn">
-                  <span class="plus-icon">+</span>
-                  Add Delivery Region
-                </button>
-              </div>
-              
-              <div class="table-container">
-                <div class="table-wrapper">
-                  <table class="data-table">
-                    <thead>
-                      <tr>
-                        <th @click="sortBy('warehouseName')" class="sortable">
-                          Warehouse Name <i :class="getSortIcon('warehouseName')"></i>
-                        </th>
-                        <th @click="sortBy('deliverTo')" class="sortable">
-                          Deliver To <i :class="getSortIcon('deliverTo')"></i>
-                        </th>
-                        <th @click="sortBy('deliveryFee')" class="sortable">
-                          Delivery Fee <i :class="getSortIcon('deliveryFee')"></i>
-                        </th>
-                        <th @click="sortBy('status')" class="sortable">
-                          Status <i :class="getSortIcon('status')"></i>
-                        </th>
-                        <th class="actions-column">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr v-for="region in sortedDeliveryRegions" :key="region.id" class="data-row">
-                        <td>{{ region.warehouseName }}</td>
-                        <td>{{ region.deliverTo }}</td>
-                        <td>{{ region.deliveryFee }}</td>
-                        <td>
-                          <span :class="['status-pill', region.status === 'Active' ? 'status-active' : 'status-inactive']">
-                            {{ region.status }}
-                          </span>
-                        </td>
-                        <td class="actions-column">
-                          <button @click="editDeliveryRegion(region)" class="action-btn edit-btn">
-                            Edit
-                          </button>
-                          <button @click="deleteDeliveryRegion(region.id)" class="action-btn delete-btn">
-                            Delete
-                          </button>
-                        </td>
-                      </tr>
-                      <tr v-if="deliveryRegions.length === 0">
-                        <td colspan="5" class="empty-state">
-                          No delivery regions added yet
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              <DeliveryRegions 
+                :initialRegions="deliveryRegions" 
+                @regions-updated="updateDeliveryRegions"
+              />
             </div>
     
             <!-- Products Tab Content -->
@@ -571,62 +519,10 @@
           
           <!-- Delivery Regions Tab Content -->
           <div v-if="activeTab === 'deliveryRegions'" class="tab-content">
-            <div class="table-controls">
-              <div class="table-title">Delivery Regions</div>
-              <button @click="openAddDeliveryRegionModal" class="add-btn">
-                <span class="plus-icon">+</span>
-                Add Delivery Region
-              </button>
-            </div>
-            
-            <div class="table-container">
-              <div class="table-wrapper">
-                <table class="data-table">
-                  <thead>
-                    <tr>
-                      <th @click="sortBy('warehouseName')" class="sortable">
-                        Warehouse Name <i :class="getSortIcon('warehouseName')"></i>
-                      </th>
-                      <th @click="sortBy('deliverTo')" class="sortable">
-                        Deliver To <i :class="getSortIcon('deliverTo')"></i>
-                      </th>
-                      <th @click="sortBy('deliveryFee')" class="sortable">
-                        Delivery Fee <i :class="getSortIcon('deliveryFee')"></i>
-                      </th>
-                      <th @click="sortBy('status')" class="sortable">
-                        Status <i :class="getSortIcon('status')"></i>
-                      </th>
-                      <th class="actions-column">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="region in sortedDeliveryRegions" :key="region.id" class="data-row">
-                      <td>{{ region.warehouseName }}</td>
-                      <td>{{ region.deliverTo }}</td>
-                      <td>{{ region.deliveryFee }}</td>
-                      <td>
-                        <span :class="['status-pill', region.status === 'Active' ? 'status-active' : 'status-inactive']">
-                          {{ region.status }}
-                        </span>
-                      </td>
-                      <td class="actions-column">
-                        <button @click="editDeliveryRegion(region)" class="action-btn edit-btn">
-                          Edit
-                        </button>
-                        <button @click="deleteDeliveryRegion(region.id)" class="action-btn delete-btn">
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                    <tr v-if="deliveryRegions.length === 0">
-                      <td colspan="5" class="empty-state">
-                        No delivery regions added yet
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            <DeliveryRegions 
+              :initialRegions="deliveryRegions" 
+              @regions-updated="updateDeliveryRegions"
+            />
           </div>
   
           <!-- Products Tab Content -->
@@ -803,62 +699,10 @@
           
           <!-- Delivery Regions Tab Content -->
           <div v-if="activeTab === 'deliveryRegions'" class="tab-content">
-            <div class="table-controls">
-              <div class="table-title">Delivery Regions</div>
-              <button @click="openAddDeliveryRegionModal" class="add-btn">
-                <span class="plus-icon">+</span>
-                Add Delivery Region
-              </button>
-            </div>
-            
-            <div class="table-container">
-              <div class="table-wrapper">
-                <table class="data-table">
-                  <thead>
-                    <tr>
-                      <th @click="sortBy('warehouseName')" class="sortable">
-                        Warehouse Name <i :class="getSortIcon('warehouseName')"></i>
-                      </th>
-                      <th @click="sortBy('deliverTo')" class="sortable">
-                        Deliver To <i :class="getSortIcon('deliverTo')"></i>
-                      </th>
-                      <th @click="sortBy('deliveryFee')" class="sortable">
-                        Delivery Fee <i :class="getSortIcon('deliveryFee')"></i>
-                      </th>
-                      <th @click="sortBy('status')" class="sortable">
-                        Status <i :class="getSortIcon('status')"></i>
-                      </th>
-                      <th class="actions-column">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="region in sortedDeliveryRegions" :key="region.id" class="data-row">
-                      <td>{{ region.warehouseName }}</td>
-                      <td>{{ region.deliverTo }}</td>
-                      <td>{{ region.deliveryFee }}</td>
-                      <td>
-                        <span :class="['status-pill', region.status === 'Active' ? 'status-active' : 'status-inactive']">
-                          {{ region.status }}
-                        </span>
-                      </td>
-                      <td class="actions-column">
-                        <button @click="editDeliveryRegion(region)" class="action-btn edit-btn">
-                          Edit
-                        </button>
-                        <button @click="deleteDeliveryRegion(region.id)" class="action-btn delete-btn">
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                    <tr v-if="deliveryRegions.length === 0">
-                      <td colspan="5" class="empty-state">
-                        No delivery regions added yet
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            <DeliveryRegions 
+              :initialRegions="deliveryRegions" 
+              @regions-updated="updateDeliveryRegions"
+            />
           </div>
   
           <!-- Products Tab Content -->
@@ -1076,211 +920,13 @@
               </div>
             </form>
           </div>
-  
-          <!-- Products Tab Content -->
-          <div v-if="activeTab === 'products'" class="tab-content">
-            <div class="table-controls">
-              <div class="table-title">Products</div>
-              <button @click="openAddProductModal" class="add-btn">
-                <span class="plus-icon">+</span>
-                Add Product
-              </button>
-            </div>
-            
-            <div class="table-container">
-              <div class="table-wrapper">
-                <table class="data-table">
-                  <thead>
-                    <tr>
-                      <th>Product</th>
-                      <th @click="sortBy('productName')" class="sortable">
-                        Name <i :class="getSortIcon('productName')"></i>
-                      </th>
-                      <th @click="sortBy('skuNumber')" class="sortable">
-                        SKU Number <i :class="getSortIcon('skuNumber')"></i>
-                      </th>
-                      <th @click="sortBy('category')" class="sortable">
-                        Category <i :class="getSortIcon('category')"></i>
-                      </th>
-                      <th @click="sortBy('unitOfMeasure')" class="sortable">
-                        Unit of Measure <i :class="getSortIcon('unitOfMeasure')"></i>
-                      </th>
-                      <th @click="sortBy('description')" class="sortable">
-                        Description <i :class="getSortIcon('description')"></i>
-                      </th>
-                      <th @click="sortBy('manufacturer')" class="sortable">
-                        Manufacturer <i :class="getSortIcon('manufacturer')"></i>
-                      </th>
-                      <th @click="sortBy('status')" class="sortable">
-                        Status <i :class="getSortIcon('status')"></i>
-                      </th>
-                      <th class="actions-column">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="product in sortedProducts" :key="product.id" class="data-row">
-                      <td>
-                        <img :src="product.imageUrl" alt="Product image" class="product-thumbnail">
-                      </td>
-                      <td>{{ product.productName }}</td>
-                      <td>{{ product.skuNumber }}</td>
-                      <td>{{ product.category }}</td>
-                      <td>{{ product.unitOfMeasure }}</td>
-                      <td class="description-cell">{{ product.description }}</td>
-                      <td>{{ product.manufacturer }}</td>
-                      <td>
-                        <span :class="['status-pill', product.status === 'Active' ? 'status-active' : 'status-inactive']">
-                          {{ product.status }}
-                        </span>
-                      </td>
-                      <td class="actions-column">
-                        <button @click="editProduct(product)" class="action-btn edit-btn">
-                          Edit
-                        </button>
-                      </td>
-                    </tr>
-                    <tr v-if="products.length === 0">
-                      <td colspan="9" class="empty-state">
-                        No products added yet
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
       
-      <!-- Add/Edit Product Modal -->
-      <div v-if="showProductModal" class="modal-overlay" @click.self="closeProductModal">
+      <!-- Add Product Modal -->
+      <div v-if="showProductModal" class="modal-overlay" @click.self="closeAddProductModal">
         <div class="modal-container">
-          <div class="modal-header">
-            <h2>{{ editingProduct ? 'Edit Product' : 'Add New Product' }}</h2>
-            <button class="close-btn" @click="closeProductModal">&times;</button>
-          </div>
-          <div class="modal-body">
-            <form @submit.prevent="saveProduct">
-              <!-- Product Images Upload -->
-              <div class="form-group">
-                <label for="productImage">Product Images</label>
-                <div 
-                  class="image-upload-container"
-                  @dragover.prevent="onDragOver"
-                  @dragleave.prevent="onDragLeave"
-                  @drop.prevent="onDrop"
-                  :class="{ 'drag-over': isDragging }"
-                >
-                  <div class="upload-placeholder">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                      <circle cx="8.5" cy="8.5" r="1.5"/>
-                      <polyline points="21 15 16 10 5 21"/>
-                    </svg>
-                    <p>Drag & drop images here or <span class="browse-text">browse</span></p>
-                    <input 
-                      type="file" 
-                      id="productImage" 
-                      class="file-input" 
-                      accept="image/*"
-                      multiple
-                      @change="onFileSelected"
-                    >
-                  </div>
-                </div>
-                
-                <!-- Images Gallery (Outside the upload container) -->
-                <div v-if="productImages.length > 0" class="images-gallery-outside">
-                  <div class="gallery-preview-outside">
-                    <img v-if="imagePreview" :src="imagePreview" alt="Primary product image" class="primary-preview-img">
-                  </div>
-                  <div class="gallery-thumbnails-outside">
-                    <div 
-                      v-for="image in productImages" 
-                      :key="image.id"
-                      class="thumbnail-container"
-                      :class="{ 'primary-thumbnail': image.isPrimary }"
-                    >
-                      <img :src="image.url" alt="Product image" class="thumbnail-img">
-                      <div class="thumbnail-actions">
-                        <button 
-                          type="button" 
-                          class="set-primary-btn" 
-                          @click="setPrimaryImage(image.id)"
-                          :disabled="image.isPrimary"
-                          :title="image.isPrimary ? 'Primary Image' : 'Set as Primary'"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                          </svg>
-                        </button>
-                        <button type="button" class="remove-thumbnail-btn" @click="removeImage(image.id)">&times;</button>
-                      </div>
-                    </div>
-                    <div class="add-more-container">
-                      <label for="additionalImages" class="add-more-btn">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <line x1="12" y1="5" x2="12" y2="19"></line>
-                          <line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
-                      </label>
-                      <input 
-                        type="file" 
-                        id="additionalImages" 
-                        class="file-input" 
-                        accept="image/*"
-                        multiple
-                        @change="onFileSelected"
-                      >
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="form-group">
-                <label for="productName">Product Name <span class="required">*</span></label>
-                <input type="text" id="productName" v-model="newProduct.productName" required placeholder="Enter product name">
-              </div>
-              
-              <div class="form-group">
-                <label for="skuNumber">SKU Number <span class="required">*</span></label>
-                <input type="text" id="skuNumber" v-model="newProduct.skuNumber" required placeholder="Enter SKU number">
-              </div>
-              
-              <div class="form-group">
-                <label for="category">Category <span class="required">*</span></label>
-                <input type="text" id="category" v-model="newProduct.category" required placeholder="Enter product category">
-              </div>
-              
-              <div class="form-group">
-                <label for="unitOfMeasure">Unit of Measure <span class="required">*</span></label>
-                <input type="text" id="unitOfMeasure" v-model="newProduct.unitOfMeasure" required placeholder="Enter unit of measure (e.g. kg, liter)">
-              </div>
-              
-              <div class="form-group">
-                <label for="description">Description <span class="required">*</span></label>
-                <textarea id="description" v-model="newProduct.description" required placeholder="Enter product description" rows="3"></textarea>
-              </div>
-              
-              <div class="form-group">
-                <label for="manufacturer">Manufacturer <span class="required">*</span></label>
-                <input type="text" id="manufacturer" v-model="newProduct.manufacturer" required placeholder="Enter manufacturer name">
-              </div>
-              
-              <div class="form-group">
-                <label for="productStatus">Status <span class="required">*</span></label>
-                <select id="productStatus" v-model="newProduct.status" required>
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
-                </select>
-              </div>
-              
-              <div class="form-actions">
-                <button type="button" class="cancel-btn" @click="closeProductModal">Cancel</button>
-                <button type="submit" class="submit-btn">Save Product</button>
-              </div>
-            </form>
-          </div>
+          <!-- Product modal content -->
         </div>
       </div>
     </div>
@@ -1292,6 +938,7 @@
   import Modal from '@/Components/Modal.vue';
   import { router } from '@inertiajs/vue3';
   import BankAccounts from "./SupplierComponents/BankAccounts.vue";
+  import DeliveryRegions from "./SupplierComponents/DeliveryRegions.vue";
   
   export default {
     name: 'SupplierDetails',
@@ -1299,7 +946,8 @@
       Head,
       AdminNavbar,
       Modal,
-      BankAccounts
+      BankAccounts,
+      DeliveryRegions
     },
     props: {
       supplier: {
@@ -1336,7 +984,7 @@
           { id: 'deliveryRegions', name: 'Delivery Regions' },
           { id: 'products', name: 'Products' }
         ],
-        sortKey: 'bankName',
+        sortKey: 'id',
         sortDir: 'asc',
         products: [
           { 
@@ -1439,6 +1087,24 @@
           status: 'Active'
         },
         editingDeliveryRegion: false,
+        editingDeliveryRegionId: null,
+        
+        // Warehouse dropdown
+        isWarehouseDropdownOpen: false,
+        warehouseSearch: '',
+        filteredWarehouses: [],
+        warehouses: [
+          { id: 1, name: 'Nairobi Central Warehouse' },
+          { id: 2, name: 'Mombasa Distribution Center' },
+          { id: 3, name: 'Kisumu Warehouse' },
+          { id: 4, name: 'Nakuru Fulfillment Center' },
+          { id: 5, name: 'Eldoret Storage Facility' }
+        ],
+        
+        // Region dropdown
+        isDeliverToDropdownOpen: false,
+        deliverToSearch: '',
+        filteredDeliverToRegions: [],
         showProductModal: false,
         newProduct: {
           productName: '',
@@ -1454,69 +1120,6 @@
         editingProductId: null,
         imagePreview: null,
         isDragging: false,
-        editingDeliveryRegionId: null,
-        isWarehouseDropdownOpen: false,
-        warehouseSearch: '',
-        filteredWarehouses: [],
-        isDeliverToDropdownOpen: false,
-        deliverToSearch: '',
-        filteredDeliverToRegions: [],
-        warehouses: [
-          {
-            id: 1,
-            name: 'Nairobi Central Warehouse',
-            contactPerson: 'John Kamau',
-            email: 'john.kamau@agritech.co.ke',
-            phone: '+254 712 345 123',
-            address: 'Industrial Area, Enterprise Road',
-            kraPin: 'A123456789P',
-            country: 'Kenya',
-            region: 'Nairobi',
-            gps: '-1.2921,36.8219',
-            status: 'Active'
-          },
-          {
-            id: 2,
-            name: 'Mombasa Distribution Center',
-            contactPerson: 'Fatima Hassan',
-            email: 'fatima.hassan@agritech.co.ke',
-            phone: '+254 734 567 890',
-            address: 'Changamwe, Port Area',
-            kraPin: 'A123456789P',
-            country: 'Kenya',
-            region: 'Mombasa',
-            gps: '-4.0435,39.6682',
-            status: 'Active'
-          },
-          {
-            id: 3,
-            name: 'Eldoret Storage Facility',
-            contactPerson: 'Daniel Kiptoo',
-            email: 'daniel.kiptoo@agritech.co.ke',
-            phone: '+254 756 789 012',
-            address: 'Eldoret Industrial Zone',
-            kraPin: 'A123456789P',
-            country: 'Kenya',
-            region: 'Uasin Gishu',
-            gps: '0.5143,35.2698',
-            status: 'Inactive'
-          }
-        ],
-        showWarehouseModal: false,
-        newWarehouse: {
-          name: '',
-          contactPerson: '',
-          email: '',
-          phone: '',
-          address: '',
-          kraPin: '',
-          country: 'Kenya',
-          region: '',
-          gps: '',
-          status: 'Active'
-        },
-        editingWarehouse: false,
-        editingWarehouseId: null,
         isCountryDropdownOpen: false,
         countrySearch: '',
         filteredCountries: [],
@@ -2469,6 +2072,9 @@
         
         // Close other dropdowns similarly if needed
       },
+      updateDeliveryRegions(updatedRegions) {
+        this.deliveryRegions = updatedRegions;
+      }
     }
   }
   </script>
