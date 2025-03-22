@@ -92,8 +92,7 @@
             <!-- Bank Accounts Tab Content -->
             <div v-if="activeTab === 'bankAccounts'" class="tab-content">
               <BankAccounts 
-                :supplier="supplier" 
-                :bankAccounts="bankAccounts"
+                :supplier="supplier"
               />
             </div>
     
@@ -189,92 +188,6 @@
         </div>
       </div>
   
-      <!-- Add Bank Account Modal -->
-      <div v-if="showBankAccountModal" class="modal-overlay" @click.self="closeBankAccountModal">
-        <div class="modal-container">
-          <div class="modal-header">
-            <h2>{{ editingBankAccount ? 'Edit Bank Account' : 'Add New Bank Account' }}</h2>
-            <button class="close-btn" @click="closeBankAccountModal">&times;</button>
-          </div>
-          <div class="modal-body">
-            <form @submit.prevent="saveBankAccount">
-              <div class="form-group">
-                <label for="bankName">Bank Name <span class="required">*</span></label>
-                
-                <!-- Custom searchable dropdown for banks -->
-                <div class="custom-select-container">
-                  <div 
-                    class="custom-select-trigger" 
-                    @click="toggleBankDropdown"
-                    :class="{ 'active': isBankDropdownOpen }"
-                  >
-                    <span>{{ newBankAccount.bankName || 'Select a bank' }}</span>
-                    <svg 
-                      class="dropdown-arrow" 
-                      :class="{ 'open': isBankDropdownOpen }"
-                      xmlns="http://www.w3.org/2000/svg" 
-                      width="16" 
-                      height="16" 
-                      viewBox="0 0 24 24" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      stroke-width="2" 
-                      stroke-linecap="round" 
-                      stroke-linejoin="round"
-                    >
-                      <polyline points="6 9 12 15 18 9"></polyline>
-                    </svg>
-                  </div>
-                  
-                  <div class="custom-select-dropdown" v-show="isBankDropdownOpen">
-                    <div class="search-box">
-                      <input
-                        type="text"
-                        v-model="bankSearch"
-                        @input="filterBanks"
-                        placeholder="Search bank..."
-                        class="dropdown-search"
-                        @click.stop
-                      >
-                    </div>
-                    
-                    <div class="dropdown-options">
-                      <div
-                        v-for="bank in filteredBanks"
-                        :key="bank"
-                        class="dropdown-option"
-                        @click="selectBank(bank)"
-                      >
-                        {{ bank }}
-                      </div>
-                      <div v-if="filteredBanks.length === 0" class="no-results">
-                        No banks match your search
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="form-group">
-                <label for="branch">Branch <span class="required">*</span></label>
-                <input type="text" id="branch" v-model="newBankAccount.branch" required placeholder="Enter branch name">
-              </div>
-              <div class="form-group">
-                <label for="accountName">Account Name <span class="required">*</span></label>
-                <input type="text" id="accountName" v-model="newBankAccount.accountName" required placeholder="Enter account name">
-              </div>
-              <div class="form-group">
-                <label for="accountNumber">Account Number <span class="required">*</span></label>
-                <input type="text" id="accountNumber" v-model="newBankAccount.accountNumber" required placeholder="Enter account number">
-              </div>
-              <div class="form-actions">
-                <button type="button" class="cancel-btn" @click="closeBankAccountModal">Cancel</button>
-                <button type="submit" class="submit-btn">Save Bank Account</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-      
       <!-- Edit Supplier Details Modal -->
       <div v-if="showSupplierModal" class="modal-overlay" @click.self="closeSupplierModal">
         <div class="modal-container">
@@ -629,10 +542,6 @@
       supplier: {
         type: Object,
         required: true
-      },
-      bankAccounts: {
-        type: Array,
-        default: () => []
       }
     },
     mounted() {
@@ -652,23 +561,6 @@
         activeTab: 'bankAccounts',
         sortKey: 'name',
         sortDir: 'asc',
-        
-        // Bank-related data
-        isBankDropdownOpen: false,
-        bankSearch: '',
-        filteredBanks: [],
-        banks: [
-          'Kenya Commercial Bank',
-          'Equity Bank',
-          'Cooperative Bank',
-          'Standard Chartered Bank',
-          'Barclays Bank',
-          'National Bank of Kenya',
-          'NIC Bank',
-          'Family Bank',
-          'CFC Stanbic Bank',
-          'I&M Bank'
-        ],
         
         // Country and region data
         isCountryDropdownOpen: false,
@@ -695,26 +587,6 @@
           'Hurlingham',
           'Nyari'
         ],
-        
-        // Bank Accounts data
-        bankAccounts: this.bankAccounts.length ? this.bankAccounts : [
-          { id: 1, accountName: 'Main Operations Account', accountNumber: '1234567890', bank: 'Kenya Commercial Bank', branch: 'Kimathi Street', swiftCode: 'KCBLKENX', currency: 'KES', isPrimary: true },
-          { id: 2, accountName: 'USD Account', accountNumber: '0987654321', bank: 'Equity Bank', branch: 'Westlands', swiftCode: 'EQBLKENA', currency: 'USD', isPrimary: false }
-        ],
-        
-        // Bank Account Modal data
-        showBankAccountModal: false,
-        editingBankAccount: false,
-        editingBankAccountId: null,
-        newBankAccount: {
-          accountName: '',
-          accountNumber: '',
-          bankName: '',
-          branch: '',
-          swiftCode: '',
-          currency: 'KES',
-          isPrimary: false
-        },
         
         // Warehouses data - keep this for passing to the Warehouses component
         warehouses: [
@@ -827,35 +699,6 @@
         
         return regions;
       },
-      sortedBankAccounts() {
-        const accounts = [...this.bankAccounts];
-        accounts.sort((a, b) => {
-          let modifier = this.sortDir === 'asc' ? 1 : -1;
-          // Handle different property name formats
-          let aValue, bValue;
-          
-          // Convert sortKey to both formats
-          const camelKey = this.sortKey; // e.g. 'bankName'
-          const snakeKey = this.sortKey.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`); // e.g. 'bank_name'
-          
-          // Try to get value in both formats
-          aValue = a[camelKey] !== undefined ? a[camelKey] : a[snakeKey];
-          bValue = b[camelKey] !== undefined ? b[camelKey] : b[snakeKey];
-          
-          // Handle undefined or null values
-          if (aValue === undefined || aValue === null) aValue = '';
-          if (bValue === undefined || bValue === null) bValue = '';
-          
-          // Sort based on value types
-          if (typeof aValue === 'number' && typeof bValue === 'number') {
-            return aValue < bValue ? -1 * modifier : 1 * modifier;
-          } else {
-            return aValue.toString().localeCompare(bValue.toString()) * modifier;
-          }
-        });
-        
-        return accounts;
-      },
       sortedProducts() {
         const products = [...this.products];
         products.sort((a, b) => {
@@ -882,7 +725,7 @@
       }
     },
     created() {
-      // Supplier and bankAccounts are directly available as props
+      // Supplier is directly available as props
       // We only need the route query approach as a fallback if we're directly navigating to the page
       if (!this.supplier && this.$route && this.$route.query && this.$route.query.supplierData) {
         try {
@@ -891,9 +734,6 @@
           console.error('Error parsing supplier data:', e);
         }
       }
-      
-      // Initialize the filtered banks with all banks
-      this.filteredBanks = [...this.banks];
       
       // Initialize filtered countries and regions
       this.filteredCountries = [...this.countries];
@@ -909,7 +749,6 @@
       this.filteredDeliverToRegions = [...this.regions];
       
       // Add click outside listener for dropdowns
-      document.addEventListener('click', this.closeBankDropdownOutside);
       document.addEventListener('click', this.closeCountryDropdownOutside);
       document.addEventListener('click', this.closeRegionDropdownOutside);
       document.addEventListener('click', this.closeIndustryDropdownOutside);
@@ -1641,77 +1480,6 @@
       updateWarehouses(updatedWarehouses) {
         this.warehouses = updatedWarehouses;
       },
-      
-      // Bank Account methods
-      openAddBankAccountModal() {
-        this.editingBankAccount = false;
-        this.editingBankAccountId = null;
-        this.newBankAccount = {
-          accountName: '',
-          accountNumber: '',
-          bankName: '',
-          branch: '',
-          swiftCode: '',
-          currency: 'KES',
-          isPrimary: false
-        };
-        this.showBankAccountModal = true;
-      },
-      
-      closeBankAccountModal() {
-        this.showBankAccountModal = false;
-      },
-      
-      saveBankAccount() {
-        if (this.editingBankAccount) {
-          // Update existing bank account
-          const index = this.bankAccounts.findIndex(account => account.id === this.editingBankAccountId);
-          if (index !== -1) {
-            this.bankAccounts.splice(index, 1, { ...this.newBankAccount, id: this.editingBankAccountId });
-          }
-        } else {
-          // Add new bank account
-          const maxId = this.bankAccounts.length > 0 ? Math.max(...this.bankAccounts.map(a => a.id)) : 0;
-          this.bankAccounts.push({
-            ...this.newBankAccount,
-            id: maxId + 1
-          });
-        }
-        this.closeBankAccountModal();
-      },
-      
-      // Bank dropdown methods
-      toggleBankDropdown() {
-        this.isBankDropdownOpen = !this.isBankDropdownOpen;
-        
-        if (this.isBankDropdownOpen) {
-          this.bankSearch = '';
-          this.filteredBanks = [...this.banks];
-        }
-      },
-      
-      closeBankDropdownOutside(event) {
-        const dropdown = document.querySelector('.custom-select-container');
-        if (dropdown && !dropdown.contains(event.target)) {
-          this.isBankDropdownOpen = false;
-        }
-      },
-      
-      filterBanks() {
-        if (this.bankSearch.trim() === '') {
-          this.filteredBanks = [...this.banks];
-        } else {
-          const query = this.bankSearch.toLowerCase();
-          this.filteredBanks = this.banks.filter(
-            bank => bank.toLowerCase().includes(query)
-          );
-        }
-      },
-      
-      selectBank(bank) {
-        this.newBankAccount.bankName = bank;
-        this.isBankDropdownOpen = false;
-      }
     }
   }
   </script>

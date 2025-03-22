@@ -58,7 +58,7 @@
                 </button>
               </td>
             </tr>
-            <tr v-if="bankAccounts.length === 0">
+            <tr v-if="localBankAccounts.length === 0">
               <td colspan="6" class="empty-state">
                 No bank accounts added yet
               </td>
@@ -165,10 +165,6 @@ export default {
     supplier: {
       type: Object,
       required: true
-    },
-    bankAccounts: {
-      type: Array,
-      default: () => []
     }
   },
   data() {
@@ -231,7 +227,7 @@ export default {
   },
   computed: {
     sortedBankAccounts() {
-      const accounts = [...this.getBankAccounts()];
+      const accounts = [...this.localBankAccounts];
       accounts.sort((a, b) => {
         let modifier = this.sortDir === 'asc' ? 1 : -1;
         // Handle different property name formats
@@ -276,13 +272,13 @@ export default {
   },
   methods: {
     getBankAccounts() {
-      // Return props.bankAccounts if it has data, otherwise use local data
-      return (this.bankAccounts && this.bankAccounts.length > 0) ? this.bankAccounts : this.localBankAccounts;
+      // Only use local data since we're fully independent now
+      return this.localBankAccounts;
     },
     loadBankAccounts() {
       // If bank accounts already provided by props, just process them
-      if (this.bankAccounts && this.bankAccounts.length > 0) {
-        this.processReceivedAccounts(this.bankAccounts);
+      if (this.localBankAccounts && this.localBankAccounts.length > 0) {
+        this.processReceivedAccounts(this.localBankAccounts);
         return;
       }
       
