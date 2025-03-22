@@ -99,88 +99,12 @@
     
             <!-- Warehouses Tab Content -->
             <div v-if="activeTab === 'warehouses'" class="tab-content">
-              <div class="table-controls">
-                <div class="table-title">Warehouses </div>
-                <button @click="openAddWarehouseModal" class="add-btn">
-                  <span class="plus-icon">+</span>
-                  Add Warehouse
-                </button>
-              </div>
-              
-              <div class="table-container">
-                <div class="table-wrapper">
-                  <table class="data-table">
-                    <thead>
-                      <tr>
-                        <th @click="sortBy('name')" class="sortable">
-                          Warehouse Name <i :class="getSortIcon('name')"></i>
-                        </th>
-                        <th @click="sortBy('contactPerson')" class="sortable">
-                          Contact Person <i :class="getSortIcon('contactPerson')"></i>
-                        </th>
-                        <th @click="sortBy('email')" class="sortable">
-                          Email <i :class="getSortIcon('email')"></i>
-                        </th>
-                        <th @click="sortBy('phone')" class="sortable">
-                          Phone <i :class="getSortIcon('phone')"></i>
-                        </th>
-                        <th @click="sortBy('address')" class="sortable">
-                          Address <i :class="getSortIcon('address')"></i>
-                        </th>
-                        <th @click="sortBy('kraPin')" class="sortable">
-                          KRA PIN <i :class="getSortIcon('kraPin')"></i>
-                        </th>
-                        <th @click="sortBy('country')" class="sortable">
-                          Country <i :class="getSortIcon('country')"></i>
-                        </th>
-                        <th @click="sortBy('region')" class="sortable">
-                          Region <i :class="getSortIcon('region')"></i>
-                        </th>
-                        <th @click="sortBy('gps')" class="sortable">
-                          GPS <i :class="getSortIcon('gps')"></i>
-                        </th>
-                        <th @click="sortBy('status')" class="sortable">
-                          Status <i :class="getSortIcon('status')"></i>
-                        </th>
-                        <th class="actions-column">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr v-for="warehouse in sortedWarehouses" :key="warehouse.id" class="data-row">
-                        <td>{{ warehouse.name }}</td>
-                        <td>{{ warehouse.contactPerson }}</td>
-                        <td>{{ warehouse.email }}</td>
-                        <td>{{ warehouse.phone }}</td>
-                        <td>{{ warehouse.address }}</td>
-                        <td>{{ warehouse.kraPin }}</td>
-                        <td>{{ warehouse.country }}</td>
-                        <td>{{ warehouse.region }}</td>
-                        <td>{{ warehouse.gps }}</td>
-                        <td>
-                          <span :class="['status-pill', warehouse.status === 'Active' ? 'status-active' : 'status-inactive']">
-                            {{ warehouse.status }}
-                          </span>
-                        </td>
-                        <td class="actions-column">
-                          <button @click="editWarehouse(warehouse)" class="action-btn edit-btn">
-                            Edit
-                          </button>
-                          <button @click="deleteWarehouse(warehouse.id)" class="action-btn delete-btn">
-                            Delete
-                          </button>
-                        </td>
-                      </tr>
-                      <tr v-if="warehouses.length === 0">
-                        <td colspan="11" class="empty-state">
-                          No warehouses added yet
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              <Warehouses 
+                :initialWarehouses="warehouses"
+                @warehouses-updated="updateWarehouses"
+              />
             </div>
-            
+    
             <!-- Delivery Regions Tab Content -->
             <div v-if="activeTab === 'deliveryRegions'" class="tab-content">
               <DeliveryRegions 
@@ -351,255 +275,6 @@
         </div>
       </div>
       
-      <!-- Add/Edit Warehouse Modal -->
-      <div v-if="showWarehouseModal" class="modal-overlay" @click.self="closeWarehouseModal">
-        <div class="modal-container">
-          <div class="modal-header">
-            <h2>{{ editingWarehouse ? 'Edit Warehouse' : 'Add New Warehouse' }}</h2>
-            <button class="close-btn" @click="closeWarehouseModal">&times;</button>
-          </div>
-          <div class="modal-body">
-            <form @submit.prevent="saveWarehouse">
-              <div class="form-group">
-                <label for="warehouseName">Warehouse Name <span class="required">*</span></label>
-                <input type="text" id="warehouseName" v-model="newWarehouse.name" required placeholder="Enter warehouse name">
-              </div>
-              <div class="form-group">
-                <label for="contactPerson">Contact Person <span class="required">*</span></label>
-                <input type="text" id="contactPerson" v-model="newWarehouse.contactPerson" required placeholder="Enter contact person">
-              </div>
-              <div class="form-group">
-                <label for="email">Email <span class="required">*</span></label>
-                <input type="email" id="email" v-model="newWarehouse.email" required placeholder="Enter email address">
-              </div>
-              <div class="form-group">
-                <label for="phone">Phone <span class="required">*</span></label>
-                <input type="text" id="phone" v-model="newWarehouse.phone" required placeholder="Enter phone number">
-              </div>
-              <div class="form-group">
-                <label for="address">Address <span class="required">*</span></label>
-                <input type="text" id="address" v-model="newWarehouse.address" required placeholder="Enter physical address">
-              </div>
-              <div class="form-group">
-                <label for="kraPin">KRA PIN <span class="required">*</span></label>
-                <input type="text" id="kraPin" v-model="newWarehouse.kraPin" required placeholder="Enter KRA PIN">
-              </div>
-              
-              <!-- Country Dropdown -->
-              <div class="form-group">
-                <label for="country">Country <span class="required">*</span></label>
-                <div class="custom-select-container country-select-container">
-                  <div 
-                    class="custom-select-trigger country-select-trigger" 
-                    @click="toggleCountryDropdown"
-                    :class="{ 'active': isCountryDropdownOpen }"
-                  >
-                    <span>{{ newWarehouse.country || 'Select a country' }}</span>
-                    <svg 
-                      class="dropdown-arrow" 
-                      :class="{ 'open': isCountryDropdownOpen }"
-                      xmlns="http://www.w3.org/2000/svg" 
-                      width="16" 
-                      height="16" 
-                      viewBox="0 0 24 24" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      stroke-width="2" 
-                      stroke-linecap="round" 
-                      stroke-linejoin="round"
-                    >
-                      <polyline points="6 9 12 15 18 9"></polyline>
-                    </svg>
-                  </div>
-                  
-                  <div class="custom-select-dropdown country-select-dropdown" v-show="isCountryDropdownOpen">
-                    <div class="search-box">
-                      <input
-                        type="text"
-                        v-model="countrySearch"
-                        @input="filterCountries"
-                        placeholder="Search country..."
-                        class="dropdown-search"
-                        @click.stop
-                      >
-                    </div>
-                    
-                    <div class="dropdown-options">
-                      <div
-                        v-for="country in filteredCountries"
-                        :key="country"
-                        class="dropdown-option"
-                        @click="selectCountry(country)"
-                      >
-                        {{ country }}
-                      </div>
-                      <div v-if="filteredCountries.length === 0" class="no-results">
-                        No countries match your search
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <!-- Region Dropdown -->
-              <div class="form-group">
-                <label for="region">Region <span class="required">*</span></label>
-                <div class="custom-select-container region-select-container">
-                  <div 
-                    class="custom-select-trigger region-select-trigger" 
-                    @click="toggleRegionDropdown"
-                    :class="{ 'active': isRegionDropdownOpen }"
-                  >
-                    <span>{{ newWarehouse.region || 'Select a region' }}</span>
-                    <svg 
-                      class="dropdown-arrow" 
-                      :class="{ 'open': isRegionDropdownOpen }"
-                      xmlns="http://www.w3.org/2000/svg" 
-                      width="16" 
-                      height="16" 
-                      viewBox="0 0 24 24" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      stroke-width="2" 
-                      stroke-linecap="round" 
-                      stroke-linejoin="round"
-                    >
-                      <polyline points="6 9 12 15 18 9"></polyline>
-                    </svg>
-                  </div>
-                  
-                  <div class="custom-select-dropdown region-select-dropdown" v-show="isRegionDropdownOpen">
-                    <div class="search-box">
-                      <input
-                        type="text"
-                        v-model="regionSearch"
-                        @input="filterRegions"
-                        placeholder="Search region..."
-                        class="dropdown-search"
-                        @click.stop
-                      >
-                    </div>
-                    
-                    <div class="dropdown-options">
-                      <div
-                        v-for="region in filteredRegions"
-                        :key="region"
-                        class="dropdown-option"
-                        @click="selectRegion(region)"
-                      >
-                        {{ region }}
-                      </div>
-                      <div v-if="filteredRegions.length === 0" class="no-results">
-                        No regions match your search
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="form-group">
-                <label for="gps">GPS Coordinates</label>
-                <input type="text" id="gps" v-model="newWarehouse.gps" placeholder="Enter GPS coordinates (latitude,longitude)">
-              </div>
-              
-              <div class="form-group">
-                <label for="status">Status <span class="required">*</span></label>
-                <select id="status" v-model="newWarehouse.status" required>
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
-                </select>
-              </div>
-              
-              <div class="form-actions">
-                <button type="button" class="cancel-btn" @click="closeWarehouseModal">Cancel</button>
-                <button type="submit" class="submit-btn">Save Warehouse</button>
-              </div>
-            </form>
-          </div>
-          
-          <!-- Delivery Regions Tab Content -->
-          <div v-if="activeTab === 'deliveryRegions'" class="tab-content">
-            <DeliveryRegions 
-              :initialRegions="deliveryRegions" 
-              @regions-updated="updateDeliveryRegions"
-            />
-          </div>
-  
-          <!-- Products Tab Content -->
-          <div v-if="activeTab === 'products'" class="tab-content">
-            <div class="table-controls">
-              <div class="table-title">Products</div>
-              <button @click="openAddProductModal" class="add-btn">
-                <span class="plus-icon">+</span>
-                Add Product
-              </button>
-            </div>
-            
-            <div class="table-container">
-              <div class="table-wrapper">
-                <table class="data-table">
-                  <thead>
-                    <tr>
-                      <th>Product</th>
-                      <th @click="sortBy('productName')" class="sortable">
-                        Name <i :class="getSortIcon('productName')"></i>
-                      </th>
-                      <th @click="sortBy('skuNumber')" class="sortable">
-                        SKU Number <i :class="getSortIcon('skuNumber')"></i>
-                      </th>
-                      <th @click="sortBy('category')" class="sortable">
-                        Category <i :class="getSortIcon('category')"></i>
-                      </th>
-                      <th @click="sortBy('unitOfMeasure')" class="sortable">
-                        Unit of Measure <i :class="getSortIcon('unitOfMeasure')"></i>
-                      </th>
-                      <th @click="sortBy('description')" class="sortable">
-                        Description <i :class="getSortIcon('description')"></i>
-                      </th>
-                      <th @click="sortBy('manufacturer')" class="sortable">
-                        Manufacturer <i :class="getSortIcon('manufacturer')"></i>
-                      </th>
-                      <th @click="sortBy('status')" class="sortable">
-                        Status <i :class="getSortIcon('status')"></i>
-                      </th>
-                      <th class="actions-column">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="product in sortedProducts" :key="product.id" class="data-row">
-                      <td>
-                        <img :src="product.imageUrl" alt="Product image" class="product-thumbnail">
-                      </td>
-                      <td>{{ product.productName }}</td>
-                      <td>{{ product.skuNumber }}</td>
-                      <td>{{ product.category }}</td>
-                      <td>{{ product.unitOfMeasure }}</td>
-                      <td class="description-cell">{{ product.description }}</td>
-                      <td>{{ product.manufacturer }}</td>
-                      <td>
-                        <span :class="['status-pill', product.status === 'Active' ? 'status-active' : 'status-inactive']">
-                          {{ product.status }}
-                        </span>
-                      </td>
-                      <td class="actions-column">
-                        <button @click="editProduct(product)" class="action-btn edit-btn">
-                          Edit
-                        </button>
-                      </td>
-                    </tr>
-                    <tr v-if="products.length === 0">
-                      <td colspan="9" class="empty-state">
-                        No products added yet
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-  
       <!-- Edit Supplier Details Modal -->
       <div v-if="showSupplierModal" class="modal-overlay" @click.self="closeSupplierModal">
         <div class="modal-container">
@@ -933,12 +608,12 @@
   </template>
   
   <script>
-  import { Head } from "@inertiajs/vue3";
-  import AdminNavbar from "@/Components/AdminNavbar.vue";
+  import { Head, Link, router } from '@inertiajs/vue3';
+  import AdminNavbar from '@/Components/AdminNavbar.vue';
   import Modal from '@/Components/Modal.vue';
-  import { router } from '@inertiajs/vue3';
-  import BankAccounts from "./SupplierComponents/BankAccounts.vue";
-  import DeliveryRegions from "./SupplierComponents/DeliveryRegions.vue";
+  import BankAccounts from './SupplierComponents/BankAccounts.vue';
+  import DeliveryRegions from './SupplierComponents/DeliveryRegions.vue';
+  import Warehouses from './SupplierComponents/Warehouses.vue';
   
   export default {
     name: 'SupplierDetails',
@@ -947,7 +622,8 @@
       AdminNavbar,
       Modal,
       BankAccounts,
-      DeliveryRegions
+      DeliveryRegions,
+      Warehouses
     },
     props: {
       supplier: {
@@ -960,102 +636,94 @@
       }
     },
     mounted() {
-      // Initialize filtered industries list
-      this.filteredIndustries = [...this.industries];
-      
-      // Initialize sortedKey for tables
-      this.sortedKey = '';
-      this.sortedDir = 'asc';
-      
-      // Add event listener for closing dropdowns when clicking outside
-      document.addEventListener('click', this.closeDropdownsOnClickOutside);
-      
       console.log('Supplier component mounted with data:', this.supplier);
+      
+      // Add industry dropdown event listener
+      document.addEventListener('click', this.closeIndustryDropdownOutside);
+    },
+    beforeUnmount() {
+      // Remove industry dropdown event listener
+      document.removeEventListener('click', this.closeIndustryDropdownOutside);
     },
     data() {
       return {
-        productImages: [],
-        selectedImageIndex: -1,
-        supplierData: null,
-        activeTab: "bankAccounts",
-        tabs: [
-          { id: 'bankAccounts', name: 'Bank Accounts' },
-          { id: 'warehouses', name: 'Warehouses' },
-          { id: 'deliveryRegions', name: 'Delivery Regions' },
-          { id: 'products', name: 'Products' }
-        ],
-        sortKey: 'id',
+        // Basic data
+        supplier: this.supplier,
+        activeTab: 'bankAccounts',
+        sortKey: 'name',
         sortDir: 'asc',
-        products: [
-          { 
-            id: 1, 
-            productName: 'NPK 17-17-17 Complete Fertilizer', 
-            skuNumber: 'NPK-17171701',
-            category: 'Compound Fertilizer',
-            unitOfMeasure: '50 kg',
-            description: 'Balanced NPK fertilizer suitable for a wide range of crops, promoting healthy growth and high yields.',
-            manufacturer: 'Green Agriculture Ltd',
-            status: 'Active',
-            imageUrl: 'https://image.made-in-china.com/202f0j00SKpWwAoscucy/High-Quality-BOPP-Laminated-PP-Woven-Chemicals-Urea-Fertilizer-Bag-25kg-50kg-100kg.jpg'
-          },
-          { 
-            id: 2, 
-            productName: 'Urea 46-0-0 Nitrogen Fertilizer', 
-            skuNumber: 'URE-46001',
-            category: 'Nitrogenous Fertilizer',
-            unitOfMeasure: '25 kg',
-            description: 'High-nitrogen fertilizer ideal for leafy vegetables and promoting vegetative growth in crops.',
-            manufacturer: 'Farm Equipment Ltd',
-            status: 'Active',
-            imageUrl: 'https://image.made-in-china.com/202f0j00SKpWwAoscucy/High-Quality-BOPP-Laminated-PP-Woven-Chemicals-Urea-Fertilizer-Bag-25kg-50kg-100kg.jpg'
-          },
-          { 
-            id: 3, 
-            productName: 'DAP 18-46-0 Phosphate Fertilizer', 
-            skuNumber: 'DAP-18461',
-            category: 'Phosphatic Fertilizer',
-            unitOfMeasure: '50 kg',
-            description: 'Diammonium phosphate fertilizer with high phosphorus content for root development and flowering.',
-            manufacturer: 'Aden Agri Supplies',
-            status: 'Active',
-            imageUrl: 'https://image.made-in-china.com/202f0j00SKpWwAoscucy/High-Quality-BOPP-Laminated-PP-Woven-Chemicals-Urea-Fertilizer-Bag-25kg-50kg-100kg.jpg'
-          },
-          { 
-            id: 4, 
-            productName: 'CAN 27% Calcium Ammonium Nitrate', 
-            skuNumber: 'CAN-27001',
-            category: 'Nitrogenous Fertilizer',
-            unitOfMeasure: '50 kg',
-            description: 'Calcium-based nitrogen fertilizer that reduces soil acidity while providing essential nitrogen.',
-            manufacturer: 'Green Agriculture Ltd',
-            status: 'Active',
-            imageUrl: 'https://image.made-in-china.com/202f0j00SKpWwAoscucy/High-Quality-BOPP-Laminated-PP-Woven-Chemicals-Urea-Fertilizer-Bag-25kg-50kg-100kg.jpg'
-          },
-          { 
-            id: 5, 
-            productName: 'MOP 0-0-60 Potassium Fertilizer', 
-            skuNumber: 'MOP-00601',
-            category: 'Potassic Fertilizer',
-            unitOfMeasure: '25 kg',
-            description: 'Muriate of Potash fertilizer for improved crop quality, disease resistance and drought tolerance.',
-            manufacturer: 'Farm Equipment Ltd',
-            status: 'Inactive',
-            imageUrl: 'https://image.made-in-china.com/202f0j00SKpWwAoscucy/High-Quality-BOPP-Laminated-PP-Woven-Chemicals-Urea-Fertilizer-Bag-25kg-50kg-100kg.jpg'
-          }
-        ],
-        showBankAccountModal: false,
-        newBankAccount: {
-          bankName: '',
-          branch: '',
-          accountName: '',
-          accountNumber: '',
-          isPrimary: false
-        },
-        editingBankAccount: false,
-        editingBankAccountId: null,
+        
+        // Bank-related data
         isBankDropdownOpen: false,
         bankSearch: '',
         filteredBanks: [],
+        banks: [
+          'Kenya Commercial Bank',
+          'Equity Bank',
+          'Cooperative Bank',
+          'Standard Chartered Bank',
+          'Barclays Bank',
+          'National Bank of Kenya',
+          'NIC Bank',
+          'Family Bank',
+          'CFC Stanbic Bank',
+          'I&M Bank'
+        ],
+        
+        // Country and region data
+        isCountryDropdownOpen: false,
+        countrySearch: '',
+        filteredCountries: [],
+        countries: ['Kenya', 'Uganda', 'Tanzania', 'Rwanda', 'Ethiopia', 'South Africa', 'Nigeria'],
+        
+        isRegionDropdownOpen: false,
+        regionSearch: '',
+        filteredRegions: [],
+        regions: [
+          'Nairobi CBD',
+          'Westlands',
+          'Kiambu',
+          'Karen',
+          'Parklands',
+          'Mombasa Island',
+          'Kilimani',
+          'Lavington',
+          'South B',
+          'South C',
+          'Eastleigh',
+          'Gigiri',
+          'Hurlingham',
+          'Nyari'
+        ],
+        
+        // Bank Accounts data
+        bankAccounts: this.bankAccounts.length ? this.bankAccounts : [
+          { id: 1, accountName: 'Main Operations Account', accountNumber: '1234567890', bank: 'Kenya Commercial Bank', branch: 'Kimathi Street', swiftCode: 'KCBLKENX', currency: 'KES', isPrimary: true },
+          { id: 2, accountName: 'USD Account', accountNumber: '0987654321', bank: 'Equity Bank', branch: 'Westlands', swiftCode: 'EQBLKENA', currency: 'USD', isPrimary: false }
+        ],
+        
+        // Bank Account Modal data
+        showBankAccountModal: false,
+        editingBankAccount: false,
+        editingBankAccountId: null,
+        newBankAccount: {
+          accountName: '',
+          accountNumber: '',
+          bankName: '',
+          branch: '',
+          swiftCode: '',
+          currency: 'KES',
+          isPrimary: false
+        },
+        
+        // Warehouses data - keep this for passing to the Warehouses component
+        warehouses: [
+          { id: 1, name: 'Nairobi Central Warehouse', contactPerson: 'John Doe', email: 'john@example.com', phone: '+254700000000', address: '123 Moi Avenue', kraPin: 'A123456789B', country: 'Kenya', region: 'Nairobi', gps: '-1.286389,36.817223', status: 'Active' },
+          { id: 2, name: 'Mombasa Distribution Center', contactPerson: 'Jane Smith', email: 'jane@example.com', phone: '+254711111111', address: '456 Nkrumah Road', kraPin: 'C987654321D', country: 'Kenya', region: 'Mombasa', gps: '-4.043477,39.668205', status: 'Active' },
+          { id: 3, name: 'Kisumu Warehouse', contactPerson: 'Michael Brown', email: 'michael@example.com', phone: '+254722222222', address: '789 Oginga Odinga Street', kraPin: 'E567891234F', country: 'Kenya', region: 'Kisumu', gps: '-0.102671,34.761770', status: 'Inactive' }
+        ],
+        
+        // Delivery Regions data
         deliveryRegions: [
           {
             id: 1,
@@ -1079,33 +747,11 @@
             status: 'Active'
           }
         ],
-        showDeliveryRegionModal: false,
-        newDeliveryRegion: {
-          warehouseName: '',
-          deliverTo: '',
-          deliveryFee: '',
-          status: 'Active'
-        },
-        editingDeliveryRegion: false,
-        editingDeliveryRegionId: null,
         
-        // Warehouse dropdown
-        isWarehouseDropdownOpen: false,
-        warehouseSearch: '',
-        filteredWarehouses: [],
-        warehouses: [
-          { id: 1, name: 'Nairobi Central Warehouse' },
-          { id: 2, name: 'Mombasa Distribution Center' },
-          { id: 3, name: 'Kisumu Warehouse' },
-          { id: 4, name: 'Nakuru Fulfillment Center' },
-          { id: 5, name: 'Eldoret Storage Facility' }
-        ],
-        
-        // Region dropdown
-        isDeliverToDropdownOpen: false,
-        deliverToSearch: '',
-        filteredDeliverToRegions: [],
+        // Products data
         showProductModal: false,
+        editingProduct: false,
+        editingProductId: null,
         newProduct: {
           productName: '',
           skuNumber: '',
@@ -1113,69 +759,19 @@
           unitOfMeasure: '',
           description: '',
           manufacturer: '',
-          status: 'Active',
-          imageUrl: ''
+          status: 'Active'
         },
-        editingProduct: false,
-        editingProductId: null,
-        imagePreview: null,
-        isDragging: false,
-        isCountryDropdownOpen: false,
-        countrySearch: '',
-        filteredCountries: [],
-        countries: [
-          'Kenya', 'Uganda', 'Tanzania', 'Rwanda', 'Burundi', 'Ethiopia', 'South Sudan'
+        products: [
+          { id: 1, imageUrl: 'https://via.placeholder.com/80', productName: 'Premium Coffee Beans', skuNumber: 'CB001', category: 'Beverages', unitOfMeasure: 'kg', description: 'High-quality arabica coffee beans from Ethiopia', manufacturer: 'Global Coffee Co.', status: 'Active' },
+          { id: 2, imageUrl: 'https://via.placeholder.com/80', productName: 'Whole Wheat Flour', skuNumber: 'WF002', category: 'Baking Supplies', unitOfMeasure: 'kg', description: 'Organic stone-ground whole wheat flour', manufacturer: 'Healthy Mills Inc.', status: 'Active' },
+          { id: 3, imageUrl: 'https://via.placeholder.com/80', productName: 'Extra Virgin Olive Oil', skuNumber: 'OL003', category: 'Oils & Condiments', unitOfMeasure: 'liter', description: 'Cold-pressed extra virgin olive oil from Spain', manufacturer: 'Mediterranean Delights', status: 'Inactive' }
         ],
-        isRegionDropdownOpen: false,
-        regionSearch: '',
-        filteredRegions: [],
-        regions: [
-          'Baringo', 'Bomet', 'Bungoma', 'Busia', 'Elgeyo Marakwet', 'Embu', 'Garissa', 
-          'Homa Bay', 'Isiolo', 'Kajiado', 'Kakamega', 'Kericho', 'Kiambu', 'Kilifi', 
-          'Kirinyaga', 'Kisii', 'Kisumu', 'Kitui', 'Kwale', 'Laikipia', 'Lamu', 'Machakos', 
-          'Makueni', 'Mandera', 'Marsabit', 'Meru', 'Migori', 'Mombasa', 'Murang\'a', 
-          'Nairobi', 'Nakuru', 'Nandi', 'Narok', 'Nyamira', 'Nyandarua', 'Nyeri', 'Samburu', 
-          'Siaya', 'Taita Taveta', 'Tana River', 'Tharaka Nithi', 'Trans Nzoia', 'Turkana', 
-          'Uasin Gishu', 'Vihiga', 'Wajir', 'West Pokot'
-        ],
-        banks: [
-          'Absa Bank Kenya',
-          'Access Bank Kenya',
-          'Bank of Africa',
-          'Bank of Baroda',
-          'Bank of India',
-          'Consolidated Bank of Kenya',
-          'Co-operative Bank',
-          'Credit Bank',
-          'Development Bank of Kenya',
-          'Diamond Trust Bank',
-          'DIB Bank Kenya',
-          'Ecobank Kenya',
-          'Equity Bank',
-          'Family Bank',
-          'First Community Bank',
-          'Guaranty Trust Bank',
-          'Guardian Bank',
-          'Gulf African Bank',
-          'Housing Finance Company of Kenya',
-          'I&M Bank',
-          'Jamii Bora Bank',
-          'KCB Bank Kenya',
-          'Kenya Commercial Bank (KCB)',
-          'Mayfair Bank',
-          'Middle East Bank Kenya',
-          'National Bank of Kenya',
-          'NCBA Bank Kenya',
-          'Paramount Bank',
-          'Prime Bank (Kenya)',
-          'SBM Bank Kenya',
-          'Sidian Bank',
-          'Spire Bank',
-          'Stanbic Bank Kenya',
-          'Standard Chartered Kenya',
-          'Victoria Commercial Bank'
-        ],
-        // New properties for supplier edit functionality
+        
+        // Categories and units of measure for products
+        productCategories: ['Beverages', 'Dairy', 'Meat & Poultry', 'Seafood', 'Fruits & Vegetables', 'Bakery', 'Grains & Pasta', 'Canned Goods', 'Snacks', 'Condiments & Sauces', 'Baking Supplies', 'Oils & Vinegars'],
+        unitsOfMeasure: ['kg', 'g', 'liter', 'ml', 'unit', 'pack', 'box', 'carton', 'dozen', 'case'],
+        
+        // Edit Supplier Modal
         showSupplierModal: false,
         editedSupplier: {
           companyName: '',
@@ -1186,32 +782,25 @@
           kraPin: '',
           industry: ''
         },
+        
+        // Industry dropdown
         isIndustryDropdownOpen: false,
         industrySearch: '',
         filteredIndustries: [],
         industries: [
-          'Agriculture', 
-          'Food Processing', 
-          'Manufacturing', 
-          'Construction',
-          'Energy',
-          'Healthcare',
-          'Information Technology',
-          'Telecommunications',
-          'Transportation',
-          'Retail',
-          'Wholesale',
-          'Financial Services',
-          'Real Estate',
-          'Education',
-          'Hospitality',
-          'Mining',
-          'Oil & Gas',
-          'Pharmaceuticals',
-          'Textiles',
-          'Automotive'
+          'Food & Beverage', 'Retail', 'Manufacturing', 'Agriculture', 'Healthcare', 
+          'Technology', 'Construction', 'Hospitality', 'Education', 'Transportation',
+          'Energy', 'Financial Services', 'Mining', 'Pharmaceuticals', 'Telecommunications'
+        ],
+        
+        // Tabs
+        tabs: [
+          { id: 'bankAccounts', name: 'Bank Accounts' },
+          { id: 'warehouses', name: 'Warehouses' },
+          { id: 'deliveryRegions', name: 'Delivery Regions' },
+          { id: 'products', name: 'Products' }
         ]
-      }
+      };
     },
     computed: {
       sortedDeliveryRegions() {
@@ -1266,30 +855,6 @@
         });
         
         return accounts;
-      },
-      sortedWarehouses() {
-        const warehouses = [...this.warehouses];
-        warehouses.sort((a, b) => {
-          let modifier = this.sortDir === 'asc' ? 1 : -1;
-          let aValue = a[this.sortKey];
-          let bValue = b[this.sortKey];
-          
-          // Handle undefined or null values
-          if (aValue === undefined || aValue === null) {
-            aValue = '';
-          }
-          if (bValue === undefined || bValue === null) {
-            bValue = '';
-          }
-          
-          if (typeof aValue === 'number' && typeof bValue === 'number') {
-            return aValue < bValue ? -1 * modifier : 1 * modifier;
-          } else {
-            return aValue.toString().localeCompare(bValue.toString()) * modifier;
-          }
-        });
-        
-        return warehouses;
       },
       sortedProducts() {
         const products = [...this.products];
@@ -1368,9 +933,7 @@
         unitOfMeasure: '',
         description: '',
         manufacturer: '',
-        status: 'Active',
-        imageUrl: '',
-        images: []
+        status: 'Active'
       };
       this.imagePreview = null;
       this.productImages = [];
@@ -2074,6 +1637,80 @@
       },
       updateDeliveryRegions(updatedRegions) {
         this.deliveryRegions = updatedRegions;
+      },
+      updateWarehouses(updatedWarehouses) {
+        this.warehouses = updatedWarehouses;
+      },
+      
+      // Bank Account methods
+      openAddBankAccountModal() {
+        this.editingBankAccount = false;
+        this.editingBankAccountId = null;
+        this.newBankAccount = {
+          accountName: '',
+          accountNumber: '',
+          bankName: '',
+          branch: '',
+          swiftCode: '',
+          currency: 'KES',
+          isPrimary: false
+        };
+        this.showBankAccountModal = true;
+      },
+      
+      closeBankAccountModal() {
+        this.showBankAccountModal = false;
+      },
+      
+      saveBankAccount() {
+        if (this.editingBankAccount) {
+          // Update existing bank account
+          const index = this.bankAccounts.findIndex(account => account.id === this.editingBankAccountId);
+          if (index !== -1) {
+            this.bankAccounts.splice(index, 1, { ...this.newBankAccount, id: this.editingBankAccountId });
+          }
+        } else {
+          // Add new bank account
+          const maxId = this.bankAccounts.length > 0 ? Math.max(...this.bankAccounts.map(a => a.id)) : 0;
+          this.bankAccounts.push({
+            ...this.newBankAccount,
+            id: maxId + 1
+          });
+        }
+        this.closeBankAccountModal();
+      },
+      
+      // Bank dropdown methods
+      toggleBankDropdown() {
+        this.isBankDropdownOpen = !this.isBankDropdownOpen;
+        
+        if (this.isBankDropdownOpen) {
+          this.bankSearch = '';
+          this.filteredBanks = [...this.banks];
+        }
+      },
+      
+      closeBankDropdownOutside(event) {
+        const dropdown = document.querySelector('.custom-select-container');
+        if (dropdown && !dropdown.contains(event.target)) {
+          this.isBankDropdownOpen = false;
+        }
+      },
+      
+      filterBanks() {
+        if (this.bankSearch.trim() === '') {
+          this.filteredBanks = [...this.banks];
+        } else {
+          const query = this.bankSearch.toLowerCase();
+          this.filteredBanks = this.banks.filter(
+            bank => bank.toLowerCase().includes(query)
+          );
+        }
+      },
+      
+      selectBank(bank) {
+        this.newBankAccount.bankName = bank;
+        this.isBankDropdownOpen = false;
       }
     }
   }
