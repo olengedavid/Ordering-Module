@@ -79,53 +79,80 @@
         </div>
         <div class="modal-body">
           <form @submit.prevent="saveProduct">
-            <!-- Product Image -->
+            <!-- Product Images Upload -->
             <div class="form-group">
-              <label>Product Image</label>
+              <label for="productImage">Product Images</label>
               <div 
-                class="image-upload-area" 
-                :class="{ 'is-dragging': isDragging }"
-                @dragover="onDragOver"
-                @dragleave="onDragLeave"
-                @drop="onDrop"
+                class="image-upload-container"
+                @dragover.prevent="onDragOver"
+                @dragleave.prevent="onDragLeave"
+                @drop.prevent="onDrop"
+                :class="{ 'drag-over': isDragging }"
               >
-                <div v-if="productImages.length > 0" class="image-preview-area">
-                  <img :src="imagePreview" alt="Product preview" class="main-image-preview">
-                  <div class="image-gallery">
-                    <div 
-                      v-for="(image, index) in productImages" 
-                      :key="image.id"
-                      class="gallery-image-wrapper"
-                      :class="{ 'selected': index === selectedImageIndex }"
-                      @click="setPrimaryImage(image.id)"
-                    >
-                      <img :src="image.url" alt="Product image" class="gallery-image">
+                <div class="upload-placeholder">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                    <polyline points="21 15 16 10 5 21"/>
+                  </svg>
+                  <p>Drag & drop images here or <span class="browse-text">browse</span></p>
+                  <input 
+                    type="file" 
+                    id="productImage" 
+                    class="file-input" 
+                    accept="image/*"
+                    multiple
+                    @change="onFileSelected"
+                  >
+                </div>
+              </div>
+              
+              <!-- Images Gallery (Outside the upload container) -->
+              <div v-if="productImages.length > 0" class="images-gallery-outside">
+                <div class="gallery-preview-outside">
+                  <img v-if="imagePreview" :src="imagePreview" alt="Primary product image" class="primary-preview-img">
+                </div>
+                <div class="gallery-thumbnails-outside">
+                  <div 
+                    v-for="image in productImages" 
+                    :key="image.id"
+                    class="thumbnail-container"
+                    :class="{ 'primary-thumbnail': image.isPrimary }"
+                  >
+                    <img :src="image.url" alt="Product image" class="thumbnail-img">
+                    <div class="thumbnail-actions">
                       <button 
                         type="button" 
-                        class="remove-image-btn"
-                        @click.stop="removeImage(image.id)"
-                      >✕</button>
-                      <div v-if="image.isPrimary" class="primary-badge">Primary</div>
+                        class="set-primary-btn" 
+                        @click="setPrimaryImage(image.id)"
+                        :disabled="image.isPrimary"
+                        :title="image.isPrimary ? 'Primary Image' : 'Set as Primary'"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                      </button>
+                      <button type="button" class="remove-thumbnail-btn" @click="removeImage(image.id)">&times;</button>
                     </div>
                   </div>
+                  <div class="add-more-container">
+                    <label for="additionalImages" class="add-more-btn">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                      </svg>
+                    </label>
+                    <input 
+                      type="file" 
+                      id="additionalImages" 
+                      class="file-input" 
+                      accept="image/*"
+                      multiple
+                      @change="onFileSelected"
+                    >
+                  </div>
                 </div>
-                <div v-else class="upload-placeholder">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                    <polyline points="21 15 16 10 5 21"></polyline>
-                  </svg>
-                  <p>Drag & drop product images here or click to browse</p>
-                </div>
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  @change="onFileSelected" 
-                  class="file-input"
-                  multiple
-                >
               </div>
-              <p class="upload-help-text">Upload at least one product image. First image will be set as the primary image.</p>
             </div>
 
             <div class="form-row">
@@ -225,12 +252,14 @@ export default {
         unitOfMeasure: '',
         description: '',
         manufacturer: '',
-        status: 'Active'
+        status: 'Active',
+        imageUrl: '',
+        images: []
       },
       products: [
-        { id: 1, imageUrl: 'https://via.placeholder.com/80', productName: 'Premium Coffee Beans', skuNumber: 'CB001', category: 'Beverages', unitOfMeasure: 'kg', description: 'High-quality arabica coffee beans from Ethiopia', manufacturer: 'Global Coffee Co.', status: 'Active' },
-        { id: 2, imageUrl: 'https://via.placeholder.com/80', productName: 'Whole Wheat Flour', skuNumber: 'WF002', category: 'Baking Supplies', unitOfMeasure: 'kg', description: 'Organic stone-ground whole wheat flour', manufacturer: 'Healthy Mills Inc.', status: 'Active' },
-        { id: 3, imageUrl: 'https://via.placeholder.com/80', productName: 'Extra Virgin Olive Oil', skuNumber: 'OL003', category: 'Oils & Condiments', unitOfMeasure: 'liter', description: 'Cold-pressed extra virgin olive oil from Spain', manufacturer: 'Mediterranean Delights', status: 'Inactive' }
+        { id: 1, imageUrl: 'https://image.made-in-china.com/202f0j00SKpWwAoscucy/High-Quality-BOPP-Laminated-PP-Woven-Chemicals-Urea-Fertilizer-Bag-25kg-50kg-100kg.jpg', productName: 'Premium Coffee Beans', skuNumber: 'CB001', category: 'Beverages', unitOfMeasure: 'kg', description: 'High-quality arabica coffee beans from Ethiopia', manufacturer: 'Global Coffee Co.', status: 'Active' },
+        { id: 2, imageUrl: 'https://image.made-in-china.com/202f0j00SKpWwAoscucy/High-Quality-BOPP-Laminated-PP-Woven-Chemicals-Urea-Fertilizer-Bag-25kg-50kg-100kg.jpg', productName: 'Whole Wheat Flour', skuNumber: 'WF002', category: 'Baking Supplies', unitOfMeasure: 'kg', description: 'Organic stone-ground whole wheat flour', manufacturer: 'Healthy Mills Inc.', status: 'Active' },
+        { id: 3, imageUrl: 'https://image.made-in-china.com/202f0j00SKpWwAoscucy/High-Quality-BOPP-Laminated-PP-Woven-Chemicals-Urea-Fertilizer-Bag-25kg-50kg-100kg.jpg', productName: 'Extra Virgin Olive Oil', skuNumber: 'OL003', category: 'Oils & Condiments', unitOfMeasure: 'liter', description: 'Cold-pressed extra virgin olive oil from Spain', manufacturer: 'Mediterranean Delights', status: 'Inactive' }
       ],
       
       // Product categories and units of measure
@@ -313,17 +342,23 @@ export default {
         unitOfMeasure: '',
         description: '',
         manufacturer: '',
-        status: 'Active'
+        status: 'Active',
+        imageUrl: '',
+        images: []
       };
       this.imagePreview = null;
       this.productImages = [];
       this.selectedImageIndex = -1;
+      this.isDragging = false;
       this.showProductModal = true;
     },
     
     closeProductModal() {
       this.showProductModal = false;
       this.imagePreview = null;
+      this.productImages = [];
+      this.selectedImageIndex = -1;
+      this.isDragging = false;
     },
     
     editProduct(product) {
@@ -341,13 +376,14 @@ export default {
         }];
       }
       this.selectedImageIndex = this.productImages.findIndex(img => img.isPrimary) || 0;
+      this.isDragging = false;
       this.showProductModal = true;
     },
     
     saveProduct() {
       // Get the primary image URL for the main imageUrl field
       const primaryImage = this.productImages.find(img => img.isPrimary);
-      const primaryImageUrl = primaryImage ? primaryImage.url : 'https://via.placeholder.com/80';
+      const primaryImageUrl = primaryImage ? primaryImage.url : 'https://image.made-in-china.com/202f0j00SKpWwAoscucy/High-Quality-BOPP-Laminated-PP-Woven-Chemicals-Urea-Fertilizer-Bag-25kg-50kg-100kg.jpg';
       
       if (this.editingProduct) {
         // Update existing product
