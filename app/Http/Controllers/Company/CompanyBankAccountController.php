@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Companies\Company;
 use App\Models\Companies\CompanyBankAccount;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class CompanyBankAccountController extends Controller
 {
@@ -81,5 +82,19 @@ class CompanyBankAccountController extends Controller
         $bankAccount->delete();
     
         return back()->with('success', 'Bank account deleted successfully');
+    }
+
+    public function getByCompany(Request $request)
+    {
+        $validated = $request->validate([
+            'company_uuid' => 'required|exists:companies,uuid'
+        ]);
+
+        $company = Company::where('uuid', $validated['company_uuid'])->firstOrFail();
+        $bankAccounts = CompanyBankAccount::where('company_id', $company->id)->get();
+
+        return response()->json([
+            'bankAccounts' => $bankAccounts
+        ]);
     }
 }
