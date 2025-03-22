@@ -206,14 +206,15 @@ onMounted(() => {
               </tbody>
             </table>
           </div>
-          <CustomPagination
+        </div>
+
+        <CustomPagination
             :current-page="currentPage"
             :last-page="lastPage"
             :per-page="perPage"
             @page-changed="handlePageChange"
             @update:per-page="handlePerPageChange"
           />
-        </div>
 
         <!-- Add Product Modal -->
         <Modal :show="showingModal" @close="closeModal">

@@ -23,6 +23,8 @@ const inventories = ref([]);
 const products = ref([]);
 const warehouses = ref([]);
 const loading = ref(true);
+const editingInventory = ref(false);
+const editingInventoryUuid = ref(null);
 
 const form = useForm({
   company_id: user.company_id,
@@ -40,15 +42,50 @@ const form = useForm({
   status: "active",
 });
 
+const editInventoryItem = (inventory) => {
+  editingInventory.value = true;
+  editingInventoryUuid.value = inventory.uuid;
+
+  form.product_id = inventory.product_id;
+  form.warehouse_id = inventory.warehouse_id;
+  form.cost_price = inventory.cost_price;
+  form.selling_price = inventory.selling_price;
+  form.stock_quantity = inventory.stock_quantity;
+  form.min_order = inventory.min_order;
+  form.max_order = inventory.max_order;
+  form.promo_amount = inventory.promo_amount;
+  form.promo_start_date = inventory.promo_start_date;
+  form.promo_end_date = inventory.promo_end_date;
+  form.status = inventory.status;
+
+  showingModal.value = true;
+};
+
 const createInventory = () => {
-  form.post(route("supplier.inventories.store"), {
-    preserveScroll: true,
-    onSuccess: () => {
-      closeModal();
-      form.reset();
-      fetchInventories();
-    },
-  });
+  if (editingInventory.value) {
+    form.put(
+      route("supplier.inventories.update", {
+        uuid: editingInventoryUuid.value,
+      }),
+      {
+        preserveScroll: true,
+        onSuccess: () => {
+          closeModal();
+          form.reset();
+          fetchInventories();
+        },
+      }
+    );
+  } else {
+    form.post(route("supplier.inventories.store"), {
+      preserveScroll: true,
+      onSuccess: () => {
+        closeModal();
+        form.reset();
+        fetchInventories();
+      },
+    });
+  }
 };
 
 const handlePerPageChange = (newPerPage) => {
@@ -110,7 +147,10 @@ const handlePageChange = (page) => {
 
 const closeModal = () => {
   showingModal.value = false;
+  editingInventory.value = false;
+  editingInventoryUuid.value = null;
   form.reset();
+  form.clearErrors();
 };
 
 defineProps({
@@ -124,6 +164,10 @@ onMounted(() => {
   fetchWarehouses();
 });
 </script>
+
+<style scoped>
+@import "../Supplier/SupplierComponents/SupplierSharedStyles.css";
+</style> 
 
 <template>
   <AuthenticatedLayout>
@@ -177,7 +221,7 @@ onMounted(() => {
         <div class="table-container">
           <div class="table-wrapper">
             <table class="data-table">
-              <thead>
+              <thead class="bg-gray-50">
                 <tr>
                   <th class="table-header table-header-sortable">Product</th>
                   <th class="table-header table-header-sortable">Warehouse</th>
@@ -189,19 +233,34 @@ onMounted(() => {
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="inventory in inventories" :key="inventory.id" class="data-row hover:bg-[#f8fafc]">
+                <tr
+                  v-for="inventory in inventories"
+                  :key="inventory.id"
+                  class="data-row hover:bg-[#f8fafc]"
+                >
                   <td class="table-cell">{{ inventory.product?.name }}</td>
                   <td class="table-cell">{{ inventory.warehouse?.name }}</td>
                   <td class="table-cell">{{ inventory.stock_quantity }}</td>
                   <td class="table-cell">KES {{ inventory.cost_price }}</td>
                   <td class="table-cell">KES {{ inventory.selling_price }}</td>
                   <td class="table-cell whitespace-nowrap">
-                    <span :class="inventory.status === 'active' ? 'status-pill-active' : 'status-pill-inactive'">
+                    <span
+                      :class="
+                        inventory.status === 'active'
+                          ? 'status-pill-active'
+                          : 'status-pill-inactive'
+                      "
+                    >
                       {{ inventory.status }}
                     </span>
                   </td>
                   <td class="table-cell">
-                    <button class="action-btn edit-btn">Edit</button>
+                    <button
+                      class="action-btn edit-btn"
+                      @click="editInventoryItem(inventory)"
+                    >
+                      Edit
+                    </button>
                     <button class="action-btn delete-btn">Delete</button>
                   </td>
                 </tr>
@@ -213,31 +272,38 @@ onMounted(() => {
               </tbody>
             </table>
           </div>
-          <CustomPagination
-            :current-page="currentPage"
-            :last-page="lastPage"
-            :per-page="perPage"
-            @page-changed="handlePageChange"
-            @update:per-page="handlePerPageChange"
-          />
         </div>
+        <CustomPagination
+          :current-page="currentPage"
+          :last-page="lastPage"
+          :per-page="perPage"
+          @page-changed="handlePageChange"
+          @update:per-page="handlePerPageChange"
+        />
 
         <!-- Add Inventory Modal -->
-        <Modal :show="showingModal" @close="closeModal">
-          <div class="p-6">
-            <h2 class="text-lg font-medium text-gray-900 mb-4">
-              Add New Inventory Item
-            </h2>
-
-            <form @submit.prevent="createInventory">
-              <div class="grid grid-cols-2 gap-4">
-                <div>
-                  <InputLabel for="product_id" value="Product" />
+        <div v-if="showingModal" class="modal-overlay" @click.self="closeModal">
+          <div class="modal-container">
+            <div class="modal-header">
+              <h2>
+                {{
+                  editingInventory
+                    ? "Edit Inventory Item"
+                    : "Add New Inventory Item"
+                }}
+              </h2>
+              <button class="close-btn" @click="closeModal">&times;</button>
+            </div>
+            <div class="modal-body">
+              <form @submit.prevent="createInventory">
+                <!-- Product Dropdown -->
+                <div class="form-group">
+                  <label>Product Name <span class="required">*</span></label>
                   <select
-                    id="product_id"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                    class="custom-select"
                     v-model="form.product_id"
                     required
+                    :disabled="editingInventory"
                   >
                     <option value="">Select Product</option>
                     <option
@@ -247,16 +313,15 @@ onMounted(() => {
                     >
                       {{ product.name }}
                     </option>
-                    <!-- Add product options dynamically -->
                   </select>
                   <InputError class="mt-2" :message="form.errors.product_id" />
                 </div>
 
-                <div>
-                  <InputLabel for="warehouse_id" value="Warehouse" />
+                <!-- Warehouse Dropdown -->
+                <div class="form-group">
+                  <label>Warehouse <span class="required">*</span></label>
                   <select
-                    id="warehouse_id"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                    class="custom-select"
                     v-model="form.warehouse_id"
                     required
                   >
@@ -268,7 +333,6 @@ onMounted(() => {
                     >
                       {{ warehouse.name }}
                     </option>
-                    <!-- Add warehouse options dynamically -->
                   </select>
                   <InputError
                     class="mt-2"
@@ -276,28 +340,32 @@ onMounted(() => {
                   />
                 </div>
 
-                <div>
-                  <InputLabel for="cost_price" value="Cost Price (KES)" />
-                  <TextInput
-                    id="cost_price"
+                <!-- Cost Price -->
+                <div class="form-group">
+                  <label
+                    >Cost Price (KES) <span class="required">*</span></label
+                  >
+                  <input
                     type="number"
                     step="0.01"
-                    class="mt-1 block w-full"
                     v-model="form.cost_price"
                     required
+                    class="form-input"
                   />
                   <InputError class="mt-2" :message="form.errors.cost_price" />
                 </div>
 
-                <div>
-                  <InputLabel for="selling_price" value="Selling Price (KES)" />
-                  <TextInput
-                    id="selling_price"
+                <!-- Selling Price -->
+                <div class="form-group">
+                  <label
+                    >Selling Price (KES) <span class="required">*</span></label
+                  >
+                  <input
                     type="number"
                     step="0.01"
-                    class="mt-1 block w-full"
                     v-model="form.selling_price"
                     required
+                    class="form-input"
                   />
                   <InputError
                     class="mt-2"
@@ -305,15 +373,14 @@ onMounted(() => {
                   />
                 </div>
 
-                <div>
-                  <InputLabel for="stock_quantity" value="Beginning Stock" />
-                  <TextInput
-                    id="stock_quantity"
+                <!-- Stock Quantity -->
+                <div class="form-group">
+                  <label>Beginning Stock <span class="required">*</span></label>
+                  <input
                     type="number"
-                    step="0.01"
-                    class="mt-1 block w-full"
                     v-model="form.stock_quantity"
                     required
+                    class="form-input"
                   />
                   <InputError
                     class="mt-2"
@@ -321,47 +388,31 @@ onMounted(() => {
                   />
                 </div>
 
-                <!-- <div>
-                      <InputLabel for="batch_number" value="Batch Number" />
-                      <TextInput
-                        id="batch_number"
-                        type="text"
-                        class="mt-1 block w-full"
-                        v-model="form.batch_number"
-                      />
-                      <InputError
-                        class="mt-2"
-                        :message="form.errors.batch_number"
-                      />
-                    </div> -->
-
-                <div>
-                  <InputLabel for="min_order" value="Minimum Order" />
-                  <TextInput
-                    id="min_order"
+                <!-- Min Order -->
+                <div class="form-group">
+                  <label>Minimum Order <span class="required">*</span></label>
+                  <input
                     type="number"
-                    step="0.01"
-                    class="mt-1 block w-full"
                     v-model="form.min_order"
                     required
+                    class="form-input"
                   />
                   <InputError class="mt-2" :message="form.errors.min_order" />
                 </div>
 
-                <div>
-                  <InputLabel for="max_order" value="Maximum Order" />
-                  <TextInput
-                    id="max_order"
+                <!-- Max Order -->
+                <div class="form-group">
+                  <label>Maximum Order <span class="required">*</span></label>
+                  <input
                     type="number"
-                    step="0.01"
-                    class="mt-1 block w-full"
                     v-model="form.max_order"
                     required
+                    class="form-input"
                   />
                   <InputError class="mt-2" :message="form.errors.max_order" />
                 </div>
 
-                <div>
+                <div class="form-group">
                   <InputLabel for="promo_amount" value="Promo Amount" />
                   <TextInput
                     id="promo_amount"
@@ -376,7 +427,7 @@ onMounted(() => {
                   />
                 </div>
 
-                <div>
+                <div class="form-group">
                   <InputLabel for="promo_start_date" value="Promo Start Date" />
                   <TextInput
                     id="promo_start_date"
@@ -390,7 +441,7 @@ onMounted(() => {
                   />
                 </div>
 
-                <div>
+                <div class="form-group">
                   <InputLabel for="promo_end_date" value="Promo End Date" />
                   <TextInput
                     id="promo_end_date"
@@ -403,23 +454,23 @@ onMounted(() => {
                     :message="form.errors.promo_end_date"
                   />
                 </div>
-              </div>
 
-              <div class="mt-6 flex justify-end">
-                <button
-                  type="button"
-                  class="mr-3 px-4 py-2 text-sm text-gray-700 hover:text-gray-900"
-                  @click="closeModal"
-                >
-                  Cancel
-                </button>
-                <PrimaryButton :disabled="form.processing">
-                  Create Inventory Item
-                </PrimaryButton>
-              </div>
-            </form>
+                <div class="form-actions">
+                  <button type="button" class="cancel-btn" @click="closeModal">
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    class="submit-btn"
+                    :disabled="form.processing"
+                  >
+                    {{ editingInventory ? "Update" : "Create" }} Inventory Item
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
-        </Modal>
+        </div>
       </div>
     </div>
   </AuthenticatedLayout>
