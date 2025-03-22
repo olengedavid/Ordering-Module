@@ -113,75 +113,9 @@
     
             <!-- Products Tab Content -->
             <div v-if="activeTab === 'products'" class="tab-content">
-              <div class="table-controls">
-                <div class="table-title">Products</div>
-                <button @click="openAddProductModal" class="add-btn">
-                  <span class="plus-icon">+</span>
-                  Add Product
-                </button>
-              </div>
-              
-              <div class="table-container">
-                <div class="table-wrapper">
-                  <table class="data-table">
-                    <thead>
-                      <tr>
-                        <th>Product</th>
-                        <th @click="sortBy('productName')" class="sortable">
-                          Name <i :class="getSortIcon('productName')"></i>
-                        </th>
-                        <th @click="sortBy('skuNumber')" class="sortable">
-                          SKU Number <i :class="getSortIcon('skuNumber')"></i>
-                        </th>
-                        <th @click="sortBy('category')" class="sortable">
-                          Category <i :class="getSortIcon('category')"></i>
-                        </th>
-                        <th @click="sortBy('unitOfMeasure')" class="sortable">
-                          Unit of Measure <i :class="getSortIcon('unitOfMeasure')"></i>
-                        </th>
-                        <th @click="sortBy('description')" class="sortable">
-                          Description <i :class="getSortIcon('description')"></i>
-                        </th>
-                        <th @click="sortBy('manufacturer')" class="sortable">
-                          Manufacturer <i :class="getSortIcon('manufacturer')"></i>
-                        </th>
-                        <th @click="sortBy('status')" class="sortable">
-                          Status <i :class="getSortIcon('status')"></i>
-                        </th>
-                        <th class="actions-column">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr v-for="product in sortedProducts" :key="product.id" class="data-row">
-                        <td>
-                          <img :src="product.imageUrl" alt="Product image" class="product-thumbnail">
-                        </td>
-                        <td>{{ product.productName }}</td>
-                        <td>{{ product.skuNumber }}</td>
-                        <td>{{ product.category }}</td>
-                        <td>{{ product.unitOfMeasure }}</td>
-                        <td class="description-cell">{{ product.description }}</td>
-                        <td>{{ product.manufacturer }}</td>
-                        <td>
-                          <span :class="['status-pill', product.status === 'Active' ? 'status-active' : 'status-inactive']">
-                            {{ product.status }}
-                          </span>
-                        </td>
-                        <td class="actions-column">
-                          <button @click="editProduct(product)" class="action-btn edit-btn">
-                            Edit
-                          </button>
-                        </td>
-                      </tr>
-                      <tr v-if="products.length === 0">
-                        <td colspan="9" class="empty-state">
-                          No products added yet
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              <Products 
+                :supplier="supplier"
+              />
             </div>
           </div>
         </div>
@@ -285,13 +219,6 @@
           </div>
         </div>
       </div>
-      
-      <!-- Add Product Modal -->
-      <div v-if="showProductModal" class="modal-overlay" @click.self="closeAddProductModal">
-        <div class="modal-container">
-          <!-- Product modal content -->
-        </div>
-      </div>
     </div>
   </template>
   
@@ -302,6 +229,7 @@
   import BankAccounts from './SupplierComponents/BankAccounts.vue';
   import DeliveryRegions from './SupplierComponents/DeliveryRegions.vue';
   import Warehouses from './SupplierComponents/Warehouses.vue';
+  import Products from './SupplierComponents/Products.vue';
   
   export default {
     name: 'SupplierDetails',
@@ -311,7 +239,8 @@
       Modal,
       BankAccounts,
       DeliveryRegions,
-      Warehouses
+      Warehouses,
+      Products
     },
     props: {
       supplier: {
@@ -369,29 +298,6 @@
           { id: 2, name: 'Mombasa Distribution Center', contactPerson: 'Jane Smith', email: 'jane@example.com', phone: '+254711111111', address: '456 Nkrumah Road', kraPin: 'C987654321D', country: 'Kenya', region: 'Mombasa', gps: '-4.043477,39.668205', status: 'Active' },
           { id: 3, name: 'Kisumu Warehouse', contactPerson: 'Michael Brown', email: 'michael@example.com', phone: '+254722222222', address: '789 Oginga Odinga Street', kraPin: 'E567891234F', country: 'Kenya', region: 'Kisumu', gps: '-0.102671,34.761770', status: 'Inactive' }
         ],
-        
-        // Products data
-        showProductModal: false,
-        editingProduct: false,
-        editingProductId: null,
-        newProduct: {
-          productName: '',
-          skuNumber: '',
-          category: '',
-          unitOfMeasure: '',
-          description: '',
-          manufacturer: '',
-          status: 'Active'
-        },
-        products: [
-          { id: 1, imageUrl: 'https://via.placeholder.com/80', productName: 'Premium Coffee Beans', skuNumber: 'CB001', category: 'Beverages', unitOfMeasure: 'kg', description: 'High-quality arabica coffee beans from Ethiopia', manufacturer: 'Global Coffee Co.', status: 'Active' },
-          { id: 2, imageUrl: 'https://via.placeholder.com/80', productName: 'Whole Wheat Flour', skuNumber: 'WF002', category: 'Baking Supplies', unitOfMeasure: 'kg', description: 'Organic stone-ground whole wheat flour', manufacturer: 'Healthy Mills Inc.', status: 'Active' },
-          { id: 3, imageUrl: 'https://via.placeholder.com/80', productName: 'Extra Virgin Olive Oil', skuNumber: 'OL003', category: 'Oils & Condiments', unitOfMeasure: 'liter', description: 'Cold-pressed extra virgin olive oil from Spain', manufacturer: 'Mediterranean Delights', status: 'Inactive' }
-        ],
-        
-        // Categories and units of measure for products
-        productCategories: ['Beverages', 'Dairy', 'Meat & Poultry', 'Seafood', 'Fruits & Vegetables', 'Bakery', 'Grains & Pasta', 'Canned Goods', 'Snacks', 'Condiments & Sauces', 'Baking Supplies', 'Oils & Vinegars'],
-        unitsOfMeasure: ['kg', 'g', 'liter', 'ml', 'unit', 'pack', 'box', 'carton', 'dozen', 'case'],
         
         // Edit Supplier Modal
         showSupplierModal: false,
@@ -479,164 +385,7 @@
       document.removeEventListener('click', this.closeDropdownsOnClickOutside);
     },
     
-    // Product Modal Methods
-    openAddProductModal() {
-      this.editingProduct = false;
-      this.editingProductId = null;
-      this.newProduct = {
-        productName: '',
-        skuNumber: '',
-        category: '',
-        unitOfMeasure: '',
-        description: '',
-        manufacturer: '',
-        status: 'Active'
-      };
-      this.imagePreview = null;
-      this.productImages = [];
-      this.showProductModal = true;
-    },
     methods: {
-      closeProductModal() {
-        this.showProductModal = false;
-        this.imagePreview = null;
-      },
-      
-      editProduct(product) {
-        this.editingProduct = true;
-        this.editingProductId = product.id;
-        this.newProduct = { ...product };
-        this.imagePreview = product.imageUrl;
-        this.productImages = product.images ? [...product.images] : [];
-        if (this.productImages.length === 0 && product.imageUrl) {
-          // If there are no images but there is an imageUrl, create an image entry
-          this.productImages = [{
-            id: 1,
-            url: product.imageUrl,
-            isPrimary: true
-          }];
-        }
-        this.selectedImageIndex = this.productImages.findIndex(img => img.isPrimary) || 0;
-        this.showProductModal = true;
-      },
-      
-      saveProduct() {
-        // Get the primary image URL for the main imageUrl field
-        const primaryImage = this.productImages.find(img => img.isPrimary);
-        const primaryImageUrl = primaryImage ? primaryImage.url : 'https://image.made-in-china.com/202f0j00SKpWwAoscucy/High-Quality-BOPP-Laminated-PP-Woven-Chemicals-Urea-Fertilizer-Bag-25kg-50kg-100kg.jpg';
-        
-        if (this.editingProduct) {
-          // Update existing product
-          const index = this.products.findIndex(product => product.id === this.editingProductId);
-          if (index !== -1) {
-            this.products.splice(index, 1, { 
-              ...this.newProduct, 
-              id: this.editingProductId,
-              imageUrl: primaryImageUrl,
-              images: [...this.productImages]
-            });
-          }
-        } else {
-          // Add new product
-          const maxId = this.products.length > 0 ? Math.max(...this.products.map(p => p.id)) : 0;
-          this.products.push({
-            ...this.newProduct,
-            id: maxId + 1,
-            imageUrl: primaryImageUrl,
-            images: [...this.productImages]
-          });
-        }
-        
-        this.closeProductModal();
-      },
-      
-      // Image Upload Methods
-      onFileSelected(event) {
-        const files = event.target.files;
-        if (files && files.length > 0) {
-          Array.from(files).forEach(file => {
-            this.addImageToGallery(file);
-          });
-        }
-      },
-      
-      onDragOver(event) {
-        event.preventDefault();
-        this.isDragging = true;
-      },
-      
-      onDragLeave(event) {
-        event.preventDefault();
-        this.isDragging = false;
-      },
-      
-      onDrop(event) {
-        this.isDragging = false;
-        const files = event.dataTransfer.files;
-        if (files && files.length > 0) {
-          Array.from(files).forEach(file => {
-            if (file.type.match('image.*')) {
-              this.addImageToGallery(file);
-            }
-          });
-        }
-      },
-      
-      addImageToGallery(file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const newImageId = this.productImages.length > 0 ? 
-            Math.max(...this.productImages.map(img => img.id)) + 1 : 1;
-          
-          const newImage = {
-            id: newImageId,
-            url: e.target.result,
-            isPrimary: this.productImages.length === 0 // First image is primary by default
-          };
-          
-          this.productImages.push(newImage);
-          
-          // Update imagePreview if this is the primary image
-          if (newImage.isPrimary) {
-            this.imagePreview = newImage.url;
-            this.selectedImageIndex = this.productImages.length - 1;
-          }
-        };
-        reader.readAsDataURL(file);
-      },
-      
-      removeImage(imageId) {
-        const index = this.productImages.findIndex(img => img.id === imageId);
-        if (index !== -1) {
-          const wasRemovingPrimary = this.productImages[index].isPrimary;
-          this.productImages.splice(index, 1);
-          
-          // If we removed the primary image and there are other images, set a new primary
-          if (wasRemovingPrimary && this.productImages.length > 0) {
-            this.productImages[0].isPrimary = true;
-            this.imagePreview = this.productImages[0].url;
-            this.selectedImageIndex = 0;
-          } else if (this.productImages.length === 0) {
-            // If no images left
-            this.imagePreview = null;
-            this.selectedImageIndex = -1;
-          }
-        }
-      },
-      
-      setPrimaryImage(imageId) {
-        // Reset all images to non-primary
-        this.productImages.forEach(img => {
-          img.isPrimary = (img.id === imageId);
-        });
-        
-        // Update the preview with the new primary image
-        const primaryImage = this.productImages.find(img => img.id === imageId);
-        if (primaryImage) {
-          this.imagePreview = primaryImage.url;
-          this.selectedImageIndex = this.productImages.findIndex(img => img.id === imageId);
-        }
-      },
       goBack() {
         window.history.back();
       },
@@ -967,41 +716,6 @@
         this.isIndustryDropdownOpen = false;
       },
       
-      // Product Methods
-      openAddProductModal() {
-        this.editingProduct = false;
-        this.editingProductId = null;
-        this.newProduct = {
-          productName: '',
-          category: '',
-          price: '',
-          stock: '',
-          status: 'Active'
-        };
-        this.showProductModal = true;
-      },
-      
-      deleteProduct(productId) {
-        if (confirm('Are you sure you want to delete this product?')) {
-          this.products = this.products.filter(product => product.id !== productId);
-        }
-      },
-      
-      closeAddProductModal() {
-        this.showProductModal = false;
-      },
-      
-      closeDropdownsOnClickOutside(event) {
-        // Close industry dropdown if clicking outside
-        if (this.isIndustryDropdownOpen) {
-          const container = document.querySelector('.industry-select-container');
-          if (container && !container.contains(event.target)) {
-            this.isIndustryDropdownOpen = false;
-          }
-        }
-        
-        // Close other dropdowns similarly if needed
-      },
       updateWarehouses(updatedWarehouses) {
         this.warehouses = updatedWarehouses;
       },
