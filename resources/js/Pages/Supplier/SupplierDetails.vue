@@ -99,7 +99,7 @@
             <!-- Warehouses Tab Content -->
             <div v-if="activeTab === 'warehouses'" class="tab-content">
               <Warehouses 
-                :initialWarehouses="warehouses"
+                :supplier="supplier"
                 @warehouses-updated="updateWarehouses"
               />
             </div>

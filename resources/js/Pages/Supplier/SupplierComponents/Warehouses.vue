@@ -255,10 +255,10 @@
 export default {
   name: 'Warehouses',
   props: {
-    // Pass initial warehouses data from parent if needed
-    initialWarehouses: {
-      type: Array,
-      default: () => []
+    // Only accept the supplier object from parent
+    supplier: {
+      type: Object,
+      required: true
     }
   },
   data() {
@@ -267,8 +267,8 @@ export default {
       sortKey: 'name',
       sortDir: 'asc',
       
-      // Warehouse data
-      warehouses: this.initialWarehouses.length ? this.initialWarehouses : [
+      // Warehouse data - this will be populated based on the supplier
+      warehouses: [
         { id: 1, name: 'Nairobi Central Warehouse', contactPerson: 'John Doe', email: 'john@example.com', phone: '+254700000000', address: '123 Moi Avenue', kraPin: 'A123456789B', country: 'Kenya', region: 'Nairobi', gps: '-1.286389,36.817223', status: 'Active' },
         { id: 2, name: 'Mombasa Distribution Center', contactPerson: 'Jane Smith', email: 'jane@example.com', phone: '+254711111111', address: '456 Nkrumah Road', kraPin: 'C987654321D', country: 'Kenya', region: 'Mombasa', gps: '-4.043477,39.668205', status: 'Active' },
         { id: 3, name: 'Kisumu Warehouse', contactPerson: 'Michael Brown', email: 'michael@example.com', phone: '+254722222222', address: '789 Oginga Odinga Street', kraPin: 'E567891234F', country: 'Kenya', region: 'Kisumu', gps: '-0.102671,34.761770', status: 'Inactive' }
@@ -323,6 +323,9 @@ export default {
     // Initialize filtered countries and regions
     this.filteredCountries = [...this.countries];
     this.updateRegionOptions();
+    
+    // In a real scenario, this is where we would fetch the warehouses from the API
+    // this.fetchWarehouses();
   },
   beforeUnmount() {
     // Clean up event listeners
@@ -356,6 +359,21 @@ export default {
     }
   },
   methods: {
+    // API Methods
+    fetchWarehouses() {
+      // In a real scenario, this would fetch warehouses from API
+      // Example:
+      // axios.get(`/api/suppliers/${this.supplier.id}/warehouses`)
+      //   .then(response => {
+      //     this.warehouses = response.data;
+      //   })
+      //   .catch(error => {
+      //     console.error('Error fetching warehouses:', error);
+      //   });
+      
+      // For now, we'll just use our default data in the data() section
+    },
+    
     // Sorting methods
     sortBy(key) {
       if (this.sortKey === key) {
@@ -408,7 +426,20 @@ export default {
       this.updateRegionOptions();
     },
     deleteWarehouse(warehouseId) {
-      // Remove the warehouse
+      // In a real scenario, this would make an API call to delete the warehouse
+      // Example:
+      // axios.delete(`/api/suppliers/${this.supplier.id}/warehouses/${warehouseId}`)
+      //   .then(() => {
+      //     // Remove the warehouse from the local list on success
+      //     this.warehouses = this.warehouses.filter(warehouse => warehouse.id !== warehouseId);
+      //     // Notify the parent that warehouses have been updated
+      //     this.$emit('warehouses-updated', this.warehouses);
+      //   })
+      //   .catch(error => {
+      //     console.error('Error deleting warehouse:', error);
+      //   });
+      
+      // For now, just remove from the list without API call
       this.warehouses = this.warehouses.filter(warehouse => warehouse.id !== warehouseId);
       
       // Emit event to notify parent component
@@ -416,13 +447,44 @@ export default {
     },
     saveWarehouse() {
       if (this.editingWarehouse) {
-        // Update existing warehouse
+        // In a real scenario, this would make an API call to update the warehouse
+        // Example:
+        // axios.put(`/api/suppliers/${this.supplier.id}/warehouses/${this.editingWarehouseId}`, this.newWarehouse)
+        //   .then(response => {
+        //     // Update the warehouse in the local list on success
+        //     const index = this.warehouses.findIndex(warehouse => warehouse.id === this.editingWarehouseId);
+        //     if (index !== -1) {
+        //       this.warehouses.splice(index, 1, { ...response.data });
+        //     }
+        //     this.closeWarehouseModal();
+        //     // Notify the parent that warehouses have been updated
+        //     this.$emit('warehouses-updated', this.warehouses);
+        //   })
+        //   .catch(error => {
+        //     console.error('Error updating warehouse:', error);
+        //   });
+        
+        // For now, just update the local list without API call
         const index = this.warehouses.findIndex(warehouse => warehouse.id === this.editingWarehouseId);
         if (index !== -1) {
           this.warehouses.splice(index, 1, { ...this.newWarehouse, id: this.editingWarehouseId });
         }
       } else {
-        // Create a new warehouse with unique ID
+        // In a real scenario, this would make an API call to create a new warehouse
+        // Example:
+        // axios.post(`/api/suppliers/${this.supplier.id}/warehouses`, this.newWarehouse)
+        //   .then(response => {
+        //     // Add the new warehouse to the local list on success
+        //     this.warehouses.push(response.data);
+        //     this.closeWarehouseModal();
+        //     // Notify the parent that warehouses have been updated
+        //     this.$emit('warehouses-updated', this.warehouses);
+        //   })
+        //   .catch(error => {
+        //     console.error('Error creating warehouse:', error);
+        //   });
+        
+        // For now, just add to the local list without API call
         const maxId = this.warehouses.length > 0 ? Math.max(...this.warehouses.map(w => w.id)) : 0;
         
         const warehouse = {
