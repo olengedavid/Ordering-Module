@@ -14,7 +14,7 @@ class Warehouse extends Model
      * TO be added
      * Country
      * Region
-     * Gps Location
+    * Gps Location
      */
     protected $fillable = [
         'name',

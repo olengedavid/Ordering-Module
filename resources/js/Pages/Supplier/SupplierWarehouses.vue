@@ -380,7 +380,8 @@ const form = useForm({
   region: '',
   gps: '',
   company_id: user.company_id,
-  created_by: user.id
+  created_by: user.id,
+  uuid: '',
 });
 
 // Computed properties for filtering and sorting
@@ -490,6 +491,7 @@ const editWarehouse = (warehouse) => {
   form.region = warehouse.region || warehouse.location;
   form.gps = warehouse.gps || '';
   form.status = warehouse.status;
+  form.uuid = warehouse.uuid;
   
   showWarehouseModal.value = true;
   isCountryDropdownOpen.value = false;
