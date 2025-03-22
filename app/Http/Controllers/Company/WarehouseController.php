@@ -50,4 +50,11 @@ class WarehouseController extends Controller{
         $warehouses = Warehouse::where('company_id', $company->id)->get();
         return response()->json($warehouses);
     }
+
+    public function getPaginatedSupplierWarehouses(Request $request)
+    {
+        $company = Company::where('uuid', $request->uuid)->firstOrFail();
+        $warehouses = Warehouse::where('company_id', $company->id)->paginate($request->pageSize);
+        return response()->json($warehouses);
+    }
 }

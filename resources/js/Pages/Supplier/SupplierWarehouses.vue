@@ -65,7 +65,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="warehouse in paginatedWarehouses" :key="warehouse.id" class="data-row">
+                <tr v-for="warehouse in warehouses" :key="warehouse.id" class="data-row">
                   <td>{{ warehouse.name }}</td>
                   <td>{{ warehouse.contact_person }}</td>
                   <td>{{ warehouse.email }}</td>
@@ -100,7 +100,14 @@
         </div>
         
         <!-- Pagination Controls -->
-        <div class="pagination-controls">
+        <CustomPagination
+            :current-page="currentPage"
+            :last-page="lastPage"
+            :per-page="perPage"
+            @page-changed="handlePageChange"
+            @update:per-page="handlePerPageChange"
+          />
+        <!-- <div class="pagination-controls">
           <div class="per-page">
             <span>Show</span>
             <select v-model="perPage" @change="resetPagination" class="per-page-select">
@@ -125,7 +132,7 @@
               Next
             </button>
           </div>
-        </div>
+        </div> -->
       </div>
       
       <!-- Add/Edit Warehouse Modal -->
@@ -311,7 +318,7 @@
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import { Head, Link, useForm, usePage } from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
-
+import CustomPagination from "@/Components/CustomPagination.vue";
 
 // const props = defineProps({
 //   warehouses: {
@@ -331,8 +338,8 @@ const sortDir = ref('asc');
 
 // Pagination
 const currentPage = ref(1);
-const perPage = ref(10);
-const perPageOptions = ref([5, 10, 20, 50]);
+const perPage = ref(5);
+const lastPage = ref(1);
 
 // Modal and form
 const showWarehouseModal = ref(false);
@@ -431,11 +438,11 @@ const totalPages = computed(() => {
   return Math.ceil(filteredWarehouses.value.length / perPage.value);
 });
 
-const paginatedWarehouses = computed(() => {
-  const startIndex = (currentPage.value - 1) * perPage.value;
-  const endIndex = startIndex + perPage.value;
-  return sortedWarehouses.value.slice(startIndex, endIndex);
-});
+// const paginatedWarehouses = computed(() => {
+//   const startIndex = (currentPage.value - 1) * perPage.value;
+//   const endIndex = startIndex + perPage.value;
+//   return sortedWarehouses.value.slice(startIndex, endIndex);
+// });
 
 // Event handlers
 const sortBy = (key) => {
@@ -524,11 +531,16 @@ const saveWarehouse = () => {
 const fetchSupplierWarehouses = async () => {
   try {
     const response = await axios.get(
-      route("supplier.warehouses.list", {
+      route("supplier.warehouses.paginate", {
         uuid: supplier_uuid,
+        page: currentPage.value,
+        pageSize: perPage.value,
       })
     );
-    warehouses.value = response.data;
+    warehouses.value = response.data.data;
+    currentPage.value = response.data.current_page;
+    lastPage.value = response.data.last_page;
+    perPage.value = response.data.per_page;
   } catch (error) {
     console.error("Error fetching warehouses:", error);
   }
@@ -648,24 +660,14 @@ const selectRegion = (region) => {
 };
 
 // Pagination methods
-const prevPage = () => {
-  if (currentPage.value > 1) {
-    currentPage.value--;
-  }
-};
-
-const nextPage = () => {
-  if (currentPage.value < totalPages.value) {
-    currentPage.value++;
-  }
-};
-
-const goToPage = (page) => {
+const handlePageChange = (page) => {
   currentPage.value = page;
+  fetchSupplierWarehouses();
 };
 
-const resetPagination = () => {
-  currentPage.value = 1;
+const handlePerPageChange = (newPerPage) => {
+  perPage.value = newPerPage;
+  fetchSupplierWarehouses();
 };
 
 // Lifecycle hooks
