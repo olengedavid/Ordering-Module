@@ -14,6 +14,10 @@ const props = defineProps({
 const page = usePage();
 const user = page.props.auth.user;
 
+const currentPage = ref(1);
+const perPage = ref(10);
+const lastPage = ref(1);
+
 const products = ref([]);
 const loading = ref(true);
 const showingModal = ref(false);
@@ -24,6 +28,8 @@ const fetchProducts = async () => {
     const response = await axios.get(
       route("supplier.products.list", {
         uuid: props.supplier.uuid,
+        page: currentPage.value,
+        perPage: perPage.value,
       })
     );
     products.value = response.data;

@@ -52,6 +52,17 @@ class ProductController extends Controller
         return response()->json($products);
     }
 
+    public function getPaginatedProductsBySupplier(Request $request){
+        $company = Company::where('uuid', $request->uuid)->firstOrFail();
+
+        $products = Product::where('company_id', $company->id)
+            ->with(['creator'])
+            ->latest()
+            ->paginate($request->pageSize);
+
+        return response()->json($products);
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([

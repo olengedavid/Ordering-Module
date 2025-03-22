@@ -25,6 +25,7 @@ Route::middleware('auth')->group(function () {
 
     #Product Routes
     Route::get('supplier/products', [ProductController::class, 'index'])->name('products.index');
+    Route::get('supplier/products/paginate', [ProductController::class, 'getPaginatedProductsBySupplier'])->name('supplier.products.paginate');
     Route::get('supplier/products/list', [ProductController::class, 'getProductsBySupplier'])->name('supplier.products.list');
     Route::get('products/create', [ProductController::class, 'create'])->name('products.create');
     Route::post('products/create', [ProductController::class, 'store'])->name('products.store');
@@ -32,7 +33,7 @@ Route::middleware('auth')->group(function () {
     #Inventory Routes
     // Route::get('supplier/inventories', [InventoryController::class, 'index'])->name('supplier.inventories.index');
     Route::get('supplier/inventories', [InventoryController::class, 'index'])->name('supplier.inventories.index');
-    Route::get('api/supplier/inventories', [InventoryController::class, 'getInventoriesBySupplier'])->name('supplier.inventories');
+    Route::get('api/supplier/inventories', [InventoryController::class, 'getInventoriesBySupplier'])->name('supplier.inventories.list');
     Route::post('supplier/inventories', [InventoryController::class, 'store'])->name('supplier.inventories.store');
     Route::put('supplier/inventories/{inventory}', [InventoryController::class, 'update'])->name('supplier.inventories.update');
     Route::delete('supplier/inventories/{inventory}', [InventoryController::class, 'destroy'])->name('supplier.inventories.destroy');

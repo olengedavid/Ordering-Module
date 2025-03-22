@@ -24,7 +24,7 @@ class InventoryController extends Controller
         $inventories = Inventory::where('company_id', $company->id)
             ->with(['product', 'warehouse'])
             ->latest()
-            ->get();
+            ->paginate($request->per_page);
 
         return response()->json($inventories);
     }
