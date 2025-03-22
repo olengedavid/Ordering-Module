@@ -64,7 +64,15 @@ class ProductController extends Controller
     }
 
     public function store(Request $request)
+
     {
+
+        // Debug the request
+    \Illuminate\Support\Facades\Log::info('Request data:', [
+        'has_file' => $request->hasFile('primary_image'),
+        'all_data' => $request->all(),
+        'files' => $request->allFiles()
+    ]);
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'sku_number' => 'required|string|unique:products',
@@ -77,6 +85,8 @@ class ProductController extends Controller
             'created_by' => 'required|integer|exists:users,id',
             'company_id' => 'required|integer|exists:companies,id'
         ]);
+
+
 
         $images = [];
 
