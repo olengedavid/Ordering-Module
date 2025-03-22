@@ -58,7 +58,7 @@
                 </button>
               </td>
             </tr>
-            <tr v-if="bankAccounts.length === 0">
+            <tr v-if="localBankAccounts.length === 0">
               <td colspan="6" class="empty-state">
                 No bank accounts added yet
               </td>
@@ -165,10 +165,6 @@ export default {
     supplier: {
       type: Object,
       required: true
-    },
-    bankAccounts: {
-      type: Array,
-      default: () => []
     }
   },
   data() {
@@ -231,7 +227,7 @@ export default {
   },
   computed: {
     sortedBankAccounts() {
-      const accounts = [...this.getBankAccounts()];
+      const accounts = [...this.localBankAccounts];
       accounts.sort((a, b) => {
         let modifier = this.sortDir === 'asc' ? 1 : -1;
         // Handle different property name formats
@@ -276,13 +272,13 @@ export default {
   },
   methods: {
     getBankAccounts() {
-      // Return props.bankAccounts if it has data, otherwise use local data
-      return (this.bankAccounts && this.bankAccounts.length > 0) ? this.bankAccounts : this.localBankAccounts;
+      // Only use local data since we're fully independent now
+      return this.localBankAccounts;
     },
-    loadBankAccounts() {
-      // If bank accounts already provided by props, just process them
-      if (this.bankAccounts && this.bankAccounts.length > 0) {
-        this.processReceivedAccounts(this.bankAccounts);
+    loadBankAccounts(forceRefresh = false) {
+      // If bank accounts already provided by props and we're not forcing a refresh, just process them
+      if (!forceRefresh && this.localBankAccounts && this.localBankAccounts.length > 0) {
+        this.processReceivedAccounts(this.localBankAccounts);
         return;
       }
       
@@ -338,7 +334,7 @@ export default {
       this.newBankAccount = {
         bankName: '',
         branch: '',
-        accountName: this.supplier ? this.supplier.companyName : '',
+        accountName: this.supplier ? (this.supplier.company_name || this.supplier.companyName || '') : '',
         accountNumber: '',
         isPrimary: this.getBankAccounts().length === 0 // Set as primary if it's the first account
       };
@@ -429,7 +425,7 @@ export default {
             preserveScroll: true,
             onSuccess: () => {
               this.closeBankAccountModal();
-              this.loadBankAccounts();
+              this.loadBankAccounts(true);
             },
             onError: (errors) => {
               alert('Error updating bank account');
@@ -442,7 +438,7 @@ export default {
             preserveScroll: true,
             onSuccess: () => {
               this.closeBankAccountModal();
-              this.loadBankAccounts();
+              this.loadBankAccounts(true);
             },
             onError: (errors) => {
               alert('Error creating bank account');
@@ -474,7 +470,7 @@ export default {
       }, {
         preserveScroll: true,
         onSuccess: () => {
-          this.loadBankAccounts();
+          this.loadBankAccounts(true);
         },
         onError: (errors) => {
           // Handle errors to prevent unresponsiveness
@@ -496,7 +492,7 @@ export default {
         data: { uuid: account.uuid },
         preserveScroll: true,
         onSuccess: () => {
-          this.loadBankAccounts();
+          this.loadBankAccounts(true);
         },
         onError: (errors) => {
           // Handle errors to prevent unresponsiveness
@@ -581,480 +577,5 @@ export default {
 </script>
 
 <style scoped>
-/* Table Controls */
-.table-controls {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.table-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #1e293b;
-}
-
-.add-btn {
-  display: flex;
-  align-items: center;
-  padding: 10px 16px;
-  background-color: #0E64A5;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.95rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.add-btn:hover {
-  background-color: #0a4f83;
-}
-
-.plus-icon {
-  font-size: 1.2rem;
-  margin-right: 8px;
-  font-weight: bold;
-}
-
-/* Table styles with horizontal scroll */
-.table-container {
-  position: relative;
-  width: 100%;
-  background-color: white;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-  margin-bottom: 24px;
-}
-
-.table-wrapper {
-  width: 100%;
-  overflow-x: auto;
-  /* Enable smooth scrolling */
-  scroll-behavior: smooth;
-  /* Add some padding for better appearance on mobile */
-  padding-bottom: 6px;
-  /* Hide scrollbar for WebKit browsers */
-  scrollbar-width: thin;
-}
-
-/* Customize scrollbar for Webkit browsers */
-.table-wrapper::-webkit-scrollbar {
-  height: 8px;
-}
-
-.table-wrapper::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 4px;
-}
-
-.table-wrapper::-webkit-scrollbar-thumb {
-  background-color: #cbd5e1;
-  border-radius: 4px;
-}
-
-.table-wrapper::-webkit-scrollbar-thumb:hover {
-  background-color: #94a3b8;
-}
-
-/* Make sure the table takes full width of its container */
-.data-table {
-  width: 100%;
-  min-width: 750px; /* Minimum width to ensure horizontal scroll appears when needed */
-  table-layout: auto; /* Allow table to adjust column width based on content */
-  border-collapse: separate;
-  border-spacing: 0;
-  font-size: 0.95rem;
-}
-
-/* Ensure the table headers and data cells have proper min-width */
-.data-table th, 
-.data-table td {
-  white-space: nowrap; /* Prevent text wrapping */
-  min-width: 120px; /* Minimum width for each column */
-}
-
-/* Actions column should be narrower and fixed */
-.actions-column {
-  min-width: 110px;
-  width: 110px;
-}
-
-/* Add a visible indicator for horizontal scroll on mobile */
-@media (max-width: 768px) {
-  .table-container::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 20px;
-    height: 100%;
-    background: linear-gradient(to right, rgba(255, 255, 255, 0), rgba(230, 230, 230, 0.3));
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.3s;
-  }
-
-  .table-container:hover::after {
-    opacity: 1;
-  }
-}
-
-.data-table th {
-  background-color: #f8fafc;
-  color: #64748b;
-  font-weight: 600;
-  text-align: left;
-  padding: 14px 15px;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.data-table th.sortable {
-  cursor: pointer;
-  user-select: none;
-}
-
-.sort-icon {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  background-repeat: no-repeat;
-  background-position: center;
-  margin-left: 4px;
-  vertical-align: text-bottom;
-}
-
-.sort-none::after {
-  content: '⇵';
-  opacity: 0.3;
-  font-size: 12px;
-}
-
-.sort-asc::after {
-  content: '↑';
-  color: #2563eb;
-  font-size: 12px;
-}
-
-.sort-desc::after {
-  content: '↓';
-  color: #2563eb;
-  font-size: 12px;
-}
-
-.data-table td {
-  padding: 14px 15px;
-  border-bottom: 1px solid #e5e7eb;
-  color: #334155;
-  text-align: left;
-}
-
-.data-table tr:last-child td {
-  border-bottom: none;
-}
-
-.data-row:hover td {
-  background-color: #f8fafc;
-}
-
-.primary-column {
-  text-align: center;
-}
-
-.primary-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  background-color: rgba(16, 185, 129, 0.1);
-  color: #10b981;
-  border-radius: 50%;
-}
-
-.set-primary-btn {
-  background: none;
-  border: 1px solid #cbd5e1;
-  border-radius: 4px;
-  padding: 6px 10px;
-  font-size: 0.85rem;
-  color: #64748b;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.set-primary-btn:hover {
-  border-color: #2563eb;
-  color: #2563eb;
-  background-color: rgba(37, 99, 235, 0.05);
-}
-
-.action-btn {
-  background: none;
-  border: 1px solid #e5e7eb;
-  border-radius: 4px;
-  padding: 6px 10px;
-  font-size: 0.85rem;
-  margin-right: 6px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.edit-btn {
-  color: #0E64A5;
-  border-color: #0E64A5;
-}
-
-.edit-btn:hover {
-  background-color: rgba(14, 100, 165, 0.05);
-}
-
-.delete-btn {
-  color: #ef4444;
-  border-color: #ef4444;
-}
-
-.delete-btn:hover {
-  background-color: rgba(239, 68, 68, 0.05);
-}
-
-.empty-state {
-  text-align: center;
-  color: #64748b;
-  padding: 30px;
-  font-style: italic;
-}
-
-/* Modal Styles */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.modal-container {
-  background-color: white;
-  border-radius: 8px;
-  width: 500px;
-  max-width: 90%;
-  max-height: 90vh;
-  overflow: hidden;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
-  display: flex;
-  flex-direction: column;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 24px;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.modal-header h2 {
-  margin: 0;
-  font-size: 1.25rem;
-  color: #1e293b;
-  font-weight: 600;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  color: #64748b;
-  cursor: pointer;
-}
-
-.modal-body {
-  padding: 24px;
-  text-align: left;
-  overflow-y: auto;
-  max-height: 70vh;
-}
-
-.form-group {
-  margin-bottom: 16px;
-  text-align: left;
-  width: 100%;
-  box-sizing: border-box;
-  position: relative;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 6px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: #334155;
-}
-
-.form-group input,
-.form-group select,
-.form-group textarea {
-  width: 100%;
-  padding: 10px 14px;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  font-size: 0.95rem;
-  color: #1e293b;
-  background-color: white;
-  transition: border-color 0.2s;
-}
-
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
-  outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
-}
-
-.required {
-  color: #ef4444;
-}
-
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 24px;
-  gap: 12px;
-}
-
-.cancel-btn {
-  padding: 10px 16px;
-  background-color: white;
-  color: #64748b;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  font-size: 0.95rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.cancel-btn:hover {
-  background-color: #f1f5f9;
-}
-
-.submit-btn {
-  padding: 10px 16px;
-  background-color: #0E64A5;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.95rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.submit-btn:hover {
-  background-color: #0a4f83;
-}
-
-/* Custom Select Styles */
-.custom-select-container {
-  position: relative;
-  width: 100%;
-}
-
-.custom-select-trigger {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  padding: 10px 14px;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  background-color: white;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.custom-select-trigger.active {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
-}
-
-.dropdown-arrow {
-  transition: transform 0.2s;
-}
-
-.dropdown-arrow.open {
-  transform: rotate(180deg);
-}
-
-.custom-select-dropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  width: 100%;
-  background-color: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  margin-top: 5px;
-  z-index: 10;
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.custom-select-dropdown.dropdown-top {
-  top: auto;
-  bottom: 100%;
-  margin-top: 0;
-  margin-bottom: 5px;
-}
-
-.search-box {
-  padding: 10px 12px;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.dropdown-search {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #cbd5e1;
-  border-radius: 4px;
-  font-size: 0.9rem;
-}
-
-.dropdown-search:focus {
-  outline: none;
-  border-color: #2563eb;
-}
-
-.dropdown-options {
-  max-height: 220px;
-  overflow-y: auto;
-}
-
-.dropdown-option {
-  padding: 10px 14px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.dropdown-option:hover {
-  background-color: #f1f5f9;
-}
-
-.no-results {
-  padding: 14px;
-  text-align: center;
-  color: #64748b;
-  font-style: italic;
-}
+@import './SupplierSharedStyles.css';
 </style> 
