@@ -4,6 +4,10 @@
       <div class="page-container">
         <Head :title="`Supplier #${supplier.id}`" />
         <div>
+          <div class="message-container">
+            <SuccessMessage v-if="successMessage" @close="successMessage = ''" v-slot>{{ successMessage }}</SuccessMessage>
+            <ErrorMessage v-if="errorMessage" @close="errorMessage = ''" v-slot>{{ errorMessage }}</ErrorMessage>
+          </div>
           <div class="header-container">
             <h1 class="page-title">Supplier Details</h1>
             <button class="back-button" @click="goBack">
@@ -232,6 +236,8 @@
   import DeliveryRegions from './SupplierComponents/DeliveryRegions.vue';
   import Warehouses from './SupplierComponents/Warehouses.vue';
   import Products from './SupplierComponents/Products.vue';
+  import SuccessMessage from '@/Components/SuccessMessage.vue';
+  import ErrorMessage from '@/Components/ErrorMessage.vue';
   
   export default {
     name: 'SupplierDetails',
@@ -242,7 +248,9 @@
       BankAccounts,
       DeliveryRegions,
       Warehouses,
-      Products
+      Products,
+      SuccessMessage,
+      ErrorMessage
     },
     props: {
       supplier: {
@@ -267,6 +275,10 @@
         activeTab: 'bankAccounts',
         sortKey: 'name',
         sortDir: 'asc',
+        
+        // Message state
+        successMessage: '',
+        errorMessage: '',
         
         // Country and region data
         isCountryDropdownOpen: false,
@@ -404,14 +416,26 @@
           // Use Inertia router to activate the supplier
           router.post('/admin/suppliers/activate', supplierData, {
             preserveScroll: true,
+            onSuccess: () => {
+              this.successMessage = 'Supplier activated successfully';
+              setTimeout(() => {
+                this.successMessage = '';
+              }, 3000);
+            },
             onError: (errors) => {
-              alert('Error activating supplier');
+              this.errorMessage = 'Error activating supplier';
               console.error(errors);
+              setTimeout(() => {
+                this.errorMessage = '';
+              }, 3000);
             }
           });
         } catch (error) {
-          alert('Error activating supplier: ' + error.message);
+          this.errorMessage = 'Error activating supplier: ' + error.message;
           console.error('Error in activateSupplier:', error);
+          setTimeout(() => {
+            this.errorMessage = '';
+          }, 3000);
         }
       },
       setActiveTab(tabId) {
@@ -626,14 +650,20 @@
             !this.editedSupplier.phoneNumber ||
             !this.editedSupplier.kraPin ||
             !this.editedSupplier.industry) {
-          alert('Please fill in all required fields');
+          this.errorMessage = 'Please fill in all required fields';
+          setTimeout(() => {
+            this.errorMessage = '';
+          }, 3000);
           return;
         }
         
         // Validate email format
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(this.editedSupplier.email)) {
-          alert('Please enter a valid email address');
+          this.errorMessage = 'Please enter a valid email address';
+          setTimeout(() => {
+            this.errorMessage = '';
+          }, 3000);
           return;
         }
         
@@ -655,17 +685,31 @@
           // Use Inertia router to update the supplier
           router.post('/admin/suppliers/update', supplierData, {
             preserveScroll: true,
-            onSuccess: () => {
+            onSuccess: (page) => {
+              // Update the supplier data in the component
+              if (page.props.supplier) {
+                this.supplier = page.props.supplier;
+              }
               this.closeSupplierModal();
+              this.successMessage = 'Supplier updated successfully';
+              setTimeout(() => {
+                this.successMessage = '';
+              }, 3000);
             },
             onError: (errors) => {
-              alert('Error updating supplier details');
+              this.errorMessage = 'Error updating supplier details';
               console.error(errors);
+              setTimeout(() => {
+                this.errorMessage = '';
+              }, 3000);
             }
           });
         } catch (error) {
-          alert('Error updating supplier: ' + error.message);
+          this.errorMessage = 'Error updating supplier: ' + error.message;
           console.error('Error in saveSupplierDetails:', error);
+          setTimeout(() => {
+            this.errorMessage = '';
+          }, 3000);
         }
       },
       
@@ -727,4 +771,14 @@
   
   <style scoped>
   @import './SupplierComponents/SupplierSharedStyles.css';
+
+  .message-container {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    width: auto;
+    max-width: 90%;
+  }
   </style>
