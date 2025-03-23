@@ -3,15 +3,19 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, Link } from "@inertiajs/vue3";
 import Modal from "@/Components/Modal.vue";
 import { ref, onMounted } from "vue";
-import { useForm, router, usePage } from "@inertiajs/vue3";
+import { useForm, usePage } from "@inertiajs/vue3";
 import CustomPagination from "@/Components/CustomPagination.vue";
-
+import SuccessMessage from '@/Components/SuccessMessage.vue';
+import ErrorMessage from '@/Components/ErrorMessage.vue';
 
 const page = usePage();
 const user = page.props.auth.user;
 const supplier_uuid = page.props.auth.user.company.uuid;
 const products = ref([]);
 const showingModal = ref(false);
+const successMessage = ref('');
+const errorMessage = ref('');
+const searchQuery = ref('');
 
 const currentPage = ref(1);
 const perPage = ref(10);
@@ -67,7 +71,17 @@ const submit = () => {
       closeModal();
       form.reset();
       fetchSupplierProducts();
+      successMessage.value = 'Product added successfully';
+      setTimeout(() => {
+        successMessage.value = '';
+      }, 3000);
     },
+    onError: () => {
+      errorMessage.value = 'Error adding product';
+      setTimeout(() => {
+        errorMessage.value = '';
+      }, 3000);
+    }
   });
 };
 
@@ -97,6 +111,11 @@ onMounted(() => {
 
     <div class="page-container">
       <div class="content-container">
+        <div class="message-container">
+          <SuccessMessage v-if="successMessage" @close="successMessage = ''" v-slot>{{ successMessage }}</SuccessMessage>
+          <ErrorMessage v-if="errorMessage" @close="errorMessage = ''" v-slot>{{ errorMessage }}</ErrorMessage>
+        </div>
+        
         <div class="header-container">
           <h1 class="page-title">Products</h1>
         </div>
@@ -367,3 +386,7 @@ onMounted(() => {
     </div>
   </AuthenticatedLayout>
 </template>
+
+<style scoped>
+@import '../Supplier/SupplierComponents/SupplierSharedStyles.css';
+</style>
