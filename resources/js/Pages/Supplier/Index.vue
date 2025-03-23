@@ -3,6 +3,8 @@ import { Head, Link, useForm, router } from "@inertiajs/vue3";
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import InputError from '@/Components/InputError.vue';
 import AdminNavbar from '@/Components/AdminNavbar.vue';
+import SuccessMessage from '@/Components/SuccessMessage.vue';
+import ErrorMessage from '@/Components/ErrorMessage.vue';
 
 const props = defineProps({
   suppliers: {
@@ -64,6 +66,12 @@ const form = useForm({
   created_by: 1
 });
 
+// Add success and error message handling
+const showSuccessMessage = ref(false);
+const showErrorMessage = ref(false);
+const successMessageText = ref('');
+const errorMessageText = ref('');
+
 // Set active tab
 const setActiveTab = (tabId) => {
   activeTab.value = tabId;
@@ -121,7 +129,19 @@ const submit = () => {
   form.post(route("suppliers.create"), {
     onSuccess: () => {
       closeModal();
+      successMessageText.value = 'Supplier has been successfully added';
+      showSuccessMessage.value = true;
+      setTimeout(() => {
+        showSuccessMessage.value = false;
+      }, 3000);
     },
+    onError: (errors) => {
+      errorMessageText.value = 'Failed to add supplier. Please check the form and try again.';
+      showErrorMessage.value = true;
+      setTimeout(() => {
+        showErrorMessage.value = false;
+      }, 3000);
+    }
   });
 };
 
@@ -230,6 +250,16 @@ onBeforeUnmount(() => {
   <Head title="Suppliers" />
   
   <AdminNavbar />
+  
+  <!-- Floating Success and Error Messages -->
+  <div class="floating-messages">
+    <SuccessMessage v-if="showSuccessMessage" @close="showSuccessMessage = false" class="floating-message">
+      {{ successMessageText }}
+    </SuccessMessage>
+    <ErrorMessage v-if="showErrorMessage" @close="showErrorMessage = false" class="floating-message">
+      {{ errorMessageText }}
+    </ErrorMessage>
+  </div>
   
   <div class="page-container">
     <div class="content-container">
@@ -1239,6 +1269,36 @@ onBeforeUnmount(() => {
   }
   
   .table-responsive:not(:hover)::after {
+    opacity: 1;
+  }
+}
+
+/* Floating Messages */
+.floating-messages {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  width: 90%;
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.floating-message {
+  animation: slideDown 0.3s ease-out;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
     opacity: 1;
   }
 }
