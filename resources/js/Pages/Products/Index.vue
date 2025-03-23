@@ -8,6 +8,12 @@ import CustomPagination from "@/Components/CustomPagination.vue";
 import SuccessMessage from '@/Components/SuccessMessage.vue';
 import ErrorMessage from '@/Components/ErrorMessage.vue';
 
+const showProductModal = ref(false);
+const editingProduct = ref(false);
+const isDragging = ref(false);
+const productImages = ref([]);
+const imagePreview = ref(null);
+
 const page = usePage();
 const user = page.props.auth.user;
 const supplier_uuid = page.props.auth.user.company.uuid;
@@ -49,7 +55,6 @@ const fetchSupplierProducts = async () => {
     currentPage.value = response.data.current_page;
     lastPage.value = response.data.last_page;
     perPage.value = response.data.per_page;
-
   } catch (error) {
     console.error("Error fetching products:", error);
   }
@@ -98,6 +103,162 @@ const handlePageChange = (page) => {
 const handlePerPageChange = (newPerPage) => {
   perPage.value = newPerPage;
   fetchSupplierProducts();
+};
+
+// Image handling methods
+const onDragOver = (e) => {
+  isDragging.value = true;
+};
+
+const onDragLeave = (e) => {
+  isDragging.value = false;
+};
+
+const onDrop = (e) => {
+  isDragging.value = false;
+  const files = e.dataTransfer.files;
+  handleFiles(files);
+};
+
+const onFileSelected = (e) => {
+  const files = e.target.files;
+  handleFiles(files);
+};
+
+const handleFiles = (files) => {
+  Array.from(files).forEach((file) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      productImages.value.push({
+        id: Date.now(),
+        url: e.target.result,
+        file: file,
+        isPrimary: productImages.value.length === 0,
+      });
+      if (productImages.value.length === 1) {
+        imagePreview.value = e.target.result;
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+};
+
+const setPrimaryImage = (imageId) => {
+  productImages.value.forEach((image) => {
+    image.isPrimary = image.id === imageId;
+    if (image.isPrimary) {
+      imagePreview.value = image.url;
+    }
+  });
+};
+
+const removeImage = (imageId) => {
+  const index = productImages.value.findIndex((img) => img.id === imageId);
+  if (index > -1) {
+    const wasRemovingPrimary = productImages.value[index].isPrimary;
+    productImages.value.splice(index, 1);
+    if (wasRemovingPrimary && productImages.value.length > 0) {
+      productImages.value[0].isPrimary = true;
+      imagePreview.value = productImages.value[0].url;
+    }
+  }
+};
+
+const closeProductModal = () => {
+  showProductModal.value = false;
+  editingProduct.value = false;
+  productImages.value = []; // Clear images array
+  imagePreview.value = null;
+  form.reset();
+  form.clearErrors();
+};
+
+const editProduct = (product) => {
+  editingProduct.value = product;
+  form.name = product.name;
+  form.sku_number = product.sku_number;
+  form.category = product.category;
+  form.unit_of_measure = product.unit_of_measure;
+  form.description = product.description;
+  form.manufucturer = product.manufucturer;
+  form.status = product.status;
+  
+  // Handle images
+  if (product.images) {
+    const images = typeof product.images === 'string' ? JSON.parse(product.images) : product.images;
+    images.forEach(async (image) => {
+      const response = await fetch(`/storage/${image.path}`);
+      const blob = await response.blob();
+      const file = new File([blob], image.path.split('/').pop(), { type: blob.type });
+      
+      productImages.value.push({
+        id: Date.now(),
+        url: URL.createObjectURL(blob),
+        file: file,
+        isPrimary: image.type === 'primary'
+      });
+      
+      if (image.type === 'primary') {
+        imagePreview.value = URL.createObjectURL(blob);
+      }
+    });
+  }
+  
+  showProductModal.value = true;
+};
+
+const saveProduct = () => {
+  const formData = new FormData();
+  formData.append("name", form.name);
+  formData.append("sku_number", form.sku_number);
+  formData.append("category", form.category);
+  formData.append("unit_of_measure", form.unit_of_measure);
+  formData.append("description", form.description);
+  formData.append("manufucturer", form.manufucturer);
+  formData.append("status", form.status);
+  formData.append("company_id", form.company_id);
+  formData.append("created_by", form.created_by);
+
+  // Add images
+  const primaryImage = productImages.value.find((img) => img.isPrimary);
+  if (primaryImage) {
+    formData.append("primary_image", primaryImage.file);
+  }
+
+  // Add secondary images
+  productImages.value.forEach((image) => {
+    if (!image.isPrimary) {
+      formData.append("secondary_images[]", image.file);
+    }
+  });
+  // Log the FormData contents
+  for (let pair of formData.entries()) {
+    console.log(pair[0], pair[1]);
+  }
+
+  if (editingProduct.value) {
+    axios
+      .post(route("products.update", editingProduct.value.uuid), formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      })
+      .then(() => {
+        closeProductModal();
+        fetchSupplierProducts();
+      });
+  }else {
+    axios
+      .post(route("products.store"), formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      })
+      .then(() => {
+        closeProductModal();
+        fetchSupplierProducts();
+      });
+  }
 };
 
 onMounted(() => {
@@ -153,7 +314,7 @@ onMounted(() => {
               v-model="searchQuery"
             />
           </div>
-          <button @click="showingModal = true" class="add-btn">
+          <button @click="showProductModal = true" class="add-btn">
             <span class="plus-icon">+</span>
             Add Product
           </button>
@@ -214,7 +375,7 @@ onMounted(() => {
                     </span>
                   </td>
                   <td class="table-cell">
-                    <button class="action-btn edit-btn">
+                    <button @click="editProduct(product)" class="action-btn edit-btn">
                       Edit
                     </button>
                     <button class="action-btn delete-btn">
@@ -225,159 +386,273 @@ onMounted(() => {
               </tbody>
             </table>
           </div>
-          <CustomPagination
-            :current-page="currentPage"
-            :last-page="lastPage"
-            :per-page="perPage"
-            @page-changed="handlePageChange"
-            @update:per-page="handlePerPageChange"
-          />
         </div>
 
-        <!-- Add Product Modal -->
-        <Modal :show="showingModal" @close="closeModal">
-          <div class="p-6">
-            <h2 class="text-lg font-medium text-gray-900 mb-4">Add Product</h2>
+        <CustomPagination
+          :current-page="currentPage"
+          :last-page="lastPage"
+          :per-page="perPage"
+          @page-changed="handlePageChange"
+          @update:per-page="handlePerPageChange"
+        />
 
-            <form @submit.prevent="submit">
-              <div class="grid grid-cols-1 gap-4">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700"
-                    >Product Name</label
+        <!-- Add Product Modal -->
+        <div
+          v-if="showProductModal"
+          class="modal-overlay"
+          @click.self="closeProductModal"
+        >
+          <div class="modal-container">
+            <div class="modal-header">
+              <h2>{{ editingProduct ? "Edit Product" : "Add New Product" }}</h2>
+              <button class="close-btn" @click="closeProductModal">
+                &times;
+              </button>
+            </div>
+            <div class="modal-body">
+              <form @submit.prevent="saveProduct">
+                <!-- Product Images Upload -->
+                <div class="form-group">
+                  <label for="productImage">Product Images</label>
+                  <div
+                    class="image-upload-container"
+                    @dragover.prevent="onDragOver"
+                    @dragleave.prevent="onDragLeave"
+                    @drop.prevent="onDrop"
+                    :class="{ 'drag-over': isDragging }"
+                  >
+                    <div class="upload-placeholder">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <rect
+                          x="3"
+                          y="3"
+                          width="18"
+                          height="18"
+                          rx="2"
+                          ry="2"
+                        />
+                        <circle cx="8.5" cy="8.5" r="1.5" />
+                        <polyline points="21 15 16 10 5 21" />
+                      </svg>
+                      <p>
+                        Drag & drop images here or
+                        <span class="browse-text">browse</span>
+                      </p>
+                      <input
+                        type="file"
+                        id="productImage"
+                        class="file-input"
+                        accept="image/*"
+                        multiple
+                        @change="onFileSelected"
+                      />
+                    </div>
+                  </div>
+
+                  <!-- Images Gallery (Outside the upload container) -->
+                  <div
+                    v-if="productImages.length > 0"
+                    class="images-gallery-outside"
+                  >
+                    <div class="gallery-preview-outside">
+                      <img
+                        v-if="imagePreview"
+                        :src="imagePreview"
+                        alt="Primary product image"
+                        class="primary-preview-img"
+                      />
+                    </div>
+                    <div class="gallery-thumbnails-outside">
+                      <div
+                        v-for="image in productImages"
+                        :key="image.id"
+                        class="thumbnail-container"
+                        :class="{ 'primary-thumbnail': image.isPrimary }"
+                      >
+                        <img
+                          :src="image.url"
+                          alt="Product image"
+                          class="thumbnail-img"
+                        />
+                        <div class="thumbnail-actions">
+                          <button
+                            type="button"
+                            class="set-primary-btn"
+                            @click="setPrimaryImage(image.id)"
+                            :disabled="image.isPrimary"
+                            :title="
+                              image.isPrimary
+                                ? 'Primary Image'
+                                : 'Set as Primary'
+                            "
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                            >
+                              <path
+                                d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                              />
+                            </svg>
+                          </button>
+                          <button
+                            type="button"
+                            class="remove-thumbnail-btn"
+                            @click="removeImage(image.id)"
+                          >
+                            &times;
+                          </button>
+                        </div>
+                      </div>
+                      <div class="">
+                        <label for="additionalImages" class="add-more-btn">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          >
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                          </svg>
+                        </label>
+                        <input
+                          type="file"
+                          id="additionalImages"
+                          class="file-input"
+                          accept="image/*"
+                          multiple
+                          @change="onFileSelected"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="productName"
+                    >Product Name <span class="required">*</span></label
                   >
                   <input
                     type="text"
+                    id="productName"
                     v-model="form.name"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
                     required
+                    placeholder="Enter product name"
                   />
                 </div>
 
-                <div>
-                  <label class="block text-sm font-medium text-gray-700"
-                    >Description</label
+                <div class="form-group">
+                  <label for="skuNumber"
+                    >SKU Number <span class="required">*</span></label
+                  >
+                  <input
+                    type="text"
+                    id="skuNumber"
+                    v-model="form.sku_number"
+                    required
+                    placeholder="Enter SKU number"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="category"
+                    >Category <span class="required">*</span></label
+                  >
+                  <input
+                    type="text"
+                    id="category"
+                    v-model="form.category"
+                    required
+                    placeholder="Enter product category"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="unitOfMeasure"
+                    >Unit of Measure <span class="required">*</span></label
+                  >
+                  <input
+                    type="text"
+                    id="unitOfMeasure"
+                    v-model="form.unit_of_measure"
+                    required
+                    placeholder="Enter unit of measure (e.g. kg, liter)"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="description"
+                    >Description <span class="required">*</span></label
                   >
                   <textarea
+                    id="description"
                     v-model="form.description"
-                    rows="3"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
                     required
+                    placeholder="Enter product description"
+                    rows="3"
                   ></textarea>
                 </div>
 
-                <div>
-                  <label class="block text-sm font-medium text-gray-700"
-                    >SKU</label
+                <div class="form-group">
+                  <label for="manufacturer"
+                    >Manufacturer <span class="required">*</span></label
                   >
                   <input
                     type="text"
-                    v-model="form.sku_number"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label class="block text-sm font-medium text-gray-700"
-                    >Category</label
-                  >
-                  <select
-                    v-model="form.category"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                    required
-                  >
-                    <option value="">Select category</option>
-                    <option value="Electronics">Electronics</option>
-                    <option value="Clothing">Clothing</option>
-                    <option value="Food">Food</option>
-                    <option value="Furniture">Furniture</option>
-                    <option value="Books">Books</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label class="block text-sm font-medium text-gray-700"
-                    >Unit of Measure</label
-                  >
-                  <select
-                    v-model="form.unit_of_measure"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                    required
-                  >
-                    <option value="">Select unit</option>
-                    <option value="KG">Kilogram (KG)</option>
-                    <option value="G">Gram (G)</option>
-                    <option value="L">Liter (L)</option>
-                    <option value="ML">Milliliter (ML)</option>
-                    <option value="PCS">Pieces (PCS)</option>
-                    <option value="BOX">Box</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label class="block text-sm font-medium text-gray-700"
-                    >Manufacturer</label
-                  >
-                  <input
-                    type="text"
+                    id="manufacturer"
                     v-model="form.manufucturer"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
                     required
+                    placeholder="Enter manufacturer name"
                   />
                 </div>
 
-                <div class="grid grid-cols-1 gap-4">
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700"
-                      >Primary Image</label
-                    >
-                    <input
-                      type="file"
-                      @input="form.primary_image = $event.target.files[0]"
-                      class="mt-1 block w-full"
-                      accept="image/png,image/jpeg,image/jpg"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700"
-                      >Secondary Images</label
-                    >
-                    <input
-                      type="file"
-                      @input="form.secondary_images = [...$event.target.files]"
-                      class="mt-1 block w-full"
-                      accept="image/png,image/jpeg,image/jpg"
-                      multiple
-                    />
-                    <p class="mt-1 text-sm text-gray-500">
-                      You can select multiple images
-                    </p>
-                  </div>
+                <div class="form-group">
+                  <label for="productStatus"
+                    >Status <span class="required">*</span></label
+                  >
+                  <select id="productStatus" v-model="form.status" required>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
                 </div>
-              </div>
 
-              <div class="mt-6 flex justify-end space-x-3">
-                <button
-                  type="button"
-                  class="px-4 py-2 text-sm text-gray-700 hover:text-gray-900"
-                  @click="closeModal"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-                  :disabled="form.processing"
-                >
-                  Save Product
-                </button>
-              </div>
-            </form>
+                <div class="form-actions">
+                  <button
+                    type="button"
+                    class="cancel-btn"
+                    @click="closeProductModal"
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" class="submit-btn">Save Product</button>
+                </div>
+              </form>
+            </div>
           </div>
-        </Modal>
+        </div>
 
         <div v-if="products.length === 0" class="text-center py-12">
           <p class="text-gray-500">No products found</p>

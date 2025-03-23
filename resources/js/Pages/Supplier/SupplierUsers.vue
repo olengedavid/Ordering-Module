@@ -9,23 +9,46 @@
         <div class="header-container">
           <h1 class="page-title">Supplier Users</h1>
         </div>
-        
+
         <div class="table-controls">
           <div class="search-container">
             <div class="search-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" color="#000000" fill="none">
-                <path opacity="0.4" fill-rule="evenodd" clip-rule="evenodd" d="M16.7929 16.7929C17.1834 16.4024 17.8166 16.4024 18.2071 16.7929L22.7071 21.2929C23.0976 21.6834 23.0976 22.3166 22.7071 22.7071C22.3166 23.0976 21.6834 23.0976 21.2929 22.7071L16.7929 18.2071C16.4024 17.8166 16.4024 17.1834 16.7929 16.7929Z" fill="currentColor" />
-                <path fill-rule="evenodd" clip-rule="evenodd" d="M1 11C1 5.47715 5.47715 1 11 1C16.5228 1 21 5.47715 21 11C21 16.5228 16.5228 21 11 21C5.47715 21 1 16.5228 1 11ZM11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3Z" fill="currentColor" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="20"
+                height="20"
+                color="#000000"
+                fill="none"
+              >
+                <path
+                  opacity="0.4"
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M16.7929 16.7929C17.1834 16.4024 17.8166 16.4024 18.2071 16.7929L22.7071 21.2929C23.0976 21.6834 23.0976 22.3166 22.7071 22.7071C22.3166 23.0976 21.6834 23.0976 21.2929 22.7071L16.7929 18.2071C16.4024 17.8166 16.4024 17.1834 16.7929 16.7929Z"
+                  fill="currentColor"
+                />
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M1 11C1 5.47715 5.47715 1 11 1C16.5228 1 21 5.47715 21 11C21 16.5228 16.5228 21 11 21C5.47715 21 1 16.5228 1 11ZM11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3Z"
+                  fill="currentColor"
+                />
               </svg>
             </div>
-            <input type="text" class="search-input" placeholder="Search users..." v-model="searchQuery">
+            <input
+              type="text"
+              class="search-input"
+              placeholder="Search users..."
+              v-model="searchQuery"
+            />
           </div>
           <button @click="openAddUserModal" class="add-btn">
             <span class="plus-icon">+</span>
             Add User
           </button>
         </div>
-        
+
         <div class="table-container">
           <div class="table-wrapper">
             <table class="data-table">
@@ -53,14 +76,21 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="user in paginatedUsers" :key="user.id" class="data-row">
+                <tr v-for="user in users" :key="user.id" class="data-row">
                   <td>{{ user.username }}</td>
                   <td>{{ user.email }}</td>
                   <td>{{ user.displayPassword }}</td>
                   <td>{{ user.warehouse }}</td>
                   <td>{{ getPermissionsDisplayText(user.permissions) }}</td>
                   <td>
-                    <span :class="['status-pill', user.status === 'Active' ? 'status-active' : 'status-inactive']">
+                    <span
+                      :class="[
+                        'status-pill',
+                        user.status === 'Active'
+                          ? 'status-active'
+                          : 'status-inactive',
+                      ]"
+                    >
                       {{ user.status }}
                     </span>
                   </td>
@@ -71,123 +101,192 @@
                   </td>
                 </tr>
                 <tr v-if="filteredUsers.length === 0">
-                  <td colspan="7" class="empty-state">
-                    No users found
-                  </td>
+                  <td colspan="7" class="empty-state">No users found</td>
                 </tr>
               </tbody>
             </table>
           </div>
         </div>
-        
+
         <!-- Pagination -->
-        <div class="pagination-controls">
-          <div class="per-page">
-            <span>Show</span>
-            <select v-model="perPage" @change="resetPagination" class="per-page-select">
-              <option v-for="option in perPageOptions" :key="option" :value="option">
-                {{ option }}
-              </option>
-            </select>
-            <span>per page</span>
-          </div>
-          <div class="pagination-buttons">
-            <button class="pagination-btn" :disabled="currentPage === 1" @click="prevPage">
-              Previous
-            </button>
-            <div class="page-numbers">
-              <span v-for="page in totalPages" :key="page"
-                   :class="['page-number', { active: currentPage === page }]"
-                   @click="goToPage(page)">
-                {{ page }}
-              </span>
-            </div>
-            <button class="pagination-btn" :disabled="currentPage === totalPages" @click="nextPage">
-              Next
-            </button>
-          </div>
-        </div>
+        <CustomPagination
+          :current-page="currentPage"
+          :last-page="lastPage"
+          :per-page="perPage"
+          @page-changed="handlePageChange"
+          @update:per-page="handlePerPageChange"
+        />
       </div>
-      
+
       <!-- Add/Edit User Modal -->
-      <div v-if="showUserModal" class="modal-overlay" @click.self="closeUserModal">
+      <div
+        v-if="showUserModal"
+        class="modal-overlay"
+        @click.self="closeUserModal"
+      >
         <div class="modal-container">
           <div class="modal-header">
-            <h2>{{ editingUser ? 'Edit User' : 'Add New User' }}</h2>
+            <h2>{{ editingUser ? "Edit User" : "Add New User" }}</h2>
             <button class="close-btn" @click="closeUserModal">&times;</button>
           </div>
           <div class="modal-body">
             <form @submit.prevent="saveUser">
               <!-- Username Field -->
               <div class="form-group">
-                <label for="username">Username <span class="required">*</span></label>
-                <input type="text" id="username" v-model="newUser.username" required>
+                <label for="username"
+                  >Username <span class="required">*</span></label
+                >
+                <input
+                  type="text"
+                  id="username"
+                  v-model="form.username"
+                  required
+                />
               </div>
-              
+
               <!-- Email Field -->
               <div class="form-group">
-                <label for="email">Email Address <span class="required">*</span></label>
-                <input type="email" id="email" v-model="newUser.email" required>
+                <label for="email"
+                  >Email Address <span class="required">*</span></label
+                >
+                <input
+                  type="email"
+                  id="email"
+                  v-model="form.email"
+                  required
+                />
               </div>
-              
+
               <!-- Password Field with show/hide toggle -->
               <div class="form-group">
-                <label for="password">Password <span class="required">*</span></label>
+                <label for="password"
+                  >Password <span class="required">*</span></label
+                >
                 <div class="password-input-container">
-                  <input :type="showPassword ? 'text' : 'password'" id="password" v-model="newUser.password" required>
-                  <button type="button" class="password-toggle-btn" @click="togglePasswordVisibility">
+                  <input
+                    :type="showPassword ? 'text' : 'password'"
+                    id="password"
+                    v-model="form.password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    class="password-toggle-btn"
+                    @click="togglePasswordVisibility"
+                  >
                     <!-- Eye Close Icon (shown when password is hidden) -->
-                    <svg v-if="!showPassword" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" color="#000000" fill="none">
-                      <path d="M19.439 15.439C21 14 22 12 22 12C20.5 9 16.6892 5 12 5C11.0922 5 10.2294 5.15476 9.41827 5.41827M17 17.4186C15.5657 18.3368 13.8793 19 12 19C7.31078 19 3.5 15 2 12C2 12 3.5 9 6.5 6.91847" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                      <path d="M9.85786 10C9.32783 10.53 9 11.2623 9 12.0711C9 13.6887 10.3113 15 11.9289 15C12.7377 15 13.47 14.6722 14 14.1421" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                      <path d="M3 3L21 21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                    <svg
+                      v-if="!showPassword"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      width="24"
+                      height="24"
+                      color="#000000"
+                      fill="none"
+                    >
+                      <path
+                        d="M19.439 15.439C21 14 22 12 22 12C20.5 9 16.6892 5 12 5C11.0922 5 10.2294 5.15476 9.41827 5.41827M17 17.4186C15.5657 18.3368 13.8793 19 12 19C7.31078 19 3.5 15 2 12C2 12 3.5 9 6.5 6.91847"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                      <path
+                        d="M9.85786 10C9.32783 10.53 9 11.2623 9 12.0711C9 13.6887 10.3113 15 11.9289 15C12.7377 15 13.47 14.6722 14 14.1421"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                      <path
+                        d="M3 3L21 21"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
                     </svg>
                     <!-- Eye Open Icon (shown when password is visible) -->
-                    <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" color="#000000" fill="none">
-                      <path d="M15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15C13.6569 15 15 13.6569 15 12Z" stroke="currentColor" stroke-width="1.5" />
-                      <path d="M12 5C17.5228 5 22 12 22 12C22 12 17.5228 19 12 19C6.47715 19 2 12 2 12C2 12 6.47715 5 12 5Z" stroke="currentColor" stroke-width="1.5" />
+                    <svg
+                      v-else
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      width="24"
+                      height="24"
+                      color="#000000"
+                      fill="none"
+                    >
+                      <path
+                        d="M15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15C13.6569 15 15 13.6569 15 12Z"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                      />
+                      <path
+                        d="M12 5C17.5228 5 22 12 22 12C22 12 17.5228 19 12 19C6.47715 19 2 12 2 12C2 12 6.47715 5 12 5Z"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                      />
                     </svg>
                   </button>
                 </div>
               </div>
-              
+
               <!-- Warehouse Dropdown -->
               <div class="form-group">
-                <label for="warehouse">Warehouse <span class="required">*</span></label>
-                <select id="warehouse" v-model="newUser.warehouse" required>
+                <label for="warehouse"
+                  >Warehouse <span class="required">*</span></label
+                >
+                <select id="warehouse" v-model="form.warehouse" required>
                   <option value="">Select a Warehouse</option>
-                  <option v-for="warehouse in warehouses" :key="warehouse.id" :value="warehouse.name">
+                  <option
+                    v-for="warehouse in warehouses"
+                    :key="warehouse.id"
+                    :value="warehouse.name"
+                  >
                     {{ warehouse.name }}
                   </option>
                 </select>
               </div>
-              
+
               <!-- Permissions Checkboxes -->
               <div class="form-group">
                 <label>Permissions <span class="required">*</span></label>
                 <div class="permissions-container">
-                  <div v-for="(permission, key) in availablePermissions" :key="key" class="permission-checkbox">
-                    <input 
-                      type="checkbox" 
-                      :id="key" 
-                      v-model="newUser.permissions[key]"
-                    >
-                    <label :for="key">{{ permission }}</label>
+                  <div
+                    v-for="permission in availablePermissions"
+                    :key="permission.id"
+                    class="permission-checkbox"
+                  >
+                    <input
+                      type="checkbox"
+                      :id="permission.id"
+                      v-model="form.permissions"
+                      :value="permission.id"
+                    />
+                    <label :for="permission.id">{{ permission.label }}</label>
                   </div>
                 </div>
               </div>
-              
+
               <!-- Status Dropdown -->
               <div class="form-group">
-                <label for="status">Status <span class="required">*</span></label>
-                <select id="status" v-model="newUser.status" required>
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
+                <label for="status"
+                  >Status <span class="required">*</span></label
+                >
+                <select id="status" v-model="form.status" required>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
                 </select>
               </div>
-              
+
               <div class="form-actions">
-                <button type="button" class="cancel-btn" @click="closeUserModal">Cancel</button>
+                <button
+                  type="button"
+                  class="cancel-btn"
+                  @click="closeUserModal"
+                >
+                  Cancel
+                </button>
                 <button type="submit" class="submit-btn">Save User</button>
               </div>
             </form>
@@ -198,449 +297,297 @@
   </AuthenticatedLayout>
 </template>
   
-<script>
+<script setup >
 import { ref, onMounted, computed } from "vue";
 import { usePage, useForm } from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
-import SuccessMessage from "@/Components/SuccessMessage.vue";
-import ErrorMessage from "@/Components/ErrorMessage.vue";
+import CustomPagination from "@/Components/CustomPagination.vue";
 
-export default {
-  name: 'SupplierUsersPage',
-  components: {
-    AuthenticatedLayout,
-    SuccessMessage,
-    ErrorMessage
-  },
-  setup() {
-    const page = usePage();
-    const user = page.props.auth.user;
-    const users = ref([]);
-    const warehouses = ref([]);
-    const searchQuery = ref("");
-    const perPage = ref(10);
-    const showUserModal = ref(false);
-    const showPassword = ref(false);
-    const editingUser = ref(false);
-    const editingUserId = ref(null);
-    const sortKey = ref('username');
-    const sortDir = ref('asc');
-    const currentPage = ref(1);
-    const perPageOptions = [5, 10, 20, 50];
-    const successMessage = ref('');
-    const errorMessage = ref('');
-    
-    // Data from API
-    const supplier_uuid = page.props.auth.user.company.uuid;
-    
-    // Form for creating/editing users
-    const newUser = ref({
-      username: '',
-      email: '',
-      password: '',
-      warehouse: '',
-      permissions: {
-        canManageUsers: false,
-        canManageOrders: false,
-        canManageWarehouses: false,
-        canManageProducts: false,
-        canManageInventory: false,
-        canCancelOrderRequests: false,
-        canCancelConfirmedOrders: false,
-        canConfirmDeliveries: false
-      },
-      status: 'Active'
-    });
-    
-    // Form for API submission
-    const form = useForm({
-      username: "",
-      email: "",
-      password: "",
-      warehouse_id: "",
-      permissions: [],
-      status: "active",
-      created_by: user.id,
-      updated_by: user.id,
-      company_id: user.company_id,
-      entity_type: "supplier",
-    });
-    
-    // Available permissions mapping
-    const availablePermissions = {
-      canManageUsers: 'Can Manage Users',
-      canManageOrders: 'Can Manage Orders',
-      canManageWarehouses: 'Can Manage Warehouses',
-      canManageProducts: 'Can Manage Products',
-      canManageInventory: 'Can Manage Inventory',
-      canCancelOrderRequests: 'Can Cancel Order Requests',
-      canCancelConfirmedOrders: 'Can Cancel Confirmed Orders',
-      canConfirmDeliveries: 'Can Confirm Deliveries'
-    };
-    
-    // API permissions format
-    const permissionsMapping = {
-      canManageUsers: "manage_users",
-      canManageOrders: "manage_orders",
-      canManageWarehouses: "manage_warehouses",
-      canManageProducts: "manage_products",
-      canManageInventory: "manage_inventory",
-      canCancelOrderRequests: "cancel_orders",
-      canConfirmDeliveries: "confirm_deliveries"
-    };
-    
-    // Load initial warehouse and user data
-    onMounted(() => {
-      fetchSupplierUsers();
-      fetchWarehouses();
-    });
-    
-    const fetchWarehouses = async () => {
-      try {
-        const response = await axios.get(
-          route("supplier.warehouses.list", {
-            uuid: supplier_uuid,
-          })
-        );
-        // Store complete warehouse data
-        warehouses.value = response.data;
-      } catch (error) {
-        console.error("Error fetching warehouses:", error);
-      }
-    };
-    
-    const fetchSupplierUsers = async () => {
-      try {
-        const response = await axios.get(
-          route("supplier.users.list", {
-            uuid: supplier_uuid,
-            search: searchQuery.value,
-            perPage: perPage.value,
-          })
-        );
-        // Transform API response to match UI format
-        users.value = response.data.data.map(user => ({
-          id: user.id,
-          username: user.name,
-          email: user.email,
-          password: 'securepass', // Placeholder for display
-          displayPassword: '••••••••',
-          warehouse: user.warehouse?.name || '',
-          permissions: parsePermissions(user.user_permissions?.[0]?.permissions),
-          status: user.status.charAt(0).toUpperCase() + user.status.slice(1) // Capitalize status
-        }));
-      } catch (error) {
-        console.error("Error fetching supplier users:", error);
-      }
-    };
-    
-    // Helper to parse permissions from API format to UI format
-    const parsePermissions = (permissionsJson) => {
-      const permissions = {
-        canManageUsers: false,
-        canManageOrders: false,
-        canManageWarehouses: false,
-        canManageProducts: false,
-        canManageInventory: false,
-        canCancelOrderRequests: false,
-        canCancelConfirmedOrders: false,
-        canConfirmDeliveries: false
-      };
-      
-      try {
-        const parsed = JSON.parse(permissionsJson || '[]');
-        parsed.forEach(perm => {
-          // Map API permission to UI permission
-          const key = Object.keys(permissionsMapping).find(key => 
-            permissionsMapping[key] === perm
-          );
-          if (key) {
-            permissions[key] = true;
-          }
-        });
-      } catch (error) {
-        console.error("Error parsing permissions:", error);
-      }
-      
-      return permissions;
-    };
-    
-    // Map UI permissions back to API format for submission
-    const mapPermissionsToApi = (permissions) => {
-      return Object.keys(permissions)
-        .filter(key => permissions[key])
-        .map(key => permissionsMapping[key])
-        .filter(Boolean);
-    };
-    
-    // Modal and form handling
-    const openAddUserModal = () => {
-      editingUser.value = false;
-      editingUserId.value = null;
-      newUser.value = {
-        username: '',
-        email: '',
-        password: '',
-        warehouse: '',
-        permissions: {
-          canManageUsers: false,
-          canManageOrders: false,
-          canManageWarehouses: false,
-          canManageProducts: false,
-          canManageInventory: false,
-          canCancelOrderRequests: false,
-          canCancelConfirmedOrders: false,
-          canConfirmDeliveries: false
-        },
-        status: 'Active'
-      };
-      showUserModal.value = true;
-      showPassword.value = false;
-    };
-    
-    const closeUserModal = () => {
-      showUserModal.value = false;
-      showPassword.value = false;
-      form.reset();
-    };
-    
-    const togglePasswordVisibility = () => {
-      showPassword.value = !showPassword.value;
-    };
-    
-    const editUser = (user) => {
-      editingUser.value = true;
-      editingUserId.value = user.id;
-      newUser.value = {
-        username: user.username,
-        email: user.email,
-        password: user.password,
-        warehouse: user.warehouse,
-        permissions: JSON.parse(JSON.stringify(user.permissions)),
-        status: user.status
-      };
-      showUserModal.value = true;
-      showPassword.value = false;
-    };
-    
-    // Save user (create or update)
-    const saveUser = () => {
-      // Set form values from UI format
-      form.username = newUser.value.username;
-      form.email = newUser.value.email;
-      form.password = newUser.value.password;
-      
-      // Find warehouse ID by name from the API data
-      try {
-        const warehouseData = warehouses.value.find(w => w.name === newUser.value.warehouse);
-        form.warehouse_id = warehouseData ? warehouseData.id : '';
-      } catch (error) {
-        console.error("Error setting warehouse ID:", error);
-        form.warehouse_id = '';
-      }
-      
-      // Map permissions to API format
-      form.permissions = mapPermissionsToApi(newUser.value.permissions);
-      
-      // Convert status to lowercase for API
-      form.status = newUser.value.status.toLowerCase();
-      
-      if (editingUser.value) {
-        // Update existing user
-        form.put(route("supplier.users.update", { id: editingUserId.value }), {
-          preserveScroll: true,
-          onSuccess: () => {
-            closeUserModal();
-            form.reset();
-            fetchSupplierUsers();
-            successMessage.value = 'User updated successfully';
-            setTimeout(() => {
-              successMessage.value = '';
-            }, 3000);
-          },
-          onError: () => {
-            errorMessage.value = 'Error updating user';
-            setTimeout(() => {
-              errorMessage.value = '';
-            }, 3000);
-          }
-        });
-      } else {
-        // Create new user
-        form.post(route("supplier.users.store"), {
-          preserveScroll: true,
-          onSuccess: () => {
-            closeUserModal();
-            form.reset();
-            fetchSupplierUsers();
-            successMessage.value = 'User added successfully';
-            setTimeout(() => {
-              successMessage.value = '';
-            }, 3000);
-          },
-          onError: () => {
-            errorMessage.value = 'Error adding user';
-            setTimeout(() => {
-              errorMessage.value = '';
-            }, 3000);
-          }
-        });
-      }
-    };
-    
-    // Sorting functions
-    const sortBy = (key) => {
-      if (sortKey.value === key) {
-        sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
-      } else {
-        sortKey.value = key;
-        sortDir.value = 'asc';
-      }
-    };
-    
-    const getSortIcon = (key) => {
-      if (sortKey.value !== key) return 'sort-icon sort-none';
-      return sortDir.value === 'asc' ? 'sort-icon sort-asc' : 'sort-icon sort-desc';
-    };
-    
-    // Pagination
-    const prevPage = () => {
-      if (currentPage.value > 1) {
-        currentPage.value--;
-      }
-    };
-    
-    const nextPage = () => {
-      if (currentPage.value < totalPages.value) {
-        currentPage.value++;
-      }
-    };
-    
-    const goToPage = (page) => {
-      currentPage.value = page;
-    };
-    
-    const resetPagination = () => {
-      currentPage.value = 1;
-      fetchSupplierUsers();
-    };
-    
-    // Helper function for permissions display
-    const getPermissionsDisplayText = (permissions) => {
-      const enabledPermissions = Object.entries(permissions)
-        .filter(([, enabled]) => enabled)
-        .map(([key]) => availablePermissions[key]);
-      
-      if (enabledPermissions.length === 0) {
-        return 'No permissions';
-      } else if (enabledPermissions.length <= 2) {
-        return enabledPermissions.join(', ');
-      } else {
-        return `${enabledPermissions.length} permissions granted`;
-      }
-    };
-    
-    // Computed properties
-    const filteredUsers = computed(() => {
-      if (searchQuery.value.trim() === '') {
-        return users.value;
-      }
-      
-      const query = searchQuery.value.toLowerCase();
-      return users.value.filter(user => {
-        return Object.values(user).some(value => {
-          if (value === null || value === undefined) return false;
-          if (typeof value === 'object') {
-            // For permissions object, check if any permission name matches
-            return Object.entries(value).some(([key]) => {
-              return availablePermissions[key]?.toLowerCase().includes(query) || false;
-            });
-          }
-          return String(value).toLowerCase().includes(query);
-        });
-      });
-    });
-    
-    const totalPages = computed(() => {
-      return Math.ceil(filteredUsers.value.length / perPage.value);
-    });
-    
-    const paginatedUsers = computed(() => {
-      const startIndex = (currentPage.value - 1) * perPage.value;
-      const endIndex = startIndex + perPage.value;
-      
-      // Sort the users first
-      const sortedUsers = [...filteredUsers.value];
-      sortedUsers.sort((a, b) => {
-        let modifier = sortDir.value === 'asc' ? 1 : -1;
-        
-        // Special handling for permissions
-        if (sortKey.value === 'permissions') {
-          // Count enabled permissions as a simple sorting metric
-          const aPermCount = Object.values(a.permissions).filter(p => p).length;
-          const bPermCount = Object.values(b.permissions).filter(p => p).length;
-          return (aPermCount < bPermCount ? -1 : 1) * modifier;
-        }
-        
-        let aValue = a[sortKey.value];
-        let bValue = b[sortKey.value];
-        
-        // Handle undefined or null values
-        if (aValue === undefined || aValue === null) {
-          aValue = '';
-        }
-        if (bValue === undefined || bValue === null) {
-          bValue = '';
-        }
-        
-        if (typeof aValue === 'number' && typeof bValue === 'number') {
-          return aValue < bValue ? -1 * modifier : 1 * modifier;
-        } else {
-          return aValue.toString().localeCompare(bValue.toString()) * modifier;
-        }
-      });
-      
-      return sortedUsers.slice(startIndex, endIndex);
-    });
-    
-    return {
-      users,
-      warehouses,
-      searchQuery,
-      perPage,
-      showUserModal,
-      showPassword,
-      newUser,
-      editingUser,
-      availablePermissions,
-      perPageOptions,
-      sortKey,
-      sortDir,
-      currentPage,
-      
-      // Methods
-      openAddUserModal,
-      closeUserModal,
-      togglePasswordVisibility,
-      editUser,
-      saveUser,
-      sortBy,
-      getSortIcon,
-      getPermissionsDisplayText,
-      prevPage,
-      nextPage,
-      goToPage,
-      resetPagination,
-      
-      // Computed properties
-      filteredUsers,
-      totalPages,
-      paginatedUsers,
-      successMessage,
-      errorMessage
-    };
+const page = usePage();
+const user = page.props.auth.user;
+const users = ref([]);
+const warehouses = ref([]);
+const searchQuery = ref("");
+const showUserModal = ref(false);
+const showPassword = ref(false);
+const editingUser = ref(false);
+const editingUserId = ref(null);
+const sortKey = ref("username");
+const sortDir = ref("asc");
+const currentPage = ref(1);
+const perPage = ref(10);
+const lastPage = ref(1);
+
+// Data from API
+const supplier_uuid = page.props.auth.user.company.uuid;
+
+
+// Form for API submission
+const form = useForm({
+  username: "",
+  email: "",
+  password: "",
+  warehouse_id: "",
+  permissions: [], // Now stores an array for multiple selections
+  status: "active",
+  created_by: user.id,
+  updated_by: user.id,
+  company_id: user.company_id,
+  entity_type: "supplier",
+});
+
+const selectedPermissions = ref([]);
+
+const availablePermissions = [
+  { id: "manage_users", label: "Can Manage Users" },
+  { id: "manage_orders", label: "Can Manage Orders" },
+  { id: "manage_warehouses", label: "Can Manage Warehouses" },
+  { id: "manage_products", label: "Can Manage Products" },
+  { id: "manage_inventory", label: "Can Manage Inventory" },
+  { id: "cancel_orders", label: "Can Cancel Order Requests" },
+  { id: "confirm_deliveries", label: "Can Confirm Deliveries" },
+];
+nConfirmDeliveries: "confirm_deliveries",
+
+// Load initial warehouse and user data
+onMounted(() => {
+  fetchSupplierUsers();
+  fetchWarehouses();
+});
+
+const fetchWarehouses = async () => {
+  try {
+    const response = await axios.get(
+      route("supplier.warehouses.list", {
+        uuid: supplier_uuid,
+      })
+    );
+    // Store complete warehouse data
+    warehouses.value = response.data;
+  } catch (error) {
+    console.error("Error fetching warehouses:", error);
   }
-}
+};
+
+const fetchSupplierUsers = async () => {
+  try {
+    const response = await axios.get(
+      route("supplier.users.list", {
+        uuid: supplier_uuid,
+        search: searchQuery.value,
+        page: currentPage.value,
+        perPage: perPage.value,
+      })
+    );
+
+    // Transform API response to match UI format
+
+    users.value = response.data.data.map((user) => ({
+      id: user.id,
+      username: user.name,
+      email: user.email,
+      password: "securepass", // Placeholder for display
+      displayPassword: "••••••••",
+      warehouse: user.warehouse?.name || "",
+      permissions: parsePermissions(user.user_permissions?.[0]?.permissions),
+      status: user.status.charAt(0).toUpperCase() + user.status.slice(1), // Capitalize status
+    }));
+
+    currentPage.value = response.data.current_page;
+    lastPage.value = response.data.last_page;
+    perPage.value = response.data.per_page;
+  } catch (error) {
+    console.error("Error fetching supplier users:", error);
+  }
+};
+
+// Helper to parse permissions from API format to UI format
+const parsePermissions = (permissionsJson) => {
+  try {
+    return JSON.parse(permissionsJson || "[]");
+  } catch (error) {
+    console.error("Error parsing permissions:", error);
+    return [];
+  }
+};
+
+// Map UI permissions back to API format for submission
+const mapPermissionsToApi = (permissions) => {
+  return Object.keys(permissions)
+    .filter((key) => permissions[key])
+    .map((key) => permissionsMapping[key])
+    .filter(Boolean);
+};
+
+// Modal and form handling
+const openAddUserModal = () => {
+  editingUser.value = false;
+  editingUserId.value = null;
+  selectedPermissions.value = [];
+  form.reset();
+  showUserModal.value = true;
+  showPassword.value = false;
+};
+
+const closeUserModal = () => {
+  showUserModal.value = false;
+  showPassword.value = false;
+  form.reset();
+};
+
+const togglePasswordVisibility = () => {
+  showPassword.value = !showPassword.value;
+};
+
+const editUser = (user) => {
+  console.log("Editing user:", user);
+  editingUser.value = true;
+  editingUserId.value = user.id;
+  // Set the form data
+  form.username = user.username;
+  form.email = user.email;
+  form.password = user.password;
+  form.warehouse_id = user.warehouse_id;
+  form.status = user.status;
+  form.permissions = parsePermissions(user.user_permissions?.[0]?.permissions);
+  showUserModal.value = true;
+  showPassword.value = false;
+};
+
+// Save user (create or update)
+const saveUser = () => {
+  if (editingUser.value) {
+    form.put(route("supplier.users.update", { uuid: editingUser.value.uuid }), {
+      preserveScroll: true,
+      onSuccess: () => {
+        closeUserModal();
+        form.reset();
+        fetchSupplierUsers();
+      },
+    });
+  } else {
+    form.post(route("supplier.users.store"), {
+      preserveScroll: true,
+      onSuccess: () => {
+        closeUserModal();
+        form.reset();
+        fetchSupplierUsers();
+      },
+    });
+  }
+};
+
+
+// Sorting functions
+const sortBy = (key) => {
+  if (sortKey.value === key) {
+    sortDir.value = sortDir.value === "asc" ? "desc" : "asc";
+  } else {
+    sortKey.value = key;
+    sortDir.value = "asc";
+  }
+};
+
+const getSortIcon = (key) => {
+  if (sortKey.value !== key) return "sort-icon sort-none";
+  return sortDir.value === "asc" ? "sort-icon sort-asc" : "sort-icon sort-desc";
+};
+
+
+const handlePageChange = (page) => {
+  currentPage.value = page;
+  fetchSupplierUsers();
+};
+
+const handlePerPageChange = (newPerPage) => {
+  perPage.value = newPerPage;
+  fetchSupplierUsers();
+};
+
+// Helper function for permissions display
+const getPermissionsDisplayText = (permissions) => {
+  if (!permissions || !Array.isArray(permissions)) {
+    return "No permissions";
+  }
+
+  const enabledPermissions = permissions.map(permId => {
+    const permission = availablePermissions.find(p => p.id === permId);
+    return permission ? permission.label : null;
+  }).filter(Boolean);
+
+  if (enabledPermissions.length === 0) {
+    return "No permissions";
+  } else if (enabledPermissions.length <= 2) {
+    return enabledPermissions.join(", ");
+  } else {
+    return `${enabledPermissions.length} permissions granted`;
+  }
+};
+
+// Computed properties
+const filteredUsers = computed(() => {
+  if (searchQuery.value.trim() === "") {
+    return users.value;
+  }
+
+  const query = searchQuery.value.toLowerCase();
+  return users.value.filter((user) => {
+    return Object.values(user).some((value) => {
+      if (value === null || value === undefined) return false;
+      if (typeof value === "object") {
+        // For permissions object, check if any permission name matches
+        return Object.entries(value).some(([key]) => {
+          return (
+            availablePermissions[key]?.toLowerCase().includes(query) || false
+          );
+        });
+      }
+      return String(value).toLowerCase().includes(query);
+    });
+  });
+});
+
+const totalPages = computed(() => {
+  return Math.ceil(filteredUsers.value.length / perPage.value);
+});
+
+const paginatedUsers = computed(() => {
+  const startIndex = (currentPage.value - 1) * perPage.value;
+  const endIndex = startIndex + perPage.value;
+
+  // Sort the users first
+  const sortedUsers = [...filteredUsers.value];
+  sortedUsers.sort((a, b) => {
+    let modifier = sortDir.value === "asc" ? 1 : -1;
+
+    // Special handling for permissions
+    if (sortKey.value === "permissions") {
+      // Count enabled permissions as a simple sorting metric
+      const aPermCount = Object.values(a.permissions).filter((p) => p).length;
+      const bPermCount = Object.values(b.permissions).filter((p) => p).length;
+      return (aPermCount < bPermCount ? -1 : 1) * modifier;
+    }
+
+    let aValue = a[sortKey.value];
+    let bValue = b[sortKey.value];
+
+    // Handle undefined or null values
+    if (aValue === undefined || aValue === null) {
+      aValue = "";
+    }
+    if (bValue === undefined || bValue === null) {
+      bValue = "";
+    }
+
+    if (typeof aValue === "number" && typeof bValue === "number") {
+      return aValue < bValue ? -1 * modifier : 1 * modifier;
+    } else {
+      return aValue.toString().localeCompare(bValue.toString()) * modifier;
+    }
+  });
+
+  return sortedUsers.slice(startIndex, endIndex);
+});
 </script>
   
 <style scoped>
@@ -650,7 +597,7 @@ export default {
   background-color: #f5f7fa;
   min-height: 100vh;
   padding: 40px 20px;
-  font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
+  font-family: "Inter", "Segoe UI", Roboto, sans-serif;
 }
 
 .content-container {
@@ -706,7 +653,7 @@ export default {
 
 .search-input:focus {
   outline: none;
-  border-color: #0E64A5;
+  border-color: #0e64a5;
   box-shadow: 0 0 0 2px rgba(14, 100, 165, 0.1);
 }
 
@@ -714,7 +661,7 @@ export default {
   display: flex;
   align-items: center;
   padding: 10px 16px;
-  background-color: #0E64A5;
+  background-color: #0e64a5;
   color: white;
   border: none;
   border-radius: 6px;
@@ -786,7 +733,7 @@ export default {
 }
 
 /* Ensure the table headers and data cells have proper min-width */
-.data-table th, 
+.data-table th,
 .data-table td {
   white-space: nowrap; /* Prevent text wrapping */
   min-width: 120px; /* Minimum width for each column */
@@ -801,13 +748,17 @@ export default {
 /* Add a visible indicator for horizontal scroll on mobile */
 @media (max-width: 768px) {
   .table-container::after {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     right: 0;
     width: 20px;
     height: 100%;
-    background: linear-gradient(to right, rgba(255, 255, 255, 0), rgba(230, 230, 230, 0.3));
+    background: linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0),
+      rgba(230, 230, 230, 0.3)
+    );
     pointer-events: none;
     opacity: 0;
     transition: opacity 0.3s;
@@ -843,19 +794,19 @@ export default {
 }
 
 .sort-none::after {
-  content: '⇵';
+  content: "⇵";
   opacity: 0.3;
   font-size: 12px;
 }
 
 .sort-asc::after {
-  content: '↑';
+  content: "↑";
   color: #2563eb;
   font-size: 12px;
 }
 
 .sort-desc::after {
-  content: '↓';
+  content: "↓";
   color: #2563eb;
   font-size: 12px;
 }
@@ -907,8 +858,8 @@ export default {
 }
 
 .edit-btn {
-  color: #0E64A5;
-  border-color: #0E64A5;
+  color: #0e64a5;
+  border-color: #0e64a5;
 }
 
 .edit-btn:hover {
@@ -994,7 +945,7 @@ export default {
 }
 
 .page-number.active {
-  background-color: #0E64A5;
+  background-color: #0e64a5;
   color: white;
 }
 
@@ -1122,7 +1073,7 @@ export default {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
-  background-color: #f8fafc;
+  /* background-color: #f8fafc; */
   border: 1px solid #e5e7eb;
   border-radius: 6px;
   padding: 16px;
@@ -1172,7 +1123,7 @@ export default {
 
 .submit-btn {
   padding: 10px 16px;
-  background-color: #0E64A5;
+  background-color: #0e64a5;
   color: white;
   border: none;
   border-radius: 6px;
@@ -1215,7 +1166,7 @@ export default {
 }
 
 .password-toggle-btn:hover {
-  color: #0E64A5;
+  color: #0e64a5;
 }
 
 .password-toggle-btn svg {
@@ -1229,117 +1180,117 @@ export default {
     align-items: flex-start;
     gap: 16px;
   }
-  
+
   .table-controls {
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
   }
-  
+
   .add-btn {
-  display: flex;
-  align-items: center;
-  padding: 10px 16px;
-  background-color: #0E64A5;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.95rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    background-color: #0e64a5;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
 
-.add-btn:hover {
-  background-color: #0a4f83;
-}
+  .add-btn:hover {
+    background-color: #0a4f83;
+  }
 
-.plus-icon {
-  font-size: 1.2rem;
-  margin-right: 8px;
-  font-weight: bold;
-}
-  
+  .plus-icon {
+    font-size: 1.2rem;
+    margin-right: 8px;
+    font-weight: bold;
+  }
+
   .search-container {
     width: 100%;
   }
-  
+
   /* Pagination Controls */
-.pagination-controls {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 24px;
-}
+  .pagination-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 24px;
+  }
 
-.per-page {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #64748b;
-  font-size: 0.9rem;
-}
+  .per-page {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #64748b;
+    font-size: 0.9rem;
+  }
 
-.per-page-select {
-  padding: 6px 8px;
-  border: 1px solid #e2e8f0;
-  border-radius: 4px;
-  background-color: white;
-  color: #1e293b;
-  font-size: 0.9rem;
-}
+  .per-page-select {
+    padding: 6px 8px;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    background-color: white;
+    color: #1e293b;
+    font-size: 0.9rem;
+  }
 
-.pagination-buttons {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
+  .pagination-buttons {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
 
-.pagination-btn {
-  padding: 6px 12px;
-  border: 1px solid #e2e8f0;
-  border-radius: 4px;
-  background-color: white;
-  color: #1e293b;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.2s;
-}
+  .pagination-btn {
+    padding: 6px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    background-color: white;
+    color: #1e293b;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
 
-.pagination-btn:hover:not(:disabled) {
-  background-color: #f1f5f9;
-}
+  .pagination-btn:hover:not(:disabled) {
+    background-color: #f1f5f9;
+  }
 
-.pagination-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
+  .pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 
-.page-numbers {
-  display: flex;
-  gap: 4px;
-}
+  .page-numbers {
+    display: flex;
+    gap: 4px;
+  }
 
-.page-number {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
+  .page-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
 
-.page-number:hover {
-  background-color: #f1f5f9;
-}
+  .page-number:hover {
+    background-color: #f1f5f9;
+  }
 
-.page-number.active {
-  background-color: #0E64A5;
-  color: white;
-}
-  
+  .page-number.active {
+    background-color: #0e64a5;
+    color: white;
+  }
+
   .permissions-container {
     grid-template-columns: 1fr;
   }
@@ -1349,29 +1300,29 @@ export default {
   .page-container {
     padding: 20px 16px;
   }
-  
+
   .content-container {
     padding: 16px;
   }
-  
+
   .actions-column {
     display: flex;
     flex-direction: column;
     gap: 8px;
   }
-  
+
   .action-btn {
     margin-right: 0;
   }
-  
+
   .table-container {
     border-radius: 6px;
   }
-  
+
   .table-wrapper {
     padding-bottom: 4px;
   }
-  
+
   .page-numbers {
     display: none;
   }

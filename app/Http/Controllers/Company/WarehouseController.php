@@ -44,10 +44,54 @@ class WarehouseController extends Controller{
          return redirect()->back();
      }
 
+     
+
     public function getWarehousesBySupplier(Request $request)
     {
         $company = Company::where('uuid', $request->uuid)->firstOrFail();
         $warehouses = Warehouse::where('company_id', $company->id)->get();
         return response()->json($warehouses);
+    }
+
+    public function getPaginatedSupplierWarehouses(Request $request)
+    {
+        $company = Company::where('uuid', $request->uuid)->firstOrFail();
+        $warehouses = Warehouse::where('company_id', $company->id)->paginate($request->pageSize);
+        return response()->json($warehouses);
+    }
+
+    public function update(Request $request)
+    {
+        try {
+            $warehouse = Warehouse::where('uuid', $request->uuid)->firstOrFail();
+            // Check if user has permission to update this warehouse
+        // if ($warehouse->company_id !== auth()->user()->company_id) {
+        //     return response()->json([
+        //         'message' => 'Unauthorized action.'
+        //     ], 403);
+        // }
+
+        $warehouse->update([
+            'name' => $request->name,
+            'contact_person' => $request->contact_person,
+            'email' => $request->email,
+            'phone_number' => $request->phone_number,
+            'address' => $request->address,
+            'krapin' => $request->krapin,
+            'country' => $request->country,
+            'region' => $request->region,
+            'gps' => $request->gps,
+            'status' => $request->status,
+            // 'updated_by' => auth()->id()
+        ]);
+
+        return redirect()->back();
+        
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error updating warehouse',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

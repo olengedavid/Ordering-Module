@@ -23,6 +23,7 @@ Route::middleware('auth')->group(function () {
     // Supplier Users Routes
     Route::get('/supplier/users', [UserPermissionController::class, 'index'])->name('supplier.users.index');
     Route::post('/supplier/users', [UserPermissionController::class, 'store'])->name('supplier.users.store');
+    Route::put('/supplier/users/{uuid}', [UserPermissionController::class, 'update'])->name('supplier.users.update');
     Route::get('/supplier/users/list', [UserPermissionController::class, 'getSupplierUsers'])->name('supplier.users.list');
 });
 

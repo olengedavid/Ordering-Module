@@ -77,6 +77,62 @@ class UserPermissionController extends BaseController
                 ->with('error', 'Failed to create user and permissions: ' . $e->getMessage());
         }
     }
+    
+    public function update(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'username' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $id,
+            'password' => 'nullable|min:8',
+            'permissions' => ['array', 'distinct', 'required'],
+            'warehouse_id' => 'nullable|exists:warehouses,id',
+            'status' => 'required|in:active,inactive',
+            'updated_by' => 'required|exists:users,id',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // Update user
+            $user = User::findOrFail($id);
+            $userData = [
+                'name' => $validated['username'],
+                'email' => $validated['email'],
+                'status' => $validated['status'],
+                'warehouse_id' => $validated['warehouse_id'],
+            ];
+
+            // Only update password if provided
+            if (!empty($validated['password'])) {
+                $userData['password'] = Hash::make($validated['password']);
+            }
+
+            $user->update($userData);
+
+            // Update permissions
+            $userPermission = userPermission::where('user_id', $id)->first();
+            if ($userPermission) {
+                $userPermission->update([
+                    'permissions' => json_encode($validated['permissions']),
+                    'updated_by' => $validated['updated_by'],
+                ]);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'User updated successfully',
+                'user' => $user->load('userPermissions')
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Failed to update user',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 
     public function getSupplierUsers(Request $request)
     {

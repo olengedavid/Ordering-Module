@@ -51,30 +51,40 @@ class InventoryController extends Controller
         Inventory::create($validated);
 
         return redirect()->back()
-        ->with('success', 'Inventory created successfully.');
+            ->with('success', 'Inventory created successfully.');
     }
 
-    public function update(Request $request, Inventory $inventory)
+    public function update(Request $request)
     {
-        $validated = $request->validate([
-            'product_id' => 'sometimes|exists:products,id',
-            'warehouse_id' => 'sometimes|exists:warehouses,id',
-            'cost_price' => 'sometimes|numeric|min:0',
-            'selling_price' => 'sometimes|numeric|min:0',
-            'stock_quantity' => 'sometimes|numeric|min:0',
-            'min_order' => 'sometimes|numeric|min:0',
-            'max_order' => 'sometimes|numeric|min:0',
-            'batch_number' => 'nullable|string',
-            'expiry_date' => 'nullable|date',
-            'promo_amount' => 'nullable|numeric|min:0',
-            'promo_start_date' => 'nullable|date',
-            'promo_end_date' => 'nullable|date',
-            'status' => 'sometimes|in:active,inactive',
-        ]);
+        try {
+            $inventory = Inventory::where('uuid', $request->uuid)->firstOrFail();
 
-        $inventory->update($validated);
+            $validated = $request->validate([
+                'product_id' => 'sometimes|exists:products,id',
+                'warehouse_id' => 'sometimes|exists:warehouses,id',
+                'cost_price' => 'sometimes|numeric|min:0',
+                'selling_price' => 'sometimes|numeric|min:0',
+                'stock_quantity' => 'sometimes|numeric|min:0',
+                'min_order' => 'sometimes|numeric|min:0',
+                'max_order' => 'sometimes|numeric|min:0',
+                'batch_number' => 'nullable|string',
+                'expiry_date' => 'nullable|date',
+                'promo_amount' => 'nullable|numeric|min:0',
+                'promo_start_date' => 'nullable|date',
+                'promo_end_date' => 'nullable|date',
+                'status' => 'sometimes|in:active,inactive',
+            ]);
 
-        return response()->json($inventory);
+            $inventory->update($validated);
+
+            return redirect()->back()
+                ->with('success', 'Inventory updated successfully.');
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error updating warehouse',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function destroy(Inventory $inventory)
