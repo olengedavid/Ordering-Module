@@ -33,4 +33,30 @@ class DeliveryRegionController extends Controller
         DeliveryRegion::create($validated);
         return redirect()->back()->with('success', 'Delivery region created successfully');
     }
+
+    public function updateDeliveryRegions(Request $request, $uuid)
+    {
+        $validated = $request->validate([
+            'warehouse_id' => 'required|exists:warehouses,id',
+            'region' => 'required|string|max:255',
+            'delivery_fee' => 'required|numeric|min:0',
+            'status' => 'required|in:active,inactive',
+            'company_id' => 'required|exists:companies,id'
+        ]);
+
+        try {
+            $deliveryRegion = DeliveryRegion::where('uuid', $uuid)->firstOrFail();
+            $deliveryRegion->update($validated);
+
+            return redirect()->back()
+            ->with('success', 'Delivery region updated successfully.');
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to update delivery region',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
+
+

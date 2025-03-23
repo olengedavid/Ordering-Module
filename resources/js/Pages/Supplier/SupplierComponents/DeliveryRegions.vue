@@ -218,7 +218,8 @@ export default {
       
       // Message state
       successMessage: '',
-      errorMessage: ''
+      errorMessage: '',
+      regionUuid: '',
     };
   },
   computed: {
@@ -364,6 +365,7 @@ export default {
     editDeliveryRegion(region) {
       this.editingDeliveryRegion = true;
       this.editingDeliveryRegionId = region.id;
+      this.regionUuid = region.uuid;
       
       this.form.reset();
       this.form.warehouse_id = region.warehouse_id;
@@ -402,7 +404,7 @@ export default {
     
     saveDeliveryRegion() {
       if (this.editingDeliveryRegion) {
-        this.form.put(route('supplier.delivery-regions.update', this.editingDeliveryRegionId), {
+        this.form.put(route('supplier.delivery-regions.update', this.regionUuid), {
           preserveScroll: true,
           onSuccess: () => {
             this.successMessage = 'Delivery region updated successfully';

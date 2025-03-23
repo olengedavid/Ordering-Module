@@ -22,6 +22,7 @@ Route::middleware('auth')->group(function () {
     #Delivery Regions Routes
     Route::get('supplier/delivery-regions', [DeliveryRegionController::class, 'getDeliveryRegionsByCompany'])->name('supplier.delivery-regions.index');
     Route::post('supplier/delivery-regions', [DeliveryRegionController::class, 'store'])->name('supplier.delivery-regions.store');
+    Route::put('supplier/delivery-regions/update{uuid}', [DeliveryRegionController::class, 'updateDeliveryRegions']) -> name('supplier.delivery-regions.update');
 
     #Product Routes
     Route::get('supplier/products', [ProductController::class, 'index'])->name('products.index');
