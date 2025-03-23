@@ -16,8 +16,8 @@ const props = defineProps({
 // Tab system
 const activeTab = ref('active');
 const tabs = ref([
-  { id: 'active', name: 'Active', count: 0 },
-  { id: 'inactive', name: 'Inactive', count: 0 }
+  { id: 'inactive', name: 'Inactive', count: 3 },
+  { id: 'active', name: 'Active', count: 20 }
 ]);
 
 // Update tab counts based on suppliers
@@ -613,8 +613,8 @@ onBeforeUnmount(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 20px;
-  height: 20px;
+  min-width: 24px;
+  height: 24px;
   padding: 0 6px;
   margin-left: 8px;
   border-radius: 10px;
@@ -622,16 +622,15 @@ onBeforeUnmount(() => {
   font-weight: 600;
 }
 
-/* Active tab - Green */
-.tabs li:nth-child(2) .tab-count {
-  background-color: rgba(16, 185, 129, 0.1);
-  color: #047857;
+/* Update tab count colors */
+.tabs li:nth-child(1) .tab-count {
+  background-color: #fadadd;
+  color: #e55c5c;
 }
 
-/* Inactive tab - Red */
-.tabs li:nth-child(3) .tab-count {
-  background-color: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
+.tabs li:nth-child(2) .tab-count {
+  background-color: #d1f0e0;
+  color: #2a9d74;
 }
 
 /* Table Controls */
