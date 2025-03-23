@@ -72,11 +72,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr
-                  v-for="user in users"
-                  :key="user.id"
-                  class="data-row"
-                >
+                <tr v-for="user in users" :key="user.id" class="data-row">
                   <td>{{ user.username }}</td>
                   <td>{{ user.email }}</td>
                   <td>{{ user.displayPassword }}</td>
@@ -116,51 +112,6 @@
           @page-changed="handlePageChange"
           @update:per-page="handlePerPageChange"
         />
-        <!-- <div class="pagination-controls">
-          <div class="per-page">
-            <span>Show</span>
-            <select
-              v-model="perPage"
-              @change="resetPagination"
-              class="per-page-select"
-            >
-              <option
-                v-for="option in perPageOptions"
-                :key="option"
-                :value="option"
-              >
-                {{ option }}
-              </option>
-            </select>
-            <span>per page</span>
-          </div>
-          <div class="pagination-buttons">
-            <button
-              class="pagination-btn"
-              :disabled="currentPage === 1"
-              @click="prevPage"
-            >
-              Previous
-            </button>
-            <div class="page-numbers">
-              <span
-                v-for="page in totalPages"
-                :key="page"
-                :class="['page-number', { active: currentPage === page }]"
-                @click="goToPage(page)"
-              >
-                {{ page }}
-              </span>
-            </div>
-            <button
-              class="pagination-btn"
-              :disabled="currentPage === totalPages"
-              @click="nextPage"
-            >
-              Next
-            </button>
-          </div>
-        </div> -->
       </div>
 
       <!-- Add/Edit User Modal -->
@@ -184,7 +135,7 @@
                 <input
                   type="text"
                   id="username"
-                  v-model="newUser.username"
+                  v-model="form.username"
                   required
                 />
               </div>
@@ -197,7 +148,7 @@
                 <input
                   type="email"
                   id="email"
-                  v-model="newUser.email"
+                  v-model="form.email"
                   required
                 />
               </div>
@@ -211,7 +162,7 @@
                   <input
                     :type="showPassword ? 'text' : 'password'"
                     id="password"
-                    v-model="newUser.password"
+                    v-model="form.password"
                     required
                   />
                   <button
@@ -281,7 +232,7 @@
                 <label for="warehouse"
                   >Warehouse <span class="required">*</span></label
                 >
-                <select id="warehouse" v-model="newUser.warehouse" required>
+                <select id="warehouse" v-model="form.warehouse" required>
                   <option value="">Select a Warehouse</option>
                   <option
                     v-for="warehouse in warehouses"
@@ -298,16 +249,17 @@
                 <label>Permissions <span class="required">*</span></label>
                 <div class="permissions-container">
                   <div
-                    v-for="(permission, key) in availablePermissions"
-                    :key="key"
+                    v-for="permission in availablePermissions"
+                    :key="permission.id"
                     class="permission-checkbox"
                   >
                     <input
                       type="checkbox"
-                      :id="key"
-                      v-model="newUser.permissions[key]"
+                      :id="permission.id"
+                      v-model="form.permissions"
+                      :value="permission.id"
                     />
-                    <label :for="key">{{ permission }}</label>
+                    <label :for="permission.id">{{ permission.label }}</label>
                   </div>
                 </div>
               </div>
@@ -317,9 +269,9 @@
                 <label for="status"
                   >Status <span class="required">*</span></label
                 >
-                <select id="status" v-model="newUser.status" required>
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
+                <select id="status" v-model="form.status" required>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
                 </select>
               </div>
 
@@ -365,24 +317,6 @@ const lastPage = ref(1);
 // Data from API
 const supplier_uuid = page.props.auth.user.company.uuid;
 
-// Form for creating/editing users
-const newUser = ref({
-  username: "",
-  email: "",
-  password: "",
-  warehouse: "",
-  permissions: {
-    canManageUsers: false,
-    canManageOrders: false,
-    canManageWarehouses: false,
-    canManageProducts: false,
-    canManageInventory: false,
-    canCancelOrderRequests: false,
-    canCancelConfirmedOrders: false,
-    canConfirmDeliveries: false,
-  },
-  status: "Active",
-});
 
 // Form for API submission
 const form = useForm({
@@ -390,7 +324,7 @@ const form = useForm({
   email: "",
   password: "",
   warehouse_id: "",
-  permissions: [],
+  permissions: [], // Now stores an array for multiple selections
   status: "active",
   created_by: user.id,
   updated_by: user.id,
@@ -398,28 +332,18 @@ const form = useForm({
   entity_type: "supplier",
 });
 
-// Available permissions mapping
-const availablePermissions = {
-  canManageUsers: "Can Manage Users",
-  canManageOrders: "Can Manage Orders",
-  canManageWarehouses: "Can Manage Warehouses",
-  canManageProducts: "Can Manage Products",
-  canManageInventory: "Can Manage Inventory",
-  canCancelOrderRequests: "Can Cancel Order Requests",
-  canCancelConfirmedOrders: "Can Cancel Confirmed Orders",
-  canConfirmDeliveries: "Can Confirm Deliveries",
-};
+const selectedPermissions = ref([]);
 
-// API permissions format
-const permissionsMapping = {
-  canManageUsers: "manage_users",
-  canManageOrders: "manage_orders",
-  canManageWarehouses: "manage_warehouses",
-  canManageProducts: "manage_products",
-  canManageInventory: "manage_inventory",
-  canCancelOrderRequests: "cancel_orders",
-  canConfirmDeliveries: "confirm_deliveries",
-};
+const availablePermissions = [
+  { id: "manage_users", label: "Can Manage Users" },
+  { id: "manage_orders", label: "Can Manage Orders" },
+  { id: "manage_warehouses", label: "Can Manage Warehouses" },
+  { id: "manage_products", label: "Can Manage Products" },
+  { id: "manage_inventory", label: "Can Manage Inventory" },
+  { id: "cancel_orders", label: "Can Cancel Order Requests" },
+  { id: "confirm_deliveries", label: "Can Confirm Deliveries" },
+];
+nConfirmDeliveries: "confirm_deliveries",
 
 // Load initial warehouse and user data
 onMounted(() => {
@@ -475,33 +399,12 @@ const fetchSupplierUsers = async () => {
 
 // Helper to parse permissions from API format to UI format
 const parsePermissions = (permissionsJson) => {
-  const permissions = {
-    canManageUsers: false,
-    canManageOrders: false,
-    canManageWarehouses: false,
-    canManageProducts: false,
-    canManageInventory: false,
-    canCancelOrderRequests: false,
-    canCancelConfirmedOrders: false,
-    canConfirmDeliveries: false,
-  };
-
   try {
-    const parsed = JSON.parse(permissionsJson || "[]");
-    parsed.forEach((perm) => {
-      // Map API permission to UI permission
-      const key = Object.keys(permissionsMapping).find(
-        (key) => permissionsMapping[key] === perm
-      );
-      if (key) {
-        permissions[key] = true;
-      }
-    });
+    return JSON.parse(permissionsJson || "[]");
   } catch (error) {
     console.error("Error parsing permissions:", error);
+    return [];
   }
-
-  return permissions;
 };
 
 // Map UI permissions back to API format for submission
@@ -516,23 +419,8 @@ const mapPermissionsToApi = (permissions) => {
 const openAddUserModal = () => {
   editingUser.value = false;
   editingUserId.value = null;
-  newUser.value = {
-    username: "",
-    email: "",
-    password: "",
-    warehouse: "",
-    permissions: {
-      canManageUsers: false,
-      canManageOrders: false,
-      canManageWarehouses: false,
-      canManageProducts: false,
-      canManageInventory: false,
-      canCancelOrderRequests: false,
-      canCancelConfirmedOrders: false,
-      canConfirmDeliveries: false,
-    },
-    status: "Active",
-  };
+  selectedPermissions.value = [];
+  form.reset();
   showUserModal.value = true;
   showPassword.value = false;
 };
@@ -548,47 +436,24 @@ const togglePasswordVisibility = () => {
 };
 
 const editUser = (user) => {
+  console.log("Editing user:", user);
   editingUser.value = true;
   editingUserId.value = user.id;
-  newUser.value = {
-    username: user.username,
-    email: user.email,
-    password: user.password,
-    warehouse: user.warehouse,
-    permissions: JSON.parse(JSON.stringify(user.permissions)),
-    status: user.status,
-  };
+  // Set the form data
+  form.username = user.username;
+  form.email = user.email;
+  form.password = user.password;
+  form.warehouse_id = user.warehouse_id;
+  form.status = user.status;
+  form.permissions = parsePermissions(user.user_permissions?.[0]?.permissions);
   showUserModal.value = true;
   showPassword.value = false;
 };
 
 // Save user (create or update)
 const saveUser = () => {
-  // Set form values from UI format
-  form.username = newUser.value.username;
-  form.email = newUser.value.email;
-  form.password = newUser.value.password;
-
-  // Find warehouse ID by name from the API data
-  try {
-    const warehouseData = warehouses.value.find(
-      (w) => w.name === newUser.value.warehouse
-    );
-    form.warehouse_id = warehouseData ? warehouseData.id : "";
-  } catch (error) {
-    console.error("Error setting warehouse ID:", error);
-    form.warehouse_id = "";
-  }
-
-  // Map permissions to API format
-  form.permissions = mapPermissionsToApi(newUser.value.permissions);
-
-  // Convert status to lowercase for API
-  form.status = newUser.value.status.toLowerCase();
-
   if (editingUser.value) {
-    // Update existing user
-    form.put(route("supplier.users.update", { id: editingUserId.value }), {
+    form.put(route("supplier.users.update", { uuid: editingUser.value.uuid }), {
       preserveScroll: true,
       onSuccess: () => {
         closeUserModal();
@@ -597,7 +462,6 @@ const saveUser = () => {
       },
     });
   } else {
-    // Create new user
     form.post(route("supplier.users.store"), {
       preserveScroll: true,
       onSuccess: () => {
@@ -608,6 +472,7 @@ const saveUser = () => {
     });
   }
 };
+
 
 // Sorting functions
 const sortBy = (key) => {
@@ -624,30 +489,8 @@ const getSortIcon = (key) => {
   return sortDir.value === "asc" ? "sort-icon sort-asc" : "sort-icon sort-desc";
 };
 
-// Pagination
-// const prevPage = () => {
-//   if (currentPage.value > 1) {
-//     currentPage.value--;
-//   }
-// };
-
-// const nextPage = () => {
-//   if (currentPage.value < totalPages.value) {
-//     currentPage.value++;
-//   }
-// };
-
-// const goToPage = (page) => {
-//   currentPage.value = page;
-// };
-
-// const resetPagination = () => {
-//   currentPage.value = 1;
-//   fetchSupplierUsers();
-// };
 
 const handlePageChange = (page) => {
-  console.log("imefika ++", page);
   currentPage.value = page;
   fetchSupplierUsers();
 };
@@ -659,9 +502,14 @@ const handlePerPageChange = (newPerPage) => {
 
 // Helper function for permissions display
 const getPermissionsDisplayText = (permissions) => {
-  const enabledPermissions = Object.entries(permissions)
-    .filter(([, enabled]) => enabled)
-    .map(([key]) => availablePermissions[key]);
+  if (!permissions || !Array.isArray(permissions)) {
+    return "No permissions";
+  }
+
+  const enabledPermissions = permissions.map(permId => {
+    const permission = availablePermissions.find(p => p.id === permId);
+    return permission ? permission.label : null;
+  }).filter(Boolean);
 
   if (enabledPermissions.length === 0) {
     return "No permissions";
@@ -1221,7 +1069,7 @@ const paginatedUsers = computed(() => {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
-  background-color: #f8fafc;
+  /* background-color: #f8fafc; */
   border: 1px solid #e5e7eb;
   border-radius: 6px;
   padding: 16px;
