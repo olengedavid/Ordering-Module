@@ -41,16 +41,16 @@
           <tbody>
             <tr v-for="product in sortedProducts" :key="product.id" class="data-row">
               <td>
-                <img :src="product.imageUrl" alt="Product image" class="product-thumbnail">
+                <img :src="getPrimaryImageUrl(product)" alt="Product image" class="product-thumbnail">
               </td>
-              <td>{{ product.productName }}</td>
-              <td>{{ product.skuNumber }}</td>
+              <td>{{ product.name || product.productName }}</td>
+              <td>{{ product.sku_number || product.skuNumber }}</td>
               <td>{{ product.category }}</td>
-              <td>{{ product.unitOfMeasure }}</td>
+              <td>{{ product.unit_of_measure || product.unitOfMeasure }}</td>
               <td class="description-cell">{{ product.description }}</td>
-              <td>{{ product.manufacturer }}</td>
+              <td>{{ product.manufucturer || product.manufacturer }}</td>
               <td>
-                <span :class="['status-pill', product.status === 'Active' ? 'status-active' : 'status-inactive']">
+                <span :class="['status-pill', (product.status === 'Active' || product.status === 'active') ? 'status-active' : 'status-inactive']">
                   {{ product.status }}
                 </span>
               </td>
@@ -68,6 +68,14 @@
           </tbody>
         </table>
       </div>
+      
+      <CustomPagination
+        :current-page="currentPage"
+        :last-page="lastPage"
+        :per-page="perPage"
+        @page-changed="handlePageChange"
+        @update:per-page="handlePerPageChange"
+      />
     </div>
 
     <!-- Add Product Modal -->
@@ -207,7 +215,7 @@
 
             <div class="form-actions">
               <button type="button" class="cancel-btn" @click="closeProductModal">Cancel</button>
-              <button type="submit" class="submit-btn">Save Product</button>
+              <button type="submit" class="submit-btn" :disabled="newProduct.processing">Save Product</button>
             </div>
           </form>
         </div>
@@ -217,63 +225,92 @@
 </template>
 
 <script>
-import { router } from '@inertiajs/vue3';
+import { router, useForm, usePage } from '@inertiajs/vue3';
+import { ref, computed, onMounted } from 'vue';
+import CustomPagination from "@/Components/CustomPagination.vue";
 
 export default {
   name: 'Products',
+  components: {
+    CustomPagination
+  },
   props: {
     supplier: {
       type: Object,
       required: true
     }
   },
-  data() {
-    return {
-      // Sorting
-      sortKey: 'productName',
-      sortDir: 'asc',
-      
-      // Product modal state
-      showProductModal: false,
-      editingProduct: false,
-      editingProductId: null,
-      
-      // Image upload state
-      imagePreview: null,
-      productImages: [],
-      selectedImageIndex: -1,
-      isDragging: false,
-      
-      // Product data
-      newProduct: {
-        productName: '',
-        skuNumber: '',
-        category: '',
-        unitOfMeasure: '',
-        description: '',
-        manufacturer: '',
-        status: 'Active',
-        imageUrl: '',
-        images: []
-      },
-      products: [
-        { id: 1, imageUrl: 'https://image.made-in-china.com/202f0j00SKpWwAoscucy/High-Quality-BOPP-Laminated-PP-Woven-Chemicals-Urea-Fertilizer-Bag-25kg-50kg-100kg.jpg', productName: 'Premium Coffee Beans', skuNumber: 'CB001', category: 'Beverages', unitOfMeasure: 'kg', description: 'High-quality arabica coffee beans from Ethiopia', manufacturer: 'Global Coffee Co.', status: 'Active' },
-        { id: 2, imageUrl: 'https://image.made-in-china.com/202f0j00SKpWwAoscucy/High-Quality-BOPP-Laminated-PP-Woven-Chemicals-Urea-Fertilizer-Bag-25kg-50kg-100kg.jpg', productName: 'Whole Wheat Flour', skuNumber: 'WF002', category: 'Baking Supplies', unitOfMeasure: 'kg', description: 'Organic stone-ground whole wheat flour', manufacturer: 'Healthy Mills Inc.', status: 'Active' },
-        { id: 3, imageUrl: 'https://image.made-in-china.com/202f0j00SKpWwAoscucy/High-Quality-BOPP-Laminated-PP-Woven-Chemicals-Urea-Fertilizer-Bag-25kg-50kg-100kg.jpg', productName: 'Extra Virgin Olive Oil', skuNumber: 'OL003', category: 'Oils & Condiments', unitOfMeasure: 'liter', description: 'Cold-pressed extra virgin olive oil from Spain', manufacturer: 'Mediterranean Delights', status: 'Inactive' }
-      ],
-      
-      // Product categories and units of measure
-      productCategories: ['Beverages', 'Dairy', 'Meat & Poultry', 'Seafood', 'Fruits & Vegetables', 'Bakery', 'Grains & Pasta', 'Canned Goods', 'Snacks', 'Condiments & Sauces', 'Baking Supplies', 'Oils & Vinegars'],
-      unitsOfMeasure: ['kg', 'g', 'liter', 'ml', 'unit', 'pack', 'box', 'carton', 'dozen', 'case']
-    };
-  },
-  computed: {
-    sortedProducts() {
-      const products = [...this.products];
-      products.sort((a, b) => {
-        let modifier = this.sortDir === 'asc' ? 1 : -1;
-        let aValue = a[this.sortKey];
-        let bValue = b[this.sortKey];
+  setup(props) {
+    // Get user info
+    const page = usePage();
+    const user = page.props.auth.user;
+    
+    // Ensure we have default values in case user or user.company is null
+    const userId = user?.id ? parseInt(user.id) : null;
+    
+    // For company ID, prioritize supplier's company_id if available
+    const companyId = props.supplier.company_id ? parseInt(props.supplier.company_id) :
+                      props.supplier.id ? parseInt(props.supplier.id) :
+                      user?.company?.id ? parseInt(user.company.id) : 
+                      user?.company_id ? parseInt(user.company_id) : null;
+    
+    console.log('Initial company ID:', companyId);
+    console.log('Supplier object:', props.supplier);
+    
+    // Sorting
+    const sortKey = ref('productName');
+    const sortDir = ref('asc');
+    
+    // Product modal state
+    const showProductModal = ref(false);
+    const editingProduct = ref(false);
+    const editingProductId = ref(null);
+    
+    // Image upload state
+    const imagePreview = ref(null);
+    const productImages = ref([]);
+    const selectedImageIndex = ref(-1);
+    const isDragging = ref(false);
+    
+    // Pagination
+    const currentPage = ref(1);
+    const perPage = ref(10);
+    const lastPage = ref(1);
+    
+    // Products data
+    const products = ref([]);
+    
+    // Product form
+    const newProduct = useForm({
+      productName: '',
+      skuNumber: '',
+      category: '',
+      unitOfMeasure: '',
+      description: '',
+      manufacturer: '',
+      status: 'Active',
+      supplier_id: props.supplier.id,
+      company_id: companyId,
+      created_by: userId,
+      primary_image: null,
+      secondary_images: []
+    });
+    
+    // Product categories and units of measure
+    const productCategories = [
+      'Beverages', 'Dairy', 'Meat & Poultry', 'Seafood', 'Fruits & Vegetables', 
+      'Bakery', 'Grains & Pasta', 'Canned Goods', 'Snacks', 'Condiments & Sauces', 
+      'Baking Supplies', 'Oils & Vinegars'
+    ];
+    const unitsOfMeasure = ['kg', 'g', 'liter', 'ml', 'unit', 'pack', 'box', 'carton', 'dozen', 'case'];
+    
+    // Computed properties
+    const sortedProducts = computed(() => {
+      const productsList = [...products.value];
+      productsList.sort((a, b) => {
+        let modifier = sortDir.value === 'asc' ? 1 : -1;
+        let aValue = a[sortKey.value];
+        let bValue = b[sortKey.value];
         
         // Handle undefined or null values
         if (aValue === undefined || aValue === null) {
@@ -290,238 +327,337 @@ export default {
         }
       });
       
-      return products;
-    }
-  },
-  mounted() {
-    // Initialize with real data from API if available
-    this.fetchProducts();
-  },
-  methods: {
-    fetchProducts() {
-      // In a real implementation, you would fetch products from the API
-      // For now, we'll use the demo data
-      console.log('Supplier ID to fetch products for:', this.supplier.id);
-      
-      // If real API integration is implemented, uncomment and modify this code:
-      /*
-      router.get(`/admin/suppliers/${this.supplier.id}/products`, {}, {
-        preserveState: true,
-        onSuccess: (response) => {
-          this.products = response.data.products;
-        },
-        onError: (errors) => {
-          console.error('Error fetching products:', errors);
-        }
-      });
-      */
-    },
+      return productsList;
+    });
     
-    sortBy(key) {
-      if (this.sortKey === key) {
-        this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
-      } else {
-        this.sortKey = key;
-        this.sortDir = 'asc';
+    // Pagination handlers
+    const handlePageChange = (page) => {
+      currentPage.value = page;
+      fetchProducts();
+    };
+
+    const handlePerPageChange = (newPerPage) => {
+      perPage.value = newPerPage;
+      currentPage.value = 1; // Reset to first page when changing items per page
+      fetchProducts();
+    };
+    
+    // Methods
+    const fetchProducts = async () => {
+      try {
+        const response = await axios.get(
+          route("supplier.products.paginate", {
+            uuid: props.supplier.uuid || props.supplier.id,
+            page: currentPage.value,
+            pageSize: perPage.value,
+          })
+        );
+        products.value = response.data.data;
+        currentPage.value = response.data.current_page;
+        lastPage.value = response.data.last_page;
+        perPage.value = response.data.per_page;
+      } catch (error) {
+        console.error('Error fetching products:', error);
       }
-    },
+    };
     
-    getSortIcon(key) {
-      if (this.sortKey !== key) return 'sort-icon sort-none';
-      return this.sortDir === 'asc' ? 'sort-icon sort-asc' : 'sort-icon sort-desc';
-    },
+    const sortBy = (key) => {
+      if (sortKey.value === key) {
+        sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
+      } else {
+        sortKey.value = key;
+        sortDir.value = 'asc';
+      }
+    };
+    
+    const getSortIcon = (key) => {
+      if (sortKey.value !== key) return 'sort-icon sort-none';
+      return sortDir.value === 'asc' ? 'sort-icon sort-asc' : 'sort-icon sort-desc';
+    };
     
     // Product Modal Methods
-    openAddProductModal() {
-      this.editingProduct = false;
-      this.editingProductId = null;
-      this.newProduct = {
-        productName: '',
-        skuNumber: '',
-        category: '',
-        unitOfMeasure: '',
-        description: '',
-        manufacturer: '',
-        status: 'Active',
-        imageUrl: '',
-        images: []
-      };
-      this.imagePreview = null;
-      this.productImages = [];
-      this.selectedImageIndex = -1;
-      this.isDragging = false;
-      this.showProductModal = true;
-    },
+    const openAddProductModal = () => {
+      editingProduct.value = false;
+      editingProductId.value = null;
+      newProduct.reset();
+      imagePreview.value = null;
+      productImages.value = [];
+      selectedImageIndex.value = -1;
+      isDragging.value = false;
+      showProductModal.value = true;
+    };
     
-    closeProductModal() {
-      this.showProductModal = false;
-      this.imagePreview = null;
-      this.productImages = [];
-      this.selectedImageIndex = -1;
-      this.isDragging = false;
-    },
+    const closeProductModal = () => {
+      showProductModal.value = false;
+      newProduct.reset();
+      imagePreview.value = null;
+      productImages.value = [];
+      selectedImageIndex.value = -1;
+      isDragging.value = false;
+    };
     
-    editProduct(product) {
-      this.editingProduct = true;
-      this.editingProductId = product.id;
-      this.newProduct = { ...product };
-      this.imagePreview = product.imageUrl;
-      this.productImages = product.images ? [...product.images] : [];
-      if (this.productImages.length === 0 && product.imageUrl) {
-        // If there are no images but there is an imageUrl, create an image entry
-        this.productImages = [{
-          id: 1,
-          url: product.imageUrl,
-          isPrimary: true
-        }];
-      }
-      this.selectedImageIndex = this.productImages.findIndex(img => img.isPrimary) || 0;
-      this.isDragging = false;
-      this.showProductModal = true;
-    },
-    
-    saveProduct() {
-      // Get the primary image URL for the main imageUrl field
-      const primaryImage = this.productImages.find(img => img.isPrimary);
-      const primaryImageUrl = primaryImage ? primaryImage.url : 'https://image.made-in-china.com/202f0j00SKpWwAoscucy/High-Quality-BOPP-Laminated-PP-Woven-Chemicals-Urea-Fertilizer-Bag-25kg-50kg-100kg.jpg';
+    const editProduct = (product) => {
+      editingProduct.value = true;
+      editingProductId.value = product.id;
       
-      if (this.editingProduct) {
-        // Update existing product
-        const index = this.products.findIndex(product => product.id === this.editingProductId);
-        if (index !== -1) {
-          this.products.splice(index, 1, { 
-            ...this.newProduct, 
-            id: this.editingProductId,
-            imageUrl: primaryImageUrl,
-            images: [...this.productImages]
-          });
+      // Map API fields to form fields
+      newProduct.productName = product.name || product.productName;
+      newProduct.skuNumber = product.sku_number || product.skuNumber;
+      newProduct.category = product.category;
+      newProduct.unitOfMeasure = product.unit_of_measure || product.unitOfMeasure;
+      newProduct.description = product.description;
+      newProduct.manufacturer = product.manufucturer || product.manufacturer;
+      newProduct.status = product.status;
+      
+      // Handle images
+      if (product.imageUrl) {
+        imagePreview.value = product.imageUrl;
+      } else if (product.images) {
+        const images = typeof product.images === 'string' 
+          ? JSON.parse(product.images) 
+          : product.images;
+          
+        if (images && images.length > 0) {
+          productImages.value = images.map((img, index) => ({
+            id: index + 1,
+            url: img.path || img.url,
+            isPrimary: img.type === 'primary' || img.isPrimary
+          }));
+          
+          const primaryImage = productImages.value.find(img => img.isPrimary);
+          if (primaryImage) {
+            imagePreview.value = primaryImage.url;
+          }
         }
-      } else {
-        // Add new product
-        const maxId = this.products.length > 0 ? Math.max(...this.products.map(p => p.id)) : 0;
-        this.products.push({
-          ...this.newProduct,
-          id: maxId + 1,
-          imageUrl: primaryImageUrl,
-          images: [...this.productImages]
-        });
       }
       
-      // In a real implementation, you would save the product to the API
-      /*
-      const productData = {
-        supplier_id: this.supplier.id,
-        ...this.newProduct,
-        primary_image_url: primaryImageUrl,
-        images: this.productImages
-      };
+      showProductModal.value = true;
+    };
+    
+    const saveProduct = () => {
+      // Prepare form data for submission
+      const formData = new FormData();
       
-      const endpoint = this.editingProduct 
-        ? `/admin/products/${this.editingProductId}` 
-        : '/admin/products';
+      // Add basic product information
+      formData.append('name', newProduct.productName);
+      formData.append('sku_number', newProduct.skuNumber);
+      formData.append('category', newProduct.category);
+      formData.append('unit_of_measure', newProduct.unitOfMeasure);
+      formData.append('description', newProduct.description);
+      formData.append('manufucturer', newProduct.manufacturer);
+      formData.append('status', newProduct.status.toLowerCase());
       
-      router.post(endpoint, productData, {
+      // Add supplier_id if available
+      if (props.supplier && props.supplier.id) {
+        formData.append('supplier_id', parseInt(props.supplier.id));
+      }
+      
+      // IMPORTANT: Ensure company_id is included as an integer
+      // Use the supplier's company_id first, as it should be the most reliable source
+      const companyIdToUse = props.supplier.company_id ? parseInt(props.supplier.company_id) : 
+                             props.supplier.id ? parseInt(props.supplier.id) : 
+                             user?.company?.id ? parseInt(user.company.id) : 
+                             user?.company_id ? parseInt(user.company_id) : null;
+      
+      // Company ID is required - ensure it's always included and is an integer
+      if (companyIdToUse) {
+        formData.append('company_id', companyIdToUse);
+        console.log('Using company_id:', companyIdToUse);
+      } else {
+        console.error('No company_id available - this will cause an error');
+        // Fallback to a default if absolutely necessary (modify based on your app structure)
+        formData.append('company_id', parseInt(props.supplier.id));
+      }
+      
+      // Add created_by user ID if available
+      const userIdToUse = userId || (user?.id ? parseInt(user.id) : null);
+      if (userIdToUse) {
+        formData.append('created_by', userIdToUse);
+      }
+      
+      // Add primary image
+      const primaryImage = productImages.value.find(img => img.isPrimary);
+      if (primaryImage && primaryImage.file) {
+        formData.append('primary_image', primaryImage.file);
+      }
+      
+      // Add secondary images
+      const secondaryImages = productImages.value.filter(img => !img.isPrimary);
+      secondaryImages.forEach(img => {
+        if (img.file) {
+          formData.append('secondary_images[]', img.file);
+        }
+      });
+      
+      // Determine endpoint
+      const endpoint = editingProduct.value 
+        ? route('products.update', editingProductId.value) 
+        : route('products.store');
+      
+      // Submit form
+      router.post(endpoint, formData, {
         onSuccess: () => {
-          this.closeProductModal();
-          this.fetchProducts(); // Refresh the products list
+          closeProductModal();
+          fetchProducts();
         },
         onError: (errors) => {
           console.error('Error saving product:', errors);
         }
       });
-      */
+    };
+    
+    const getPrimaryImageUrl = (product) => {
+      // If the product has a direct imageUrl property, use that
+      if (product.imageUrl) {
+        return product.imageUrl;
+      }
       
-      this.closeProductModal();
-    },
+      // If the product has images in API format
+      if (product.images) {
+        const images = typeof product.images === 'string'
+          ? JSON.parse(product.images)
+          : product.images;
+          
+        const primaryImage = images?.find(img => img.type === 'primary' || img.isPrimary);
+        if (primaryImage) {
+          return primaryImage.path || primaryImage.url;
+        }
+      }
+      
+      // Default image if none found
+      return 'https://image.made-in-china.com/202f0j00SKpWwAoscucy/High-Quality-BOPP-Laminated-PP-Woven-Chemicals-Urea-Fertilizer-Bag-25kg-50kg-100kg.jpg';
+    };
     
     // Image Upload Methods
-    onFileSelected(event) {
+    const onFileSelected = (event) => {
       const files = event.target.files;
       if (files && files.length > 0) {
         Array.from(files).forEach(file => {
-          this.addImageToGallery(file);
+          addImageToGallery(file);
         });
       }
-    },
+    };
     
-    onDragOver(event) {
+    const onDragOver = (event) => {
       event.preventDefault();
-      this.isDragging = true;
-    },
+      isDragging.value = true;
+    };
     
-    onDragLeave(event) {
+    const onDragLeave = (event) => {
       event.preventDefault();
-      this.isDragging = false;
-    },
+      isDragging.value = false;
+    };
     
-    onDrop(event) {
+    const onDrop = (event) => {
       event.preventDefault();
-      this.isDragging = false;
+      isDragging.value = false;
       const files = event.dataTransfer.files;
       if (files && files.length > 0) {
         Array.from(files).forEach(file => {
           if (file.type.match('image.*')) {
-            this.addImageToGallery(file);
+            addImageToGallery(file);
           }
         });
       }
-    },
+    };
     
-    addImageToGallery(file) {
+    const addImageToGallery = (file) => {
       const reader = new FileReader();
       reader.onload = (e) => {
-        const newImageId = this.productImages.length > 0 ? 
-          Math.max(...this.productImages.map(img => img.id)) + 1 : 1;
+        const newImageId = productImages.value.length > 0 ? 
+          Math.max(...productImages.value.map(img => img.id)) + 1 : 1;
         
         const newImage = {
           id: newImageId,
           url: e.target.result,
-          isPrimary: this.productImages.length === 0 // First image is primary by default
+          file: file,
+          isPrimary: productImages.value.length === 0 // First image is primary by default
         };
         
-        this.productImages.push(newImage);
+        productImages.value.push(newImage);
         
         // Update imagePreview if this is the primary image
         if (newImage.isPrimary) {
-          this.imagePreview = newImage.url;
-          this.selectedImageIndex = this.productImages.length - 1;
+          imagePreview.value = newImage.url;
+          selectedImageIndex.value = productImages.value.length - 1;
         }
       };
       reader.readAsDataURL(file);
-    },
+    };
     
-    removeImage(imageId) {
-      const index = this.productImages.findIndex(img => img.id === imageId);
+    const removeImage = (imageId) => {
+      const index = productImages.value.findIndex(img => img.id === imageId);
       if (index !== -1) {
-        const wasRemovingPrimary = this.productImages[index].isPrimary;
-        this.productImages.splice(index, 1);
+        const wasRemovingPrimary = productImages.value[index].isPrimary;
+        productImages.value.splice(index, 1);
         
         // If we removed the primary image and there are other images, set a new primary
-        if (wasRemovingPrimary && this.productImages.length > 0) {
-          this.productImages[0].isPrimary = true;
-          this.imagePreview = this.productImages[0].url;
-          this.selectedImageIndex = 0;
-        } else if (this.productImages.length === 0) {
+        if (wasRemovingPrimary && productImages.value.length > 0) {
+          productImages.value[0].isPrimary = true;
+          imagePreview.value = productImages.value[0].url;
+          selectedImageIndex.value = 0;
+        } else if (productImages.value.length === 0) {
           // If no images left
-          this.imagePreview = null;
-          this.selectedImageIndex = -1;
+          imagePreview.value = null;
+          selectedImageIndex.value = -1;
         }
       }
-    },
+    };
     
-    setPrimaryImage(imageId) {
+    const setPrimaryImage = (imageId) => {
       // Reset all images to non-primary
-      this.productImages.forEach(img => {
+      productImages.value.forEach(img => {
         img.isPrimary = (img.id === imageId);
       });
       
       // Update the preview with the new primary image
-      const primaryImage = this.productImages.find(img => img.id === imageId);
+      const primaryImage = productImages.value.find(img => img.id === imageId);
       if (primaryImage) {
-        this.imagePreview = primaryImage.url;
-        this.selectedImageIndex = this.productImages.findIndex(img => img.id === imageId);
+        imagePreview.value = primaryImage.url;
+        selectedImageIndex.value = productImages.value.findIndex(img => img.id === imageId);
       }
-    }
+    };
+    
+    // Initialize
+    onMounted(() => {
+      fetchProducts();
+    });
+    
+    return {
+      sortKey,
+      sortDir,
+      showProductModal,
+      editingProduct,
+      editingProductId,
+      imagePreview,
+      productImages,
+      selectedImageIndex,
+      isDragging,
+      newProduct,
+      products,
+      productCategories,
+      unitsOfMeasure,
+      sortedProducts,
+      currentPage,
+      perPage,
+      lastPage,
+      handlePageChange,
+      handlePerPageChange,
+      sortBy,
+      getSortIcon,
+      openAddProductModal,
+      closeProductModal,
+      editProduct,
+      saveProduct,
+      onFileSelected,
+      onDragOver,
+      onDragLeave,
+      onDrop,
+      addImageToGallery,
+      removeImage,
+      setPrimaryImage,
+      getPrimaryImageUrl
+    };
   }
 };
 </script>
