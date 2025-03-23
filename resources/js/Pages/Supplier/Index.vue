@@ -12,9 +12,8 @@ const props = defineProps({
 });
 
 // Tab system
-const activeTab = ref('all');
+const activeTab = ref('active');
 const tabs = ref([
-  { id: 'all', name: 'All Suppliers' },
   { id: 'active', name: 'Active', count: 0 },
   { id: 'inactive', name: 'Inactive', count: 0 }
 ]);
