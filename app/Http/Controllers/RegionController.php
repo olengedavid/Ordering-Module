@@ -13,9 +13,15 @@ class RegionController extends Controller
         return Inertia::render('Supplier/Region');
     }
 
-    public function getRegions()
+    public function getRegions(Request $request)
     {
-        $regions = Region::with(['creator'])->get();
+
+        $perPage = $request->input('per_page', 10);
+
+        $regions = Region::with(['creator'])
+        ->orderBy('created_at', 'desc')
+        ->paginate($perPage);
+
         return response()->json($regions);
     }
 
