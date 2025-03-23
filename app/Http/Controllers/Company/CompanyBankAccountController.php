@@ -55,7 +55,7 @@ class CompanyBankAccountController extends Controller
     
         $bankAccount = CompanyBankAccount::where('uuid', $validated['uuid'])->firstOrFail();
     
-        if ($validated['is_primary']) {
+        if (isset($validated['is_primary']) && $validated['is_primary']) {
             CompanyBankAccount::where('company_id', $bankAccount->company_id)
                 ->where('id', '!=', $bankAccount->id)
                 ->update(['is_primary' => false]);
@@ -66,7 +66,7 @@ class CompanyBankAccountController extends Controller
             'branch' => $validated['branch'],
             'account_name' => $validated['account_name'],
             'account_number' => $validated['account_number'],
-            'is_primary' => $validated['is_primary']
+            'is_primary' => $validated['is_primary'] ?? false
         ]);
     
         return back()->with('success', 'Bank account updated successfully');
