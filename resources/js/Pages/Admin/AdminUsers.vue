@@ -7,7 +7,7 @@
         <ErrorMessage v-if="errorMessage" @close="errorMessage = ''" v-slot>{{ errorMessage }}</ErrorMessage>
       </div>
       <div class="content-container">
-        <h1 class="page-title">User Management</h1>
+        <h1 class="page-title">Users</h1>
 
         <div class="table-controls">
           <div class="search-container">
