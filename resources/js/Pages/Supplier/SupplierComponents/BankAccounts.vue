@@ -1,5 +1,10 @@
 <template>
   <div>
+    <div class="message-container">
+      <SuccessMessage v-if="successMessage" @close="successMessage = ''" v-slot>{{ successMessage }}</SuccessMessage>
+      <ErrorMessage v-if="errorMessage" @close="errorMessage = ''" v-slot>{{ errorMessage }}</ErrorMessage>
+    </div>
+    
     <div class="table-controls">
       <div class="table-title">Bank Accounts</div>
       <button @click="openAddBankAccountModal" class="add-btn">
@@ -158,9 +163,15 @@
 
 <script>
 import { router } from '@inertiajs/vue3';
+import SuccessMessage from '@/Components/SuccessMessage.vue';
+import ErrorMessage from '@/Components/ErrorMessage.vue';
 
 export default {
   name: 'BankAccounts',
+  components: {
+    SuccessMessage,
+    ErrorMessage
+  },
   props: {
     supplier: {
       type: Object,
@@ -169,6 +180,8 @@ export default {
   },
   data() {
     return {
+      successMessage: '',
+      errorMessage: '',
       sortKey: 'bankName',
       sortDir: 'asc',
       showBankAccountModal: false,
@@ -369,7 +382,8 @@ export default {
     editBankAccount(account) {
       // Basic validation to prevent errors
       if (!account || !account.id) {
-        alert('Cannot edit: Invalid bank account');
+        this.errorMessage = 'Cannot edit: Invalid bank account';
+        this.autoDismissMessage('error');
         return;
       }
       
@@ -389,9 +403,10 @@ export default {
         this.showBankAccountModal = true;
       } catch (error) {
         console.error('Error preparing bank account for editing:', error);
-        alert('An error occurred while preparing the bank account for editing');
+        this.errorMessage = 'An error occurred while preparing the bank account for editing';
         this.editingBankAccount = false;
         this.editingBankAccountId = null;
+        this.autoDismissMessage('error');
       }
     },
     saveBankAccount() {
@@ -412,7 +427,8 @@ export default {
             !bankAccountData.account_name || !bankAccountData.account_number || 
             !bankAccountData.company_uuid) {
           // If any required field is missing, don't proceed
-          alert('Please fill in all required fields');
+          this.errorMessage = 'Please fill in all required fields';
+          this.autoDismissMessage('error');
           return;
         }
 
@@ -424,12 +440,15 @@ export default {
           router.put(route('supplier.bank-accounts.update'), bankAccountData, {
             preserveScroll: true,
             onSuccess: () => {
+              this.successMessage = 'Bank account updated successfully';
               this.closeBankAccountModal();
               this.loadBankAccounts(true);
+              this.autoDismissMessage('success');
             },
             onError: (errors) => {
-              alert('Error updating bank account');
+              this.errorMessage = 'Error updating bank account';
               console.error(errors);
+              this.autoDismissMessage('error');
             }
           });
         } else {
@@ -437,25 +456,29 @@ export default {
           router.post(route('supplier.bank-accounts.store'), bankAccountData, {
             preserveScroll: true,
             onSuccess: () => {
+              this.successMessage = 'Bank account added successfully';
               this.closeBankAccountModal();
               this.loadBankAccounts(true);
+              this.autoDismissMessage('success');
             },
             onError: (errors) => {
-              alert('Error creating bank account');
+              this.errorMessage = 'Error creating bank account';
               console.error(errors);
+              this.autoDismissMessage('error');
             }
           });
         }
       } catch (error) {
         console.error('Error in saveBankAccount:', error);
-        alert('An unexpected error occurred when saving the bank account');
+        this.errorMessage = 'An unexpected error occurred when saving the bank account';
+        this.autoDismissMessage('error');
       }
     },
     setPrimaryAccount(accountId) {
       // Get the account object to find its UUID
       const account = this.getBankAccounts().find(acc => acc.id === accountId);
       if (!account || !account.uuid) {
-        alert('Could not find bank account to set as primary');
+        this.errorMessage = 'Could not find bank account to set as primary';
         return;
       }
       
@@ -470,12 +493,15 @@ export default {
       }, {
         preserveScroll: true,
         onSuccess: () => {
+          this.successMessage = 'Primary bank account updated successfully';
           this.loadBankAccounts(true);
+          this.autoDismissMessage('success');
         },
         onError: (errors) => {
           // Handle errors to prevent unresponsiveness
-          alert('Error setting bank account as primary');
+          this.errorMessage = 'Error setting bank account as primary';
           console.error(errors);
+          this.autoDismissMessage('error');
         }
       });
     },
@@ -483,7 +509,7 @@ export default {
       // Get the account object to find its UUID
       const account = this.getBankAccounts().find(acc => acc.id === accountId);
       if (!account || !account.uuid) {
-        alert('Could not find bank account to delete');
+        this.errorMessage = 'Could not find bank account to delete';
         return;
       }
       
@@ -492,12 +518,15 @@ export default {
         data: { uuid: account.uuid },
         preserveScroll: true,
         onSuccess: () => {
+          this.successMessage = 'Bank account deleted successfully';
           this.loadBankAccounts(true);
+          this.autoDismissMessage('success');
         },
         onError: (errors) => {
           // Handle errors to prevent unresponsiveness
-          alert('Error deleting bank account');
+          this.errorMessage = 'Error deleting bank account';
           console.error(errors);
+          this.autoDismissMessage('error');
         }
       });
     },
@@ -571,6 +600,15 @@ export default {
         accountNumber: account.account_number || account.accountNumber,
         isPrimary: account.is_primary || account.isPrimary
       };
+    },
+    autoDismissMessage(type) {
+      setTimeout(() => {
+        if (type === 'success') {
+          this.successMessage = '';
+        } else if (type === 'error') {
+          this.errorMessage = '';
+        }
+      }, 3000);
     }
   }
 }

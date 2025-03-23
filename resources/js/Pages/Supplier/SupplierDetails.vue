@@ -3,13 +3,14 @@
       <AdminNavbar />
       <div class="page-container">
         <Head :title="`Supplier #${supplier.id}`" />
-        <div class="content-container">
+        <div>
           <div class="header-container">
             <h1 class="page-title">Supplier Details</h1>
             <button class="back-button" @click="goBack">
               <span>←</span> Back to Suppliers
             </button>
           </div>
+        <div class="content-container">
           <div class="supplier-details-container" v-if="supplier">
             <!-- Supplier Header with Status -->
             <div class="order-header">
@@ -107,84 +108,18 @@
             <!-- Delivery Regions Tab Content -->
             <div v-if="activeTab === 'deliveryRegions'" class="tab-content">
               <DeliveryRegions 
-                :initialRegions="deliveryRegions" 
-                @regions-updated="updateDeliveryRegions"
+                :supplier="supplier"
               />
             </div>
     
             <!-- Products Tab Content -->
             <div v-if="activeTab === 'products'" class="tab-content">
-              <div class="table-controls">
-                <div class="table-title">Products</div>
-                <button @click="openAddProductModal" class="add-btn">
-                  <span class="plus-icon">+</span>
-                  Add Product
-                </button>
-              </div>
-              
-              <div class="table-container">
-                <div class="table-wrapper">
-                  <table class="data-table">
-                    <thead>
-                      <tr>
-                        <th>Product</th>
-                        <th @click="sortBy('productName')" class="sortable">
-                          Name <i :class="getSortIcon('productName')"></i>
-                        </th>
-                        <th @click="sortBy('skuNumber')" class="sortable">
-                          SKU Number <i :class="getSortIcon('skuNumber')"></i>
-                        </th>
-                        <th @click="sortBy('category')" class="sortable">
-                          Category <i :class="getSortIcon('category')"></i>
-                        </th>
-                        <th @click="sortBy('unitOfMeasure')" class="sortable">
-                          Unit of Measure <i :class="getSortIcon('unitOfMeasure')"></i>
-                        </th>
-                        <th @click="sortBy('description')" class="sortable">
-                          Description <i :class="getSortIcon('description')"></i>
-                        </th>
-                        <th @click="sortBy('manufacturer')" class="sortable">
-                          Manufacturer <i :class="getSortIcon('manufacturer')"></i>
-                        </th>
-                        <th @click="sortBy('status')" class="sortable">
-                          Status <i :class="getSortIcon('status')"></i>
-                        </th>
-                        <th class="actions-column">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr v-for="product in sortedProducts" :key="product.id" class="data-row">
-                        <td>
-                          <img :src="product.imageUrl" alt="Product image" class="product-thumbnail">
-                        </td>
-                        <td>{{ product.productName }}</td>
-                        <td>{{ product.skuNumber }}</td>
-                        <td>{{ product.category }}</td>
-                        <td>{{ product.unitOfMeasure }}</td>
-                        <td class="description-cell">{{ product.description }}</td>
-                        <td>{{ product.manufacturer }}</td>
-                        <td>
-                          <span :class="['status-pill', product.status === 'Active' ? 'status-active' : 'status-inactive']">
-                            {{ product.status }}
-                          </span>
-                        </td>
-                        <td class="actions-column">
-                          <button @click="editProduct(product)" class="action-btn edit-btn">
-                            Edit
-                          </button>
-                        </td>
-                      </tr>
-                      <tr v-if="products.length === 0">
-                        <td colspan="9" class="empty-state">
-                          No products added yet
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              <Products 
+                :supplier="supplier"
+              />
             </div>
           </div>
+        </div>
         </div>
       </div>
   
@@ -284,249 +219,19 @@
               </div>
             </form>
           </div>
-          
-          <!-- Delivery Regions Tab Content -->
-          <div v-if="activeTab === 'deliveryRegions'" class="tab-content">
-            <DeliveryRegions 
-              :initialRegions="deliveryRegions" 
-              @regions-updated="updateDeliveryRegions"
-            />
-          </div>
-  
-          <!-- Products Tab Content -->
-          <div v-if="activeTab === 'products'" class="tab-content">
-            <div class="table-controls">
-              <div class="table-title">Products</div>
-              <button @click="openAddProductModal" class="add-btn">
-                <span class="plus-icon">+</span>
-                Add Product
-              </button>
-            </div>
-            
-            <div class="table-container">
-              <div class="table-wrapper">
-                <table class="data-table">
-                  <thead>
-                    <tr>
-                      <th>Product</th>
-                      <th @click="sortBy('productName')" class="sortable">
-                        Name <i :class="getSortIcon('productName')"></i>
-                      </th>
-                      <th @click="sortBy('skuNumber')" class="sortable">
-                        SKU Number <i :class="getSortIcon('skuNumber')"></i>
-                      </th>
-                      <th @click="sortBy('category')" class="sortable">
-                        Category <i :class="getSortIcon('category')"></i>
-                      </th>
-                      <th @click="sortBy('unitOfMeasure')" class="sortable">
-                        Unit of Measure <i :class="getSortIcon('unitOfMeasure')"></i>
-                      </th>
-                      <th @click="sortBy('description')" class="sortable">
-                        Description <i :class="getSortIcon('description')"></i>
-                      </th>
-                      <th @click="sortBy('manufacturer')" class="sortable">
-                        Manufacturer <i :class="getSortIcon('manufacturer')"></i>
-                      </th>
-                      <th @click="sortBy('status')" class="sortable">
-                        Status <i :class="getSortIcon('status')"></i>
-                      </th>
-                      <th class="actions-column">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="product in sortedProducts" :key="product.id" class="data-row">
-                      <td>
-                        <img :src="product.imageUrl" alt="Product image" class="product-thumbnail">
-                      </td>
-                      <td>{{ product.productName }}</td>
-                      <td>{{ product.skuNumber }}</td>
-                      <td>{{ product.category }}</td>
-                      <td>{{ product.unitOfMeasure }}</td>
-                      <td class="description-cell">{{ product.description }}</td>
-                      <td>{{ product.manufacturer }}</td>
-                      <td>
-                        <span :class="['status-pill', product.status === 'Active' ? 'status-active' : 'status-inactive']">
-                          {{ product.status }}
-                        </span>
-                      </td>
-                      <td class="actions-column">
-                        <button @click="editProduct(product)" class="action-btn edit-btn">
-                          Edit
-                        </button>
-                      </td>
-                    </tr>
-                    <tr v-if="products.length === 0">
-                      <td colspan="9" class="empty-state">
-                        No products added yet
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Add Delivery Region Modal -->
-      <div v-if="showDeliveryRegionModal" class="modal-overlay" @click.self="closeDeliveryRegionModal">
-        <div class="modal-container">
-          <div class="modal-header">
-            <h2>{{ editingDeliveryRegion ? 'Edit Delivery Region' : 'Add New Delivery Region' }}</h2>
-            <button class="close-btn" @click="closeDeliveryRegionModal">&times;</button>
-          </div>
-          <div class="modal-body">
-            <form @submit.prevent="saveDeliveryRegion">
-              <!-- Warehouse Name Dropdown -->
-              <div class="form-group">
-                <label for="warehouseName">Warehouse Name <span class="required">*</span></label>
-                <div class="custom-select-container warehouse-select-container">
-                  <div 
-                    class="custom-select-trigger warehouse-select-trigger" 
-                    @click="toggleWarehouseDropdown"
-                    :class="{ 'active': isWarehouseDropdownOpen }"
-                  >
-                    <span>{{ newDeliveryRegion.warehouseName || 'Select a warehouse' }}</span>
-                    <svg 
-                      class="dropdown-arrow" 
-                      :class="{ 'open': isWarehouseDropdownOpen }"
-                      xmlns="http://www.w3.org/2000/svg" 
-                      width="16" 
-                      height="16" 
-                      viewBox="0 0 24 24" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      stroke-width="2" 
-                      stroke-linecap="round" 
-                      stroke-linejoin="round"
-                    >
-                      <polyline points="6 9 12 15 18 9"></polyline>
-                    </svg>
-                  </div>
-                  
-                  <div class="custom-select-dropdown warehouse-select-dropdown" v-show="isWarehouseDropdownOpen">
-                    <div class="search-box">
-                      <input
-                        type="text"
-                        v-model="warehouseSearch"
-                        @input="filterWarehouses"
-                        placeholder="Search warehouse..."
-                        class="dropdown-search"
-                        @click.stop
-                      >
-                    </div>
-                    
-                    <div class="dropdown-options">
-                      <div
-                        v-for="warehouse in filteredWarehouses"
-                        :key="warehouse"
-                        class="dropdown-option"
-                        @click="selectWarehouse(warehouse)"
-                      >
-                        {{ warehouse }}
-                      </div>
-                      <div v-if="filteredWarehouses.length === 0" class="no-results">
-                        No warehouses match your search
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <!-- Region Dropdown for Deliver To -->
-              <div class="form-group">
-                <label for="deliverTo">Deliver To <span class="required">*</span></label>
-                <div class="custom-select-container deliverTo-select-container">
-                  <div 
-                    class="custom-select-trigger deliverTo-select-trigger" 
-                    @click="toggleDeliverToDropdown"
-                    :class="{ 'active': isDeliverToDropdownOpen }"
-                  >
-                    <span>{{ newDeliveryRegion.deliverTo || 'Select a region' }}</span>
-                    <svg 
-                      class="dropdown-arrow" 
-                      :class="{ 'open': isDeliverToDropdownOpen }"
-                      xmlns="http://www.w3.org/2000/svg" 
-                      width="16" 
-                      height="16" 
-                      viewBox="0 0 24 24" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      stroke-width="2" 
-                      stroke-linecap="round" 
-                      stroke-linejoin="round"
-                    >
-                      <polyline points="6 9 12 15 18 9"></polyline>
-                    </svg>
-                  </div>
-                  
-                  <div class="custom-select-dropdown deliverTo-select-dropdown" v-show="isDeliverToDropdownOpen">
-                    <div class="search-box">
-                      <input
-                        type="text"
-                        v-model="deliverToSearch"
-                        @input="filterDeliverToRegions"
-                        placeholder="Search region..."
-                        class="dropdown-search"
-                        @click.stop
-                      >
-                    </div>
-                    
-                    <div class="dropdown-options">
-                      <div
-                        v-for="region in filteredDeliverToRegions"
-                        :key="region"
-                        class="dropdown-option"
-                        @click="selectDeliverToRegion(region)"
-                      >
-                        {{ region }}
-                      </div>
-                      <div v-if="filteredDeliverToRegions.length === 0" class="no-results">
-                        No regions match your search
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="form-group">
-                <label for="deliveryFee">Delivery Fee <span class="required">*</span></label>
-                <input type="text" id="deliveryFee" v-model="newDeliveryRegion.deliveryFee" @input="formatDeliveryFee" required placeholder="Enter delivery fee">
-              </div>
-              
-              <div class="form-group">
-                <label for="status">Status <span class="required">*</span></label>
-                <select id="status" v-model="newDeliveryRegion.status" required>
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
-                </select>
-              </div>
-              
-              <div class="form-actions">
-                <button type="button" class="cancel-btn" @click="closeDeliveryRegionModal">Cancel</button>
-                <button type="submit" class="submit-btn">Save Delivery Region</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Add Product Modal -->
-      <div v-if="showProductModal" class="modal-overlay" @click.self="closeAddProductModal">
-        <div class="modal-container">
-          <!-- Product modal content -->
         </div>
       </div>
     </div>
   </template>
   
   <script>
-  import { Head, Link, router } from '@inertiajs/vue3';
+  import { Head, router } from '@inertiajs/vue3';
   import AdminNavbar from '@/Components/AdminNavbar.vue';
   import Modal from '@/Components/Modal.vue';
   import BankAccounts from './SupplierComponents/BankAccounts.vue';
   import DeliveryRegions from './SupplierComponents/DeliveryRegions.vue';
   import Warehouses from './SupplierComponents/Warehouses.vue';
+  import Products from './SupplierComponents/Products.vue';
   
   export default {
     name: 'SupplierDetails',
@@ -536,7 +241,8 @@
       Modal,
       BankAccounts,
       DeliveryRegions,
-      Warehouses
+      Warehouses,
+      Products
     },
     props: {
       supplier: {
@@ -595,54 +301,6 @@
           { id: 3, name: 'Kisumu Warehouse', contactPerson: 'Michael Brown', email: 'michael@example.com', phone: '+254722222222', address: '789 Oginga Odinga Street', kraPin: 'E567891234F', country: 'Kenya', region: 'Kisumu', gps: '-0.102671,34.761770', status: 'Inactive' }
         ],
         
-        // Delivery Regions data
-        deliveryRegions: [
-          {
-            id: 1,
-            warehouseName: 'Nairobi Central Warehouse',
-            deliverTo: 'Nairobi CBD',
-            deliveryFee: 500,
-            status: 'Active'
-          },
-          {
-            id: 2,
-            warehouseName: 'Nairobi Central Warehouse',
-            deliverTo: 'Westlands',
-            deliveryFee: 700,
-            status: 'Active'
-          },
-          {
-            id: 3,
-            warehouseName: 'Mombasa Distribution Center',
-            deliverTo: 'Mombasa Island',
-            deliveryFee: 450,
-            status: 'Active'
-          }
-        ],
-        
-        // Products data
-        showProductModal: false,
-        editingProduct: false,
-        editingProductId: null,
-        newProduct: {
-          productName: '',
-          skuNumber: '',
-          category: '',
-          unitOfMeasure: '',
-          description: '',
-          manufacturer: '',
-          status: 'Active'
-        },
-        products: [
-          { id: 1, imageUrl: 'https://via.placeholder.com/80', productName: 'Premium Coffee Beans', skuNumber: 'CB001', category: 'Beverages', unitOfMeasure: 'kg', description: 'High-quality arabica coffee beans from Ethiopia', manufacturer: 'Global Coffee Co.', status: 'Active' },
-          { id: 2, imageUrl: 'https://via.placeholder.com/80', productName: 'Whole Wheat Flour', skuNumber: 'WF002', category: 'Baking Supplies', unitOfMeasure: 'kg', description: 'Organic stone-ground whole wheat flour', manufacturer: 'Healthy Mills Inc.', status: 'Active' },
-          { id: 3, imageUrl: 'https://via.placeholder.com/80', productName: 'Extra Virgin Olive Oil', skuNumber: 'OL003', category: 'Oils & Condiments', unitOfMeasure: 'liter', description: 'Cold-pressed extra virgin olive oil from Spain', manufacturer: 'Mediterranean Delights', status: 'Inactive' }
-        ],
-        
-        // Categories and units of measure for products
-        productCategories: ['Beverages', 'Dairy', 'Meat & Poultry', 'Seafood', 'Fruits & Vegetables', 'Bakery', 'Grains & Pasta', 'Canned Goods', 'Snacks', 'Condiments & Sauces', 'Baking Supplies', 'Oils & Vinegars'],
-        unitsOfMeasure: ['kg', 'g', 'liter', 'ml', 'unit', 'pack', 'box', 'carton', 'dozen', 'case'],
-        
         // Edit Supplier Modal
         showSupplierModal: false,
         editedSupplier: {
@@ -675,30 +333,6 @@
       };
     },
     computed: {
-      sortedDeliveryRegions() {
-        const regions = [...this.deliveryRegions];
-        regions.sort((a, b) => {
-          let modifier = this.sortDir === 'asc' ? 1 : -1;
-          let aValue = a[this.sortKey];
-          let bValue = b[this.sortKey];
-          
-          // Handle undefined or null values
-          if (aValue === undefined || aValue === null) {
-            aValue = '';
-          }
-          if (bValue === undefined || bValue === null) {
-            bValue = '';
-          }
-          
-          if (typeof aValue === 'number' && typeof bValue === 'number') {
-            return aValue < bValue ? -1 * modifier : 1 * modifier;
-          } else {
-            return aValue.toString().localeCompare(bValue.toString()) * modifier;
-          }
-        });
-        
-        return regions;
-      },
       sortedProducts() {
         const products = [...this.products];
         products.sort((a, b) => {
@@ -742,18 +376,10 @@
       // Initialize filtered industries
       this.filteredIndustries = [...this.industries];
       
-      // Initialize filtered warehouses for delivery regions
-      this.filteredWarehouses = [...this.warehouses.map(w => w.name)];
-      
-      // Initialize filtered regions for Deliver To dropdown
-      this.filteredDeliverToRegions = [...this.regions];
-      
       // Add click outside listener for dropdowns
       document.addEventListener('click', this.closeCountryDropdownOutside);
       document.addEventListener('click', this.closeRegionDropdownOutside);
       document.addEventListener('click', this.closeIndustryDropdownOutside);
-      document.addEventListener('click', this.closeWarehouseDropdownOutside);
-      document.addEventListener('click', this.closeDeliverToDropdownOutside);
     },
     
     beforeDestroy() {
@@ -761,164 +387,7 @@
       document.removeEventListener('click', this.closeDropdownsOnClickOutside);
     },
     
-    // Product Modal Methods
-    openAddProductModal() {
-      this.editingProduct = false;
-      this.editingProductId = null;
-      this.newProduct = {
-        productName: '',
-        skuNumber: '',
-        category: '',
-        unitOfMeasure: '',
-        description: '',
-        manufacturer: '',
-        status: 'Active'
-      };
-      this.imagePreview = null;
-      this.productImages = [];
-      this.showProductModal = true;
-    },
     methods: {
-      closeProductModal() {
-        this.showProductModal = false;
-        this.imagePreview = null;
-      },
-      
-      editProduct(product) {
-        this.editingProduct = true;
-        this.editingProductId = product.id;
-        this.newProduct = { ...product };
-        this.imagePreview = product.imageUrl;
-        this.productImages = product.images ? [...product.images] : [];
-        if (this.productImages.length === 0 && product.imageUrl) {
-          // If there are no images but there is an imageUrl, create an image entry
-          this.productImages = [{
-            id: 1,
-            url: product.imageUrl,
-            isPrimary: true
-          }];
-        }
-        this.selectedImageIndex = this.productImages.findIndex(img => img.isPrimary) || 0;
-        this.showProductModal = true;
-      },
-      
-      saveProduct() {
-        // Get the primary image URL for the main imageUrl field
-        const primaryImage = this.productImages.find(img => img.isPrimary);
-        const primaryImageUrl = primaryImage ? primaryImage.url : 'https://image.made-in-china.com/202f0j00SKpWwAoscucy/High-Quality-BOPP-Laminated-PP-Woven-Chemicals-Urea-Fertilizer-Bag-25kg-50kg-100kg.jpg';
-        
-        if (this.editingProduct) {
-          // Update existing product
-          const index = this.products.findIndex(product => product.id === this.editingProductId);
-          if (index !== -1) {
-            this.products.splice(index, 1, { 
-              ...this.newProduct, 
-              id: this.editingProductId,
-              imageUrl: primaryImageUrl,
-              images: [...this.productImages]
-            });
-          }
-        } else {
-          // Add new product
-          const maxId = this.products.length > 0 ? Math.max(...this.products.map(p => p.id)) : 0;
-          this.products.push({
-            ...this.newProduct,
-            id: maxId + 1,
-            imageUrl: primaryImageUrl,
-            images: [...this.productImages]
-          });
-        }
-        
-        this.closeProductModal();
-      },
-      
-      // Image Upload Methods
-      onFileSelected(event) {
-        const files = event.target.files;
-        if (files && files.length > 0) {
-          Array.from(files).forEach(file => {
-            this.addImageToGallery(file);
-          });
-        }
-      },
-      
-      onDragOver(event) {
-        event.preventDefault();
-        this.isDragging = true;
-      },
-      
-      onDragLeave(event) {
-        event.preventDefault();
-        this.isDragging = false;
-      },
-      
-      onDrop(event) {
-        this.isDragging = false;
-        const files = event.dataTransfer.files;
-        if (files && files.length > 0) {
-          Array.from(files).forEach(file => {
-            if (file.type.match('image.*')) {
-              this.addImageToGallery(file);
-            }
-          });
-        }
-      },
-      
-      addImageToGallery(file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const newImageId = this.productImages.length > 0 ? 
-            Math.max(...this.productImages.map(img => img.id)) + 1 : 1;
-          
-          const newImage = {
-            id: newImageId,
-            url: e.target.result,
-            isPrimary: this.productImages.length === 0 // First image is primary by default
-          };
-          
-          this.productImages.push(newImage);
-          
-          // Update imagePreview if this is the primary image
-          if (newImage.isPrimary) {
-            this.imagePreview = newImage.url;
-            this.selectedImageIndex = this.productImages.length - 1;
-          }
-        };
-        reader.readAsDataURL(file);
-      },
-      
-      removeImage(imageId) {
-        const index = this.productImages.findIndex(img => img.id === imageId);
-        if (index !== -1) {
-          const wasRemovingPrimary = this.productImages[index].isPrimary;
-          this.productImages.splice(index, 1);
-          
-          // If we removed the primary image and there are other images, set a new primary
-          if (wasRemovingPrimary && this.productImages.length > 0) {
-            this.productImages[0].isPrimary = true;
-            this.imagePreview = this.productImages[0].url;
-            this.selectedImageIndex = 0;
-          } else if (this.productImages.length === 0) {
-            // If no images left
-            this.imagePreview = null;
-            this.selectedImageIndex = -1;
-          }
-        }
-      },
-      
-      setPrimaryImage(imageId) {
-        // Reset all images to non-primary
-        this.productImages.forEach(img => {
-          img.isPrimary = (img.id === imageId);
-        });
-        
-        // Update the preview with the new primary image
-        const primaryImage = this.productImages.find(img => img.id === imageId);
-        if (primaryImage) {
-          this.imagePreview = primaryImage.url;
-          this.selectedImageIndex = this.productImages.findIndex(img => img.id === imageId);
-        }
-      },
       goBack() {
         window.history.back();
       },
@@ -1249,234 +718,6 @@
         this.isIndustryDropdownOpen = false;
       },
       
-      // Delivery Region methods
-      openAddDeliveryRegionModal() {
-        this.editingDeliveryRegion = false;
-        this.editingDeliveryRegionId = null;
-        this.newDeliveryRegion = {
-          warehouseName: '',
-          deliverTo: '',
-          deliveryFee: '',
-          status: 'Active'
-        };
-        this.showDeliveryRegionModal = true;
-        this.isWarehouseDropdownOpen = false;
-      },
-      
-      // Product Methods
-      openAddProductModal() {
-        this.editingProduct = false;
-        this.editingProductId = null;
-        this.newProduct = {
-          productName: '',
-          category: '',
-          price: '',
-          stock: '',
-          status: 'Active'
-        };
-        this.showProductModal = true;
-      },
-      
-      deleteProduct(productId) {
-        if (confirm('Are you sure you want to delete this product?')) {
-          this.products = this.products.filter(product => product.id !== productId);
-        }
-      },
-      
-      closeDeliveryRegionModal() {
-        this.showDeliveryRegionModal = false;
-      },
-      
-      editDeliveryRegion(region) {
-        this.editingDeliveryRegion = true;
-        this.editingDeliveryRegionId = region.id;
-        
-        // Create a copy of the region with formatted delivery fee
-        const regionCopy = { ...region };
-        
-        // Format the delivery fee with comma separators
-        if (regionCopy.deliveryFee) {
-          regionCopy.deliveryFee = regionCopy.deliveryFee.toLocaleString('en-US');
-        }
-        
-        this.newDeliveryRegion = regionCopy;
-        this.showDeliveryRegionModal = true;
-      },
-      
-      deleteDeliveryRegion(regionId) {
-        // Remove the delivery region
-        this.deliveryRegions = this.deliveryRegions.filter(region => region.id !== regionId);
-      },
-      
-      saveDeliveryRegion() {
-        // Convert the formatted delivery fee back to a number for storage
-        const deliveryFeeValue = this.newDeliveryRegion.deliveryFee ? 
-          parseFloat(this.newDeliveryRegion.deliveryFee.toString().replace(/,/g, '')) : 
-          0;
-        
-        // Create a copy of the delivery region with the numeric delivery fee
-        const deliveryRegionData = {
-          ...this.newDeliveryRegion,
-          deliveryFee: deliveryFeeValue
-        };
-        
-        if (this.editingDeliveryRegion) {
-          // Update existing delivery region
-          const index = this.deliveryRegions.findIndex(region => region.id === this.editingDeliveryRegionId);
-          if (index !== -1) {
-            this.deliveryRegions.splice(index, 1, { ...deliveryRegionData, id: this.editingDeliveryRegionId });
-          }
-        } else {
-          // Create a new delivery region with unique ID
-          const maxId = this.deliveryRegions.length > 0 ? Math.max(...this.deliveryRegions.map(r => r.id)) : 0;
-          
-          const region = {
-            id: maxId + 1,
-            ...deliveryRegionData
-          };
-          
-          this.deliveryRegions.push(region);
-        }
-        this.closeDeliveryRegionModal();
-      },
-      
-      // Warehouse dropdown methods for delivery regions
-      toggleWarehouseDropdown() {
-        this.isWarehouseDropdownOpen = !this.isWarehouseDropdownOpen;
-        
-        if (this.isWarehouseDropdownOpen) {
-          // Reset search when opening
-          this.warehouseSearch = '';
-          this.filteredWarehouses = [...this.warehouses.map(w => w.name)];
-          
-          this.$nextTick(() => {
-            const trigger = document.querySelector('.warehouse-select-trigger');
-            const dropdown = document.querySelector('.warehouse-select-dropdown');
-            
-            if (!trigger || !dropdown) return;
-            
-            const triggerRect = trigger.getBoundingClientRect();
-            const viewportHeight = window.innerHeight;
-            
-            const spaceBelow = viewportHeight - triggerRect.bottom;
-            const dropdownHeight = Math.min(250, this.filteredWarehouses.length * 36 + 70);
-            
-            if (spaceBelow < dropdownHeight) {
-              dropdown.classList.add('dropdown-top');
-            } else {
-              dropdown.classList.remove('dropdown-top');
-            }
-          });
-        }
-      },
-      
-      closeWarehouseDropdownOutside(event) {
-        const dropdown = document.querySelector('.warehouse-select-container');
-        if (dropdown && !dropdown.contains(event.target)) {
-          this.isWarehouseDropdownOpen = false;
-        }
-      },
-      
-      filterWarehouses() {
-        if (this.warehouseSearch.trim() === '') {
-          this.filteredWarehouses = [...this.warehouses.map(w => w.name)];
-        } else {
-          const query = this.warehouseSearch.toLowerCase();
-          this.filteredWarehouses = this.warehouses
-            .map(w => w.name)
-            .filter(name => name.toLowerCase().includes(query));
-        }
-      },
-      
-      selectWarehouse(warehouse) {
-        this.newDeliveryRegion.warehouseName = warehouse;
-        this.isWarehouseDropdownOpen = false;
-      },
-      
-      // Deliver To dropdown methods
-      toggleDeliverToDropdown() {
-        this.isDeliverToDropdownOpen = !this.isDeliverToDropdownOpen;
-        
-        if (this.isDeliverToDropdownOpen) {
-          // Reset search when opening
-          this.deliverToSearch = '';
-          this.filteredDeliverToRegions = [...this.regions];
-          
-          this.$nextTick(() => {
-            const trigger = document.querySelector('.deliverTo-select-trigger');
-            const dropdown = document.querySelector('.deliverTo-select-dropdown');
-            
-            if (!trigger || !dropdown) return;
-            
-            const triggerRect = trigger.getBoundingClientRect();
-            const viewportHeight = window.innerHeight;
-            
-            const spaceBelow = viewportHeight - triggerRect.bottom;
-            const dropdownHeight = Math.min(250, this.filteredDeliverToRegions.length * 36 + 70);
-            
-            if (spaceBelow < dropdownHeight) {
-              dropdown.classList.add('dropdown-top');
-            } else {
-              dropdown.classList.remove('dropdown-top');
-            }
-          });
-        }
-      },
-      
-      closeDeliverToDropdownOutside(event) {
-        const dropdown = document.querySelector('.deliverTo-select-container');
-        if (dropdown && !dropdown.contains(event.target)) {
-          this.isDeliverToDropdownOpen = false;
-        }
-      },
-      
-      filterDeliverToRegions() {
-        if (this.deliverToSearch.trim() === '') {
-          this.filteredDeliverToRegions = [...this.regions];
-        } else {
-          const query = this.deliverToSearch.toLowerCase();
-          this.filteredDeliverToRegions = this.regions.filter(
-            region => region.toLowerCase().includes(query)
-          );
-        }
-      },
-      
-      selectDeliverToRegion(region) {
-        this.newDeliveryRegion.deliverTo = region;
-        this.isDeliverToDropdownOpen = false;
-      },
-      
-      // Format delivery fee with comma separators for thousands
-      formatDeliveryFee() {
-        // If the input is empty, do nothing
-        if (!this.newDeliveryRegion.deliveryFee) return;
-        
-        // Remove any non-numeric characters except for the decimal point
-        let value = this.newDeliveryRegion.deliveryFee.toString().replace(/[^0-9.]/g, '');
-        
-        // Parse the value as a number
-        const numValue = parseFloat(value);
-        
-        // If it's a valid number, format it with commas
-        if (!isNaN(numValue)) {
-          // Format the number with commas for thousands
-          this.newDeliveryRegion.deliveryFee = numValue.toLocaleString('en-US');
-        }
-      },
-      closeDropdownsOnClickOutside(event) {
-        // Close industry dropdown if clicking outside
-        if (this.isIndustryDropdownOpen) {
-          const container = document.querySelector('.industry-select-container');
-          if (container && !container.contains(event.target)) {
-            this.isIndustryDropdownOpen = false;
-          }
-        }
-        
-        // Close other dropdowns similarly if needed
-      },
-      updateDeliveryRegions(updatedRegions) {
-        this.deliveryRegions = updatedRegions;
-      },
       updateWarehouses(updatedWarehouses) {
         this.warehouses = updatedWarehouses;
       },

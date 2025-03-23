@@ -3,6 +3,8 @@ import { Head, Link, useForm, router } from "@inertiajs/vue3";
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import InputError from '@/Components/InputError.vue';
 import AdminNavbar from '@/Components/AdminNavbar.vue';
+import SuccessMessage from '@/Components/SuccessMessage.vue';
+import ErrorMessage from '@/Components/ErrorMessage.vue';
 
 const props = defineProps({
   suppliers: {
@@ -12,11 +14,10 @@ const props = defineProps({
 });
 
 // Tab system
-const activeTab = ref('all');
+const activeTab = ref('active');
 const tabs = ref([
-  { id: 'all', name: 'All Suppliers' },
-  { id: 'active', name: 'Active', count: 0 },
-  { id: 'inactive', name: 'Inactive', count: 0 }
+  { id: 'inactive', name: 'Inactive', count: 3 },
+  { id: 'active', name: 'Active', count: 20 }
 ]);
 
 // Update tab counts based on suppliers
@@ -64,6 +65,12 @@ const form = useForm({
   status: 'active',
   created_by: 1
 });
+
+// Add success and error message handling
+const showSuccessMessage = ref(false);
+const showErrorMessage = ref(false);
+const successMessageText = ref('');
+const errorMessageText = ref('');
 
 // Set active tab
 const setActiveTab = (tabId) => {
@@ -122,7 +129,19 @@ const submit = () => {
   form.post(route("suppliers.create"), {
     onSuccess: () => {
       closeModal();
+      successMessageText.value = 'Supplier has been successfully added';
+      showSuccessMessage.value = true;
+      setTimeout(() => {
+        showSuccessMessage.value = false;
+      }, 3000);
     },
+    onError: (errors) => {
+      errorMessageText.value = 'Failed to add supplier. Please check the form and try again.';
+      showErrorMessage.value = true;
+      setTimeout(() => {
+        showErrorMessage.value = false;
+      }, 3000);
+    }
   });
 };
 
@@ -231,6 +250,16 @@ onBeforeUnmount(() => {
   <Head title="Suppliers" />
   
   <AdminNavbar />
+  
+  <!-- Floating Success and Error Messages -->
+  <div class="floating-messages">
+    <SuccessMessage v-if="showSuccessMessage" @close="showSuccessMessage = false" class="floating-message">
+      {{ successMessageText }}
+    </SuccessMessage>
+    <ErrorMessage v-if="showErrorMessage" @close="showErrorMessage = false" class="floating-message">
+      {{ errorMessageText }}
+    </ErrorMessage>
+  </div>
   
   <div class="page-container">
     <div class="content-container">
@@ -584,8 +613,8 @@ onBeforeUnmount(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 20px;
-  height: 20px;
+  min-width: 24px;
+  height: 24px;
   padding: 0 6px;
   margin-left: 8px;
   border-radius: 10px;
@@ -593,16 +622,15 @@ onBeforeUnmount(() => {
   font-weight: 600;
 }
 
-/* Active tab - Green */
-.tabs li:nth-child(2) .tab-count {
-  background-color: rgba(16, 185, 129, 0.1);
-  color: #047857;
+/* Update tab count colors */
+.tabs li:nth-child(1) .tab-count {
+  background-color: #fadadd;
+  color: #e55c5c;
 }
 
-/* Inactive tab - Red */
-.tabs li:nth-child(3) .tab-count {
-  background-color: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
+.tabs li:nth-child(2) .tab-count {
+  background-color: #d1f0e0;
+  color: #2a9d74;
 }
 
 /* Table Controls */
@@ -1240,6 +1268,36 @@ onBeforeUnmount(() => {
   }
   
   .table-responsive:not(:hover)::after {
+    opacity: 1;
+  }
+}
+
+/* Floating Messages */
+.floating-messages {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  width: 90%;
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.floating-message {
+  animation: slideDown 0.3s ease-out;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
     opacity: 1;
   }
 }

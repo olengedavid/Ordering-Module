@@ -1,5 +1,10 @@
 <template>
   <div class="tab-content">
+    <div class="message-container">
+      <SuccessMessage v-if="successMessage" @close="successMessage = ''" v-slot>{{ successMessage }}</SuccessMessage>
+      <ErrorMessage v-if="errorMessage" @close="errorMessage = ''" v-slot>{{ errorMessage }}</ErrorMessage>
+    </div>
+    
     <div class="table-controls">
       <div class="table-title">Warehouses</div>
       <button @click="openAddWarehouseModal" class="add-btn">
@@ -262,6 +267,8 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import { useForm, usePage } from "@inertiajs/vue3";
+import SuccessMessage from '@/Components/SuccessMessage.vue';
+import ErrorMessage from '@/Components/ErrorMessage.vue';
 
 const props = defineProps({
   supplier: {
@@ -324,6 +331,10 @@ const form = useForm({
   created_by: user && user.id ? parseInt(user.id) : '',
   supplier_id: props.supplier && props.supplier.id ? parseInt(props.supplier.id) : ''
 });
+
+// Message state
+const successMessage = ref('');
+const errorMessage = ref('');
 
 // Computed properties for sorting
 const sortedWarehouses = computed(() => {
@@ -446,9 +457,22 @@ const deleteWarehouse = (warehouseId) => {
     useForm().delete(route('supplierwarehouse.delete', warehouseId), {
       preserveScroll: true,
       onSuccess: () => {
-        // Message will be handled by the inertia success flash message
+        successMessage.value = 'Warehouse deleted successfully';
         fetchWarehouses();
+        console.log('Setting success message in Warehouses - delete');
+        setTimeout(() => { 
+          successMessage.value = '';
+          console.log('Clearing success message in Warehouses - delete');
+        }, 3000);
       },
+      onError: () => {
+        errorMessage.value = 'Error deleting warehouse';
+        console.log('Setting error message in Warehouses - delete');
+        setTimeout(() => { 
+          errorMessage.value = '';
+          console.log('Clearing error message in Warehouses - delete');
+        }, 3000);
+      }
     });
   }
 };
@@ -467,27 +491,61 @@ const saveWarehouse = () => {
     form.put(route('supplierwarehouse.update', editingWarehouseId.value), {
       preserveScroll: true,
       onSuccess: (response) => {
+        successMessage.value = 'Warehouse updated successfully';
         closeWarehouseModal();
         fetchWarehouses();
+        console.log('Setting success message in Warehouses - update');
+        setTimeout(() => { 
+          successMessage.value = '';
+          console.log('Clearing success message in Warehouses - update');
+        }, 3000);
       },
       onError: (errors) => {
+        errorMessage.value = 'Error updating warehouse';
         console.error('Update failed with errors:', errors);
+        console.log('Setting error message in Warehouses - update');
+        setTimeout(() => { 
+          errorMessage.value = '';
+          console.log('Clearing error message in Warehouses - update');
+        }, 3000);
       }
     });
   } else {
-
-    
     form.post(route('supplierwarehouse.create'), {
       preserveScroll: true,
       onSuccess: (response) => {
+        successMessage.value = 'Warehouse added successfully';
         closeWarehouseModal();
         fetchWarehouses();
+        console.log('Setting success message in Warehouses - create');
+        setTimeout(() => { 
+          successMessage.value = '';
+          console.log('Clearing success message in Warehouses - create');
+        }, 3000);
       },
       onError: (errors) => {
+        errorMessage.value = 'Error creating warehouse';
         console.error('Creation failed with errors:', errors);
+        console.log('Setting error message in Warehouses - create');
+        setTimeout(() => { 
+          errorMessage.value = '';
+          console.log('Clearing error message in Warehouses - create');
+        }, 3000);
       }
     });
   }
+};
+
+// Auto-dismiss messages after 3 seconds
+const autoDismissMessage = (type) => {
+  console.log('Warehouses - Auto dismissing message of type:', type);
+  setTimeout(() => {
+    if (type === 'success') {
+      successMessage.value = '';
+    } else if (type === 'error') {
+      errorMessage.value = '';
+    }
+  }, 3000);
 };
 
 // Dropdown methods
