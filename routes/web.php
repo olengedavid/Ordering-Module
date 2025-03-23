@@ -25,6 +25,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/supplier/users', [UserPermissionController::class, 'store'])->name('supplier.users.store');
     Route::put('/supplier/users/{uuid}', [UserPermissionController::class, 'update'])->name('supplier.users.update');
     Route::get('/supplier/users/list', [UserPermissionController::class, 'getSupplierUsers'])->name('supplier.users.list');
+
+    // Admin Users Routes
+    Route::get('/admin/users', function() { return Inertia::render('Admin/AdminUsers'); })->name('admin.users.index');
+    Route::post('/admin/users', [UserPermissionController::class, 'storeAdminUser'])->name('admin.users.store');
+    Route::put('/admin/users/{id}', [UserPermissionController::class, 'updateAdminUser'])->name('admin.users.update');
+    Route::get('/admin/users/list', [UserPermissionController::class, 'getAdminUsers'])->name('admin.users.list');
 });
 
 require __DIR__ . '/auth.php';

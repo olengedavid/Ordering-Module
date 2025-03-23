@@ -49,6 +49,7 @@
           </div>
           
           <div class="nav-link" :class="{ active: $page.url.startsWith('/admin/users') }">
+            <Link :href="route('admin.users.index')" class="nav-link" :class="{ active: route().current('admin.users.index') }">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" color="#000000" fill="none" class="nav-icon">
               <path opacity="0.4" d="M15 8C15 9.65685 13.6569 11 12 11C10.3431 11 9 9.65685 9 8C9 6.34315 10.3431 5 12 5C13.6569 5 15 6.34315 15 8Z" fill="currentColor" />
               <path opacity="0.4" d="M13.7143 14H10.2857C7.91876 14 5.99998 15.9188 5.99998 18.2857C5.99998 19.2325 6.76749 20 7.71426 20H16.2857C17.2325 20 18 19.2325 18 18.2857C18 15.9188 16.0812 14 13.7143 14Z" fill="currentColor" />
@@ -60,6 +61,7 @@
               <path d="M3.71429 19C2.76751 19 2 18.2325 2 17.2857C2 14.9188 3.91878 13 6.28571 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
             </svg>
             <span>Users</span>
+            </Link>
           </div>
         </div>
 
@@ -158,6 +160,7 @@
           </div>
           
           <div class="mobile-nav-link disabled-link" :class="{ active: $page.url.startsWith('/admin/users') }">
+            <Link :href="route('admin.users.index')" class="mobile-nav-link" :class="{ active: route().current('admin.users.index') }">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" color="#000000" fill="none" class="nav-icon">
               <path opacity="0.4" d="M15 8C15 9.65685 13.6569 11 12 11C10.3431 11 9 9.65685 9 8C9 6.34315 10.3431 5 12 5C13.6569 5 15 6.34315 15 8Z" fill="currentColor" />
               <path opacity="0.4" d="M13.7143 14H10.2857C7.91876 14 5.99998 15.9188 5.99998 18.2857C5.99998 19.2325 6.76749 20 7.71426 20H16.2857C17.2325 20 18 19.2325 18 18.2857C18 15.9188 16.0812 14 13.7143 14Z" fill="currentColor" />
@@ -169,6 +172,7 @@
               <path d="M3.71429 19C2.76751 19 2 18.2325 2 17.2857C2 14.9188 3.91878 13 6.28571 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
             </svg>
             <span>Users</span>
+            </Link>
           </div>
 
           <Link :href="route('logout')" method="post" class="mobile-nav-link" @click="closeMobileMenu">
