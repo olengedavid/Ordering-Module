@@ -214,10 +214,10 @@ onMounted(() => {
                     </span>
                   </td>
                   <td class="table-cell">
-                    <button class="text-indigo-600 hover:text-indigo-900 mr-3">
+                    <button class="action-btn edit-btn">
                       Edit
                     </button>
-                    <button class="text-red-600 hover:text-red-900">
+                    <button class="action-btn delete-btn">
                       Delete
                     </button>
                   </td>
