@@ -326,6 +326,7 @@ const form = useForm({
   country: 'Kenya',
   region: '',
   gps: '',
+  uuid: '',
   company_id: props.supplier && props.supplier.company_id ? parseInt(props.supplier.company_id) : 
              (props.supplier && props.supplier.id ? parseInt(props.supplier.id) : ''),
   created_by: user && user.id ? parseInt(user.id) : '',
@@ -434,7 +435,7 @@ const closeWarehouseModal = () => {
 const editWarehouse = (warehouse) => {
   editingWarehouse.value = true;
   editingWarehouseId.value = warehouse.id;
-  
+  form.uuid = warehouse.uuid;
   // Map warehouse fields to form
   form.name = warehouse.name;
   form.contact_person = warehouse.contact_person;
@@ -488,7 +489,7 @@ const saveWarehouse = () => {
   
   
   if (editingWarehouse.value) {
-    form.put(route('supplierwarehouse.update', editingWarehouseId.value), {
+    form.put(route('supplierwarehouse.update'), {
       preserveScroll: true,
       onSuccess: (response) => {
         successMessage.value = 'Warehouse updated successfully';
