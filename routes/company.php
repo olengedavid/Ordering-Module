@@ -6,6 +6,7 @@ use App\Http\Controllers\Product\ProductController;
 use App\Http\Controllers\Company\CompanyBankAccountController;
 use App\Http\Controllers\Company\DeliveryRegionController;
 use App\Http\Controllers\Company\InventoryController;
+use App\Http\Controllers\RegionController;
 
 Route::middleware('auth')->group(function () {
     Route::get('admin/suppliers', [CompanyController::class, 'index'])->name('admin.suppliers.index');
@@ -40,4 +41,11 @@ Route::middleware('auth')->group(function () {
     Route::put('supplier/inventories/update', [InventoryController::class, 'update'])->name('supplier.inventories.update');
     Route::put('supplier/inventories/update', [InventoryController::class, 'update'])->name('supplier.inventories.update');
     Route::delete('supplier/inventories/{inventory}', [InventoryController::class, 'destroy'])->name('supplier.inventories.destroy');
+
+    #Region Routes
+    Route::get('admin/regions', [RegionController::class, 'index'])->name('admin.regions.index');
+    Route::get('admin/regions/list', [RegionController::class, 'getRegions'])->name('admin.regions.list');
+    Route::post('admin/regions', [RegionController::class, 'store'])->name('admin.regions.store');
+    Route::put('admin/regions/{uuid}', [RegionController::class, 'update'])->name('admin.regions.update');
+    Route::delete('admin/regions/{uuid}', [RegionController::class, 'destroy'])->name('admin.regions.delete');
 });
