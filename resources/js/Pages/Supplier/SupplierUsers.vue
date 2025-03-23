@@ -2,6 +2,10 @@
   <AuthenticatedLayout>
     <div class="page-container">
       <div class="content-container">
+        <div class="message-container">
+          <SuccessMessage v-if="successMessage" @close="successMessage = ''" v-slot>{{ successMessage }}</SuccessMessage>
+          <ErrorMessage v-if="errorMessage" @close="errorMessage = ''" v-slot>{{ errorMessage }}</ErrorMessage>
+        </div>
         <div class="header-container">
           <h1 class="page-title">Supplier Users</h1>
         </div>
@@ -198,11 +202,15 @@
 import { ref, onMounted, computed } from "vue";
 import { usePage, useForm } from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
+import SuccessMessage from "@/Components/SuccessMessage.vue";
+import ErrorMessage from "@/Components/ErrorMessage.vue";
 
 export default {
   name: 'SupplierUsersPage',
   components: {
-    AuthenticatedLayout
+    AuthenticatedLayout,
+    SuccessMessage,
+    ErrorMessage
   },
   setup() {
     const page = usePage();
@@ -219,6 +227,8 @@ export default {
     const sortDir = ref('asc');
     const currentPage = ref(1);
     const perPageOptions = [5, 10, 20, 50];
+    const successMessage = ref('');
+    const errorMessage = ref('');
     
     // Data from API
     const supplier_uuid = page.props.auth.user.company.uuid;
@@ -443,7 +453,17 @@ export default {
             closeUserModal();
             form.reset();
             fetchSupplierUsers();
+            successMessage.value = 'User updated successfully';
+            setTimeout(() => {
+              successMessage.value = '';
+            }, 3000);
           },
+          onError: () => {
+            errorMessage.value = 'Error updating user';
+            setTimeout(() => {
+              errorMessage.value = '';
+            }, 3000);
+          }
         });
       } else {
         // Create new user
@@ -453,7 +473,17 @@ export default {
             closeUserModal();
             form.reset();
             fetchSupplierUsers();
+            successMessage.value = 'User added successfully';
+            setTimeout(() => {
+              successMessage.value = '';
+            }, 3000);
           },
+          onError: () => {
+            errorMessage.value = 'Error adding user';
+            setTimeout(() => {
+              errorMessage.value = '';
+            }, 3000);
+          }
         });
       }
     };
@@ -605,7 +635,9 @@ export default {
       // Computed properties
       filteredUsers,
       totalPages,
-      paginatedUsers
+      paginatedUsers,
+      successMessage,
+      errorMessage
     };
   }
 }
@@ -1311,6 +1343,55 @@ export default {
   .permissions-container {
     grid-template-columns: 1fr;
   }
+}
+
+@media (max-width: 640px) {
+  .page-container {
+    padding: 20px 16px;
+  }
+  
+  .content-container {
+    padding: 16px;
+  }
+  
+  .actions-column {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .action-btn {
+    margin-right: 0;
+  }
+  
+  .table-container {
+    border-radius: 6px;
+  }
+  
+  .table-wrapper {
+    padding-bottom: 4px;
+  }
+  
+  .page-numbers {
+    display: none;
+  }
+}
+
+.close-icon {
+  line-height: 1;
+  position: relative;
+  top: -2px;
+}
+
+/* Message container */
+.message-container {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  min-width: 300px;
+  max-width: 400px;
 }
 
 @media (max-width: 640px) {
