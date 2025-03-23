@@ -3,13 +3,14 @@
       <AdminNavbar />
       <div class="page-container">
         <Head :title="`Supplier #${supplier.id}`" />
-        <div class="content-container">
+        <div>
           <div class="header-container">
             <h1 class="page-title">Supplier Details</h1>
             <button class="back-button" @click="goBack">
               <span>←</span> Back to Suppliers
             </button>
           </div>
+        <div class="content-container">
           <div class="supplier-details-container" v-if="supplier">
             <!-- Supplier Header with Status -->
             <div class="order-header">
@@ -118,6 +119,7 @@
               />
             </div>
           </div>
+        </div>
         </div>
       </div>
   

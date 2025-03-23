@@ -1,4 +1,26 @@
 /* Image upload container styles */
+.edit-details-btn {
+  display: flex;
+  align-items: center;
+  padding: 8px 14px;
+  background-color: white;
+  color: #0E64A5;
+  border: 1px solid #0E64A5;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.edit-details-btn:hover {
+  background-color: rgba(14, 100, 165, 0.05);
+}
+
+.edit-details-btn svg {
+  margin-right: 8px;
+}
+
 .image-upload-container {
   border: 2px dashed #ccc;
   border-radius: 8px;
