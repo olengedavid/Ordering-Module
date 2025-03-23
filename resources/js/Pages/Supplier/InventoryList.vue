@@ -9,6 +9,8 @@ import PrimaryButton from "@/Components/PrimaryButton.vue";
 import { ref, onMounted } from "vue";
 import axios from "axios";
 import CustomPagination from "@/Components/CustomPagination.vue";
+import SuccessMessage from '@/Components/SuccessMessage.vue';
+import ErrorMessage from '@/Components/ErrorMessage.vue';
 
 const currentPage = ref(1);
 const perPage = ref(10);
@@ -23,6 +25,9 @@ const inventories = ref([]);
 const products = ref([]);
 const warehouses = ref([]);
 const loading = ref(true);
+const successMessage = ref('');
+const errorMessage = ref('');
+const searchQuery = ref('');
 
 const form = useForm({
   company_id: user.company_id,
@@ -47,7 +52,17 @@ const createInventory = () => {
       closeModal();
       form.reset();
       fetchInventories();
+      successMessage.value = 'Inventory added successfully';
+      setTimeout(() => {
+        successMessage.value = '';
+      }, 3000);
     },
+    onError: () => {
+      errorMessage.value = 'Error adding inventory';
+      setTimeout(() => {
+        errorMessage.value = '';
+      }, 3000);
+    }
   });
 };
 
@@ -131,6 +146,11 @@ onMounted(() => {
 
     <div class="page-container">
       <div class="content-container">
+        <div class="message-container">
+          <SuccessMessage v-if="successMessage" @close="successMessage = ''" v-slot>{{ successMessage }}</SuccessMessage>
+          <ErrorMessage v-if="errorMessage" @close="errorMessage = ''" v-slot>{{ errorMessage }}</ErrorMessage>
+        </div>
+        
         <div class="header-container">
           <h1 class="page-title">Inventory</h1>
         </div>
@@ -424,3 +444,7 @@ onMounted(() => {
     </div>
   </AuthenticatedLayout>
 </template>
+
+<style scoped>
+@import './SupplierComponents/SupplierSharedStyles.css';
+</style>
