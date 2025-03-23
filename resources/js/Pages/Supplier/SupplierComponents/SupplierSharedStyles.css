@@ -1090,4 +1090,15 @@
   .table-controls {
     padding: 0 12px;
   }
+}
+
+/* Message Container for Alert Messages */
+.message-container {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  width: 90%;
+  max-width: 500px;
 } 

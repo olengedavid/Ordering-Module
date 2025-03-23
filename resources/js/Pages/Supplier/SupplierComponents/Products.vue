@@ -1,5 +1,10 @@
 <template>
   <div>
+    <div class="message-container">
+      <SuccessMessage v-if="successMessage" @close="successMessage = ''" v-slot>{{ successMessage }}</SuccessMessage>
+      <ErrorMessage v-if="errorMessage" @close="errorMessage = ''" v-slot>{{ errorMessage }}</ErrorMessage>
+    </div>
+    
     <div class="table-controls">
       <div class="table-title">Products</div>
       <button @click="openAddProductModal" class="add-btn">
@@ -228,11 +233,15 @@
 import { router, useForm, usePage } from '@inertiajs/vue3';
 import { ref, computed, onMounted } from 'vue';
 import CustomPagination from "@/Components/CustomPagination.vue";
+import SuccessMessage from '@/Components/SuccessMessage.vue';
+import ErrorMessage from '@/Components/ErrorMessage.vue';
 
 export default {
   name: 'Products',
   components: {
-    CustomPagination
+    CustomPagination,
+    SuccessMessage,
+    ErrorMessage
   },
   props: {
     supplier: {
@@ -303,6 +312,10 @@ export default {
       'Baking Supplies', 'Oils & Vinegars'
     ];
     const unitsOfMeasure = ['kg', 'g', 'liter', 'ml', 'unit', 'pack', 'box', 'carton', 'dozen', 'case'];
+    
+    // Message state
+    const successMessage = ref('');
+    const errorMessage = ref('');
     
     // Computed properties
     const sortedProducts = computed(() => {
@@ -497,13 +510,39 @@ export default {
       // Submit form
       router.post(endpoint, formData, {
         onSuccess: () => {
+          successMessage.value = editingProduct.value ? 'Product updated successfully' : 'Product added successfully';
           closeProductModal();
           fetchProducts();
+          // Call autoDismissMessage directly
+          console.log('Setting success message in Products');
+          setTimeout(() => { 
+            successMessage.value = '';
+            console.log('Clearing success message in Products');
+          }, 3000);
         },
         onError: (errors) => {
+          errorMessage.value = 'Error saving product';
           console.error('Error saving product:', errors);
+          // Call autoDismissMessage directly
+          console.log('Setting error message in Products');
+          setTimeout(() => { 
+            errorMessage.value = '';
+            console.log('Clearing error message in Products');
+          }, 3000);
         }
       });
+    };
+    
+    // Auto-dismiss messages after 3 seconds
+    const autoDismissMessage = (type) => {
+      console.log('Products - Auto dismissing message of type:', type);
+      setTimeout(() => {
+        if (type === 'success') {
+          successMessage.value = '';
+        } else if (type === 'error') {
+          errorMessage.value = '';
+        }
+      }, 3000);
     };
     
     const getPrimaryImageUrl = (product) => {
@@ -641,6 +680,8 @@ export default {
       currentPage,
       perPage,
       lastPage,
+      successMessage,
+      errorMessage,
       handlePageChange,
       handlePerPageChange,
       sortBy,
@@ -656,7 +697,8 @@ export default {
       addImageToGallery,
       removeImage,
       setPrimaryImage,
-      getPrimaryImageUrl
+      getPrimaryImageUrl,
+      autoDismissMessage
     };
   }
 };

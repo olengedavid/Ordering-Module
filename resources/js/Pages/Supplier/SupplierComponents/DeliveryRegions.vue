@@ -1,5 +1,10 @@
 <template>
   <div>
+    <div class="message-container">
+      <SuccessMessage v-if="successMessage" @close="successMessage = ''" v-slot>{{ successMessage }}</SuccessMessage>
+      <ErrorMessage v-if="errorMessage" @close="errorMessage = ''" v-slot>{{ errorMessage }}</ErrorMessage>
+    </div>
+    
     <div class="table-controls">
       <div class="table-title">Delivery Regions</div>
       <button @click="openAddDeliveryRegionModal" class="add-btn">
@@ -160,6 +165,8 @@
 <script>
 import { useForm, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
+import SuccessMessage from '@/Components/SuccessMessage.vue';
+import ErrorMessage from '@/Components/ErrorMessage.vue';
 
 export default {
   name: 'DeliveryRegions',
@@ -172,6 +179,10 @@ export default {
       type: Number,
       default: null
     }
+  },
+  components: {
+    SuccessMessage,
+    ErrorMessage
   },
   data() {
     const page = usePage();
@@ -203,7 +214,11 @@ export default {
       warehouses: [],
       isWarehouseDropdownOpen: false,
       warehouseSearch: '',
-      filteredWarehouses: []
+      filteredWarehouses: [],
+      
+      // Message state
+      successMessage: '',
+      errorMessage: ''
     };
   },
   computed: {
@@ -367,9 +382,21 @@ export default {
       
       try {
         await axios.delete(route('supplier.delivery-regions.destroy', regionId));
+        this.successMessage = 'Delivery region deleted successfully';
         this.fetchDeliveryRegions();
+        console.log('Setting success message in DeliveryRegions - delete');
+        setTimeout(() => { 
+          this.successMessage = '';
+          console.log('Clearing success message in DeliveryRegions - delete');
+        }, 3000);
       } catch (error) {
+        this.errorMessage = 'Error deleting delivery region';
         console.error('Error deleting delivery region:', error);
+        console.log('Setting error message in DeliveryRegions - delete');
+        setTimeout(() => { 
+          this.errorMessage = '';
+          console.log('Clearing error message in DeliveryRegions - delete');
+        }, 3000);
       }
     },
     
@@ -378,16 +405,46 @@ export default {
         this.form.put(route('supplier.delivery-regions.update', this.editingDeliveryRegionId), {
           preserveScroll: true,
           onSuccess: () => {
+            this.successMessage = 'Delivery region updated successfully';
             this.closeDeliveryRegionModal();
             this.fetchDeliveryRegions();
+            console.log('Setting success message in DeliveryRegions - update');
+            setTimeout(() => { 
+              this.successMessage = '';
+              console.log('Clearing success message in DeliveryRegions - update');
+            }, 3000);
+          },
+          onError: (errors) => {
+            this.errorMessage = 'Error updating delivery region';
+            console.error('Error:', errors);
+            console.log('Setting error message in DeliveryRegions - update');
+            setTimeout(() => { 
+              this.errorMessage = '';
+              console.log('Clearing error message in DeliveryRegions - update');
+            }, 3000);
           }
         });
       } else {
         this.form.post(route('supplier.delivery-regions.store'), {
           preserveScroll: true,
           onSuccess: () => {
+            this.successMessage = 'Delivery region added successfully';
             this.closeDeliveryRegionModal();
             this.fetchDeliveryRegions();
+            console.log('Setting success message in DeliveryRegions - create');
+            setTimeout(() => { 
+              this.successMessage = '';
+              console.log('Clearing success message in DeliveryRegions - create');
+            }, 3000);
+          },
+          onError: (errors) => {
+            this.errorMessage = 'Error creating delivery region';
+            console.error('Error:', errors);
+            console.log('Setting error message in DeliveryRegions - create');
+            setTimeout(() => { 
+              this.errorMessage = '';
+              console.log('Clearing error message in DeliveryRegions - create');
+            }, 3000);
           }
         });
       }
