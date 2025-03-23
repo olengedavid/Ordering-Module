@@ -4,6 +4,10 @@
     
     <div class="page-container">
       <div class="content-container">
+        <div class="message-container">
+          <SuccessMessage v-if="successMessage" @close="successMessage = ''" v-slot>{{ successMessage }}</SuccessMessage>
+          <ErrorMessage v-if="errorMessage" @close="errorMessage = ''" v-slot>{{ errorMessage }}</ErrorMessage>
+        </div>
         <div class="header-container">
           <h1 class="page-title">Warehouses </h1>
         </div>
@@ -311,7 +315,8 @@
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import { Head, Link, useForm, usePage } from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
-
+import SuccessMessage from '@/Components/SuccessMessage.vue';
+import ErrorMessage from '@/Components/ErrorMessage.vue';
 
 // const props = defineProps({
 //   warehouses: {
@@ -320,6 +325,8 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 //   },
 // });
 const warehouses = ref([]);
+const successMessage = ref('');
+const errorMessage = ref('');
 
 const page = usePage();
 const user = page.props.auth.user;
@@ -495,7 +502,18 @@ const deleteWarehouse = (warehouseId) => {
       preserveScroll: true,
       onSuccess: () => {
         // Message will be handled by the inertia success flash message
+        fetchSupplierWarehouses();
+        successMessage.value = 'Warehouse deleted successfully';
+        setTimeout(() => {
+          successMessage.value = '';
+        }, 3000);
       },
+      onError: () => {
+        errorMessage.value = 'Error deleting warehouse';
+        setTimeout(() => {
+          errorMessage.value = '';
+        }, 3000);
+      }
     });
   }
 };
@@ -507,7 +525,17 @@ const saveWarehouse = () => {
       onSuccess: () => {
         closeWarehouseModal();
         fetchSupplierWarehouses();
+        successMessage.value = 'Warehouse updated successfully';
+        setTimeout(() => {
+          successMessage.value = '';
+        }, 3000);
       },
+      onError: () => {
+        errorMessage.value = 'Error updating warehouse';
+        setTimeout(() => {
+          errorMessage.value = '';
+        }, 3000);
+      }
     });
   } else {
     form.post(route('supplierwarehouse.create'), {
@@ -515,11 +543,20 @@ const saveWarehouse = () => {
       onSuccess: () => {
         closeWarehouseModal();
         fetchSupplierWarehouses();
+        successMessage.value = 'Warehouse added successfully';
+        setTimeout(() => {
+          successMessage.value = '';
+        }, 3000);
       },
+      onError: () => {
+        errorMessage.value = 'Error adding warehouse';
+        setTimeout(() => {
+          errorMessage.value = '';
+        }, 3000);
+      }
     });
   }
 };
-
 
 const fetchSupplierWarehouses = async () => {
   try {
@@ -702,6 +739,16 @@ onBeforeUnmount(() => {
   max-width: 100%;
   border-radius: 12px;
   padding: 24px;
+}
+
+.message-container {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  width: auto;
+  max-width: 500px;
 }
 
 .header-container {
