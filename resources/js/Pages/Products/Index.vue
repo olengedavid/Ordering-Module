@@ -158,6 +158,40 @@ const closeProductModal = () => {
   form.clearErrors();
 };
 
+const editProduct = (product) => {
+  editingProduct.value = product;
+  form.name = product.name;
+  form.sku_number = product.sku_number;
+  form.category = product.category;
+  form.unit_of_measure = product.unit_of_measure;
+  form.description = product.description;
+  form.manufucturer = product.manufucturer;
+  form.status = product.status;
+  
+  // Handle images
+  if (product.images) {
+    const images = typeof product.images === 'string' ? JSON.parse(product.images) : product.images;
+    images.forEach(async (image) => {
+      const response = await fetch(`/storage/${image.path}`);
+      const blob = await response.blob();
+      const file = new File([blob], image.path.split('/').pop(), { type: blob.type });
+      
+      productImages.value.push({
+        id: Date.now(),
+        url: URL.createObjectURL(blob),
+        file: file,
+        isPrimary: image.type === 'primary'
+      });
+      
+      if (image.type === 'primary') {
+        imagePreview.value = URL.createObjectURL(blob);
+      }
+    });
+  }
+  
+  showProductModal.value = true;
+};
+
 const saveProduct = () => {
   const formData = new FormData();
   formData.append("name", form.name);
@@ -188,14 +222,17 @@ const saveProduct = () => {
   }
 
   if (editingProduct.value) {
-    form.put(route("products.update", editingProduct.value), {
-      preserveScroll: true,
-      onSuccess: () => {
+    axios
+      .post(route("products.update", editingProduct.value.uuid), formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      })
+      .then(() => {
         closeProductModal();
         fetchSupplierProducts();
-      },
-    });
-  } else {
+      });
+  }else {
     axios
       .post(route("products.store"), formData, {
         headers: {
@@ -213,8 +250,6 @@ onMounted(() => {
   fetchSupplierProducts();
 });
 </script>
-
-
 
 <template>
   <AuthenticatedLayout>
@@ -320,7 +355,7 @@ onMounted(() => {
                     </span>
                   </td>
                   <td class="table-cell">
-                    <button class="text-indigo-600 hover:text-indigo-900 mr-3">
+                    <button @click="editProduct(product)" class="text-indigo-600 hover:text-indigo-900 mr-3">
                       Edit
                     </button>
                     <button class="text-red-600 hover:text-red-900">
@@ -579,8 +614,8 @@ onMounted(() => {
                     >Status <span class="required">*</span></label
                   >
                   <select id="productStatus" v-model="form.status" required>
-                    <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
                   </select>
                 </div>
 

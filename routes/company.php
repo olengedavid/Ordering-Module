@@ -29,7 +29,8 @@ Route::middleware('auth')->group(function () {
     Route::get('supplier/products/list', [ProductController::class, 'getProductsBySupplier'])->name('supplier.products.list');
     Route::get('products/create', [ProductController::class, 'create'])->name('products.create');
     Route::post('products/create', [ProductController::class, 'store'])->name('products.store');
-    
+    Route::post('products/{uuid}', [ProductController::class, 'update'])->name('products.update');
+
     #Inventory Routes
     // Route::get('supplier/inventories', [InventoryController::class, 'index'])->name('supplier.inventories.index');
     Route::get('supplier/inventories', [InventoryController::class, 'index'])->name('supplier.inventories.index');
