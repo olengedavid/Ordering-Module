@@ -539,9 +539,17 @@
   font-style: italic;
 }
 
-/* SupplierDetails Specific Styles */
 .content-container {
-  max-width: 1300px;
+  width: 1200px;
+  max-width: 100%;
+  border-radius: 12px;
+  padding: 24px;
+}
+
+/* SupplierDetails Specific Styles */
+.supplier-container {
+  width: 1200px;
+  max-width: 100%;
   margin: 0 auto;
   background-color: white;
   border-radius: 12px;

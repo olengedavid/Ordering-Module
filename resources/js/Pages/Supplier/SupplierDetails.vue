@@ -10,7 +10,7 @@
               <span>←</span> Back to Suppliers
             </button>
           </div>
-        <div class="content-container">
+        <div class="supplier-container">
           <div class="supplier-details-container" v-if="supplier">
             <!-- Supplier Header with Status -->
             <div class="order-header">
