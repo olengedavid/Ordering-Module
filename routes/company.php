@@ -24,6 +24,8 @@ Route::middleware('auth')->group(function () {
     Route::get('supplier/delivery-regions', [DeliveryRegionController::class, 'getDeliveryRegionsByCompany'])->name('supplier.delivery-regions.index');
     Route::post('supplier/delivery-regions', [DeliveryRegionController::class, 'store'])->name('supplier.delivery-regions.store');
     Route::put('supplier/delivery-regions/update{uuid}', [DeliveryRegionController::class, 'updateDeliveryRegions']) -> name('supplier.delivery-regions.update');
+    Route::delete('/supplier/delivery-regions/delete/{uuid}', [DeliveryRegionController::class, 'destroy'])->name('supplier.delivery-regions.destroy');
+   
 
     #Product Routes
     Route::get('supplier/products', [ProductController::class, 'index'])->name('products.index');

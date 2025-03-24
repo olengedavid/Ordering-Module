@@ -1,5 +1,7 @@
 <?php
+
 namespace App\Http\Controllers\Company;
+
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -8,7 +10,8 @@ use App\Models\Companies\Company;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class WarehouseController extends Controller{
+class WarehouseController extends Controller
+{
 
     // public function index() : Response
     //  {
@@ -19,32 +22,31 @@ class WarehouseController extends Controller{
     //     ]);
     //  }
 
-     public function index()
-     {
+    public function index()
+    {
         return Inertia::render('Supplier/SupplierWarehouses');
-     }
+    }
 
-     public function api_store_warehouse(Request $request)
-     {
-    
-         $validated = $request->validate([
-             'name' => 'required|string|max:255',
+    public function api_store_warehouse(Request $request)
+    {
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
             //  'location' => 'required|string|max:255',
-             'contact_person' => 'required|string|max:255',
-             'phone_number' => 'required|string|max:20',
-             'address' =>'required|string|max:255',
-             'email' =>'required|string|email|max:255|unique:warehouses',
-             'krapin' =>'required|string|max:10|unique:warehouses',
-             'company_id' =>'required|integer|exists:companies,id',
-             'created_by' => 'required|integer|exists:users,id'
-         ]);
-     
-         Warehouse::create($validated + ['status' => 'active']);
-     
-         return redirect()->back();
-     }
+            'contact_person' => 'required|string|max:255',
+            'phone_number' => 'required|string|max:20',
+            'address' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:warehouses',
+            'krapin' => 'required|string|max:10|unique:warehouses',
+            'company_id' => 'required|integer|exists:companies,id',
+            'created_by' => 'required|integer|exists:users,id'
+        ]);
 
-     
+        Warehouse::create($validated + ['status' => 'active']);
+
+        return redirect()->back();
+    }
+
 
     public function getWarehousesBySupplier(Request $request)
     {
@@ -65,33 +67,44 @@ class WarehouseController extends Controller{
         try {
             $warehouse = Warehouse::where('uuid', $request->uuid)->firstOrFail();
             // Check if user has permission to update this warehouse
-        // if ($warehouse->company_id !== auth()->user()->company_id) {
-        //     return response()->json([
-        //         'message' => 'Unauthorized action.'
-        //     ], 403);
-        // }
+            // if ($warehouse->company_id !== auth()->user()->company_id) {
+            //     return response()->json([
+            //         'message' => 'Unauthorized action.'
+            //     ], 403);
+            // }
 
-        $warehouse->update([
-            'name' => $request->name,
-            'contact_person' => $request->contact_person,
-            'email' => $request->email,
-            'phone_number' => $request->phone_number,
-            'address' => $request->address,
-            'krapin' => $request->krapin,
-            'country' => $request->country,
-            'region' => $request->region,
-            'gps' => $request->gps,
-            'status' => $request->status,
-            // 'updated_by' => auth()->id()
-        ]);
+            $warehouse->update([
+                'name' => $request->name,
+                'contact_person' => $request->contact_person,
+                'email' => $request->email,
+                'phone_number' => $request->phone_number,
+                'address' => $request->address,
+                'krapin' => $request->krapin,
+                'country' => $request->country,
+                'region' => $request->region,
+                'gps' => $request->gps,
+                'status' => $request->status,
+                // 'updated_by' => auth()->id()
+            ]);
 
-        return redirect()->back();
-        
+            return redirect()->back();
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error updating warehouse',
                 'error' => $e->getMessage()
             ], 500);
+        }
+    }
+
+    public function destroy($uuid)
+    {
+        $warehouse = Warehouse::where('uuid', $uuid)->firstOrFail();
+        try {
+            $warehouse->delete();
+            return redirect()->back()
+            ->with('success', 'Warehouse deleted successfully.');
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error deleting warehouse'], 500);
         }
     }
 }
