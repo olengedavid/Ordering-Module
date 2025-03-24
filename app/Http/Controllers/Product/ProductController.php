@@ -109,16 +109,16 @@ class ProductController extends Controller
                 $uniqueRef = hexdec(uniqid());
                 $extension = $image->getClientOriginalExtension();
                 $path = $image->storeAs('products', $uniqueRef . '.' . $extension, 'public');
-                $images[] = [
+                array_push($images, [
                     'path' => $path,
                     'type' => 'secondary'
-                ];
+                ]);
             }
         }
 
         $product = Product::create([
             ...$validated,
-            'images' => json_encode($images), // Encode the images array to JSON
+            'images' => json_encode(array_values($images)), // Encode the images array to JSON
             'status' => 'active'
         ]);
 
@@ -153,13 +153,14 @@ class ProductController extends Controller
             $primaryPath = $primaryImage->storeAs('products', $uniqueRef . '.' . $extension, 'public');
 
             // Remove old primary image
-            $images = array_filter($images, fn($img) => $img['type'] !== 'primary');
+            // Remove old primary image
+            $images = array_values(array_filter($images, fn($img) => $img['type'] !== 'primary'));
 
             // Add new primary image
-            $images[] = [
+            array_push($images, [
                 'path' => $primaryPath,
                 'type' => 'primary'
-            ];
+            ]);
         }
 
         // Handle secondary images
@@ -171,10 +172,10 @@ class ProductController extends Controller
                 $uniqueRef = hexdec(uniqid());
                 $extension = $image->getClientOriginalExtension();
                 $path = $image->storeAs('products', $uniqueRef . '.' . $extension, 'public');
-                $images[] = [
+                array_push($images, [
                     'path' => $path,
                     'type' => 'secondary'
-                ];
+                ]);
             }
         }
 
