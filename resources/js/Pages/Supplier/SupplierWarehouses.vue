@@ -88,7 +88,7 @@
                     <button @click="editWarehouse(warehouse)" class="action-btn edit-btn">
                       Edit
                     </button>
-                    <button @click="deleteWarehouse(warehouse.id)" class="action-btn delete-btn">
+                    <button @click="deleteWarehouse(warehouse.uuid)" class="action-btn delete-btn">
                       Delete
                     </button>
                   </td>
@@ -506,9 +506,9 @@ const editWarehouse = (warehouse) => {
   isRegionDropdownOpen.value = false;
 };
 
-const deleteWarehouse = (warehouseId) => {
+const deleteWarehouse = (warehouseUuid) => {
   if (confirm('Are you sure you want to delete this warehouse?')) {
-    useForm().delete(route('supplierwarehouse.delete', warehouseId), {
+    useForm().delete(route('supplierwarehouse.delete', warehouseUuid), {
       preserveScroll: true,
       onSuccess: () => {
         // Message will be handled by the inertia success flash message

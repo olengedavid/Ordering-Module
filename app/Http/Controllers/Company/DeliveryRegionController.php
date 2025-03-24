@@ -49,7 +49,7 @@ class DeliveryRegionController extends Controller
             $deliveryRegion->update($validated);
 
             return redirect()->back()
-            ->with('success', 'Delivery region updated successfully.');
+                ->with('success', 'Delivery region updated successfully.');
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Failed to update delivery region',
@@ -57,6 +57,16 @@ class DeliveryRegionController extends Controller
             ], 500);
         }
     }
+
+    public function destroy($uuid)
+    {
+        $deliveryRegion = DeliveryRegion::where('uuid', $uuid)->firstOrFail();
+
+        try {
+            $deliveryRegion->delete();
+            return response()->json(['message' => 'Delivery region deleted successfully']);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error deleting delivery region'], 500);
+        }
+    }
 }
-
-

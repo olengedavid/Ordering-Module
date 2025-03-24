@@ -47,7 +47,7 @@
                 <button @click="editDeliveryRegion(region)" class="action-btn edit-btn">
                   Edit
                 </button>
-                <button @click="deleteDeliveryRegion(region.id)" class="action-btn delete-btn">
+                <button @click="deleteDeliveryRegion(region.uuid)" class="action-btn delete-btn">
                   Delete
                 </button>
               </td>
@@ -377,13 +377,13 @@ export default {
       this.showDeliveryRegionModal = true;
     },
     
-    async deleteDeliveryRegion(regionId) {
+    async deleteDeliveryRegion(regionUuid) {
       if (!confirm('Are you sure you want to delete this delivery region?')) {
         return;
       }
       
       try {
-        await axios.delete(route('supplier.delivery-regions.destroy', regionId));
+        await axios.delete(route('supplier.delivery-regions.destroy', regionUuid));
         this.successMessage = 'Delivery region deleted successfully';
         this.fetchDeliveryRegions();
         console.log('Setting success message in DeliveryRegions - delete');
