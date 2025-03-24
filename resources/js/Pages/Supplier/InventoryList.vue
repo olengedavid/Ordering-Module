@@ -9,8 +9,8 @@ import PrimaryButton from "@/Components/PrimaryButton.vue";
 import { ref, onMounted } from "vue";
 import axios from "axios";
 import CustomPagination from "@/Components/CustomPagination.vue";
-import SuccessMessage from '@/Components/SuccessMessage.vue';
-import ErrorMessage from '@/Components/ErrorMessage.vue';
+import SuccessMessage from "@/Components/SuccessMessage.vue";
+import ErrorMessage from "@/Components/ErrorMessage.vue";
 
 const currentPage = ref(1);
 const perPage = ref(10);
@@ -25,9 +25,9 @@ const inventories = ref([]);
 const products = ref([]);
 const warehouses = ref([]);
 const loading = ref(true);
-const successMessage = ref('');
-const errorMessage = ref('');
-const searchQuery = ref('');
+const successMessage = ref("");
+const errorMessage = ref("");
+const searchQuery = ref("");
 const editingInventory = ref(false);
 const editingInventoryUuid = ref(null);
 
@@ -46,6 +46,8 @@ const form = useForm({
   created_by: user.id,
   status: "active",
 });
+
+const formErrors = ref({});
 
 const editInventoryItem = (inventory) => {
   editingInventory.value = true;
@@ -67,24 +69,6 @@ const editInventoryItem = (inventory) => {
 };
 
 const createInventory = () => {
-  form.post(route("supplier.inventories.store"), {
-    preserveScroll: true,
-    onSuccess: () => {
-      closeModal();
-      form.reset();
-      fetchInventories();
-      successMessage.value = 'Inventory added successfully';
-      setTimeout(() => {
-        successMessage.value = '';
-      }, 3000);
-    },
-    onError: () => {
-      errorMessage.value = 'Error adding inventory';
-      setTimeout(() => {
-        errorMessage.value = '';
-      }, 3000);
-    }
-  });
   if (editingInventory.value) {
     form.put(
       route("supplier.inventories.update", {
@@ -96,6 +80,11 @@ const createInventory = () => {
           closeModal();
           form.reset();
           fetchInventories();
+          // Flash
+          successMessage.value = "Inventory Updated successfully";
+          setTimeout(() => {
+            successMessage.value = "";
+          }, 3000);
         },
       }
     );
@@ -106,7 +95,15 @@ const createInventory = () => {
         closeModal();
         form.reset();
         fetchInventories();
+        // Flash
+        successMessage.value = "Inventory Created successfully";
+        setTimeout(() => {
+          successMessage.value = "";
+        }, 3000);
       },
+      onError: (errors) => {
+        formErrors.value = errors;
+      }
     });
   }
 };
@@ -168,6 +165,11 @@ const handlePageChange = (page) => {
   fetchInventories(page);
 };
 
+const handleInputChange = () => {
+  form.clearErrors();
+  formErrors.value = {};
+};
+
 const closeModal = () => {
   showingModal.value = false;
   editingInventory.value = false;
@@ -199,10 +201,17 @@ onMounted(() => {
     <div class="page-container">
       <div class="content-container">
         <div class="message-container">
-          <SuccessMessage v-if="successMessage" @close="successMessage = ''" v-slot>{{ successMessage }}</SuccessMessage>
-          <ErrorMessage v-if="errorMessage" @close="errorMessage = ''" v-slot>{{ errorMessage }}</ErrorMessage>
+          <SuccessMessage
+            v-if="successMessage"
+            @close="successMessage = ''"
+            v-slot
+            >{{ successMessage }}</SuccessMessage
+          >
+          <ErrorMessage v-if="errorMessage" @close="errorMessage = ''" v-slot>{{
+            errorMessage
+          }}</ErrorMessage>
         </div>
-        
+
         <div class="header-container">
           <h1 class="page-title">Inventory</h1>
         </div>
@@ -323,6 +332,12 @@ onMounted(() => {
               <button class="close-btn" @click="closeModal">&times;</button>
             </div>
             <div class="modal-body">
+              <div
+                v-if="form.errors.warehouse_id || formErrors.warehouse_id"
+                class="error-message"
+              >
+                {{ form.errors.warehouse_id || formErrors.warehouse_id }}
+              </div>
               <form @submit.prevent="createInventory">
                 <!-- Product Dropdown -->
                 <div class="form-group">
@@ -351,6 +366,7 @@ onMounted(() => {
                   <select
                     class="custom-select"
                     v-model="form.warehouse_id"
+                    @input="handleInputChange"
                     required
                   >
                     <option value="">Select Warehouse</option>
@@ -505,5 +521,5 @@ onMounted(() => {
 </template>
 
 <style scoped>
-@import './SupplierComponents/SupplierSharedStyles.css';
+@import "./SupplierComponents/SupplierSharedStyles.css";
 </style>

@@ -8,6 +8,7 @@ use App\Models\Companies\Inventory;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Inertia\Inertia;
+use Illuminate\Validation\Rule;
 
 class InventoryController extends Controller
 {
@@ -31,10 +32,22 @@ class InventoryController extends Controller
 
     public function store(Request $request)
     {
+
+        $messages = [
+            'warehouse_id.unique' => 'This product already exists in the selected warehouse. Please update the existing inventory instead.'
+        ];
+
         $validated = $request->validate([
             'company_id' => 'required|exists:companies,id',
             'product_id' => 'required|exists:products,id',
-            'warehouse_id' => 'required|exists:warehouses,id',
+            'warehouse_id' => [
+                'required',
+                'exists:warehouses,id',
+                Rule::unique('inventories')->where(function ($query) use ($request) {
+                    return $query->where('product_id', $request->product_id)
+                        ->where('warehouse_id', $request->warehouse_id);
+                })
+            ],
             'cost_price' => 'required|numeric|min:0',
             'selling_price' => 'required|numeric|min:0',
             'stock_quantity' => 'required|numeric|min:0',
@@ -46,7 +59,7 @@ class InventoryController extends Controller
             'promo_start_date' => 'nullable|date',
             'promo_end_date' => 'nullable|date',
             'created_by' => 'required|exists:users,id',
-        ]);
+        ], $messages);
 
         Inventory::create($validated);
 
