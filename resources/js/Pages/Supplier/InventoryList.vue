@@ -103,7 +103,7 @@ const createInventory = () => {
       },
       onError: (errors) => {
         formErrors.value = errors;
-      }
+      },
     });
   }
 };
@@ -176,6 +176,33 @@ const closeModal = () => {
   editingInventoryUuid.value = null;
   form.reset();
   form.clearErrors();
+};
+
+const getPrimaryImagePreviewPath = (product) => {
+  if (!product.images) return "https://via.placeholder.com/50";
+
+  try {
+    let images;
+    const parsedImages =
+      typeof product.images === "string"
+        ? JSON.parse(product.images)
+        : product.images;
+
+    // Handle both array and object formats
+    images = Array.isArray(parsedImages)
+      ? parsedImages
+      : Object.values(parsedImages);
+
+    const primaryImage = images.find((img) => img.type === "primary");
+
+    if (primaryImage?.path) {
+      return `/storage/${primaryImage.path}`;
+    }
+  } catch (error) {
+    console.error("Error processing product images:", error);
+  }
+
+  return "https://via.placeholder.com/50";
 };
 
 defineProps({
@@ -275,6 +302,17 @@ onMounted(() => {
                   :key="inventory.id"
                   class="data-row hover:bg-[#f8fafc]"
                 >
+                  <td class="table-cell">
+                    <div class="product-image-container">
+                      <img
+                        :src="getPrimaryImagePreviewPath(inventory?.product)"
+                        class="product-thumbnail"
+                        @error="
+                          $event.target.src = 'https://via.placeholder.com/50'
+                        "
+                      />
+                    </div>
+                  </td>
                   <td class="table-cell">{{ inventory.product?.name }}</td>
                   <td class="table-cell">{{ inventory.warehouse?.name }}</td>
                   <td class="table-cell">{{ inventory.stock_quantity }}</td>
@@ -522,4 +560,21 @@ onMounted(() => {
 
 <style scoped>
 @import "./SupplierComponents/SupplierSharedStyles.css";
+
+.product-image-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.product-thumbnail {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.product-name {
+  font-weight: 500;
+}
 </style>
