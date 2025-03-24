@@ -5,11 +5,11 @@ namespace App\Models\Companies;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use App\Models\Companies\Company;
-// use App\Models\Companies\Product;
-// use App\Models\Companies\Warehouse;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Inventory extends Model
 {
+    use SoftDeletes;
     //
 
     protected $fillable =[
@@ -58,5 +58,5 @@ class Inventory extends Model
     public function warehouse()
     {
         return $this->belongsTo(Warehouse::class, 'warehouse_id');
-    }
+    } 
 }

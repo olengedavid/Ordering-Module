@@ -25,10 +25,10 @@ class InventoryController extends Controller
 
         $inventories = Inventory::where('company_id', $company->id)
             ->with(['product', 'warehouse'])
-            ->whereHas('product', function($query) use ($search) {
+            ->whereHas('product', function ($query) use ($search) {
                 $query->where('name', 'like', "%{$search}%");
             })
-            ->orWhereHas('warehouse', function($query) use ($search) {
+            ->orWhereHas('warehouse', function ($query) use ($search) {
                 $query->where('name', 'like', "%{$search}%");
             })
             ->latest()
@@ -107,10 +107,20 @@ class InventoryController extends Controller
         }
     }
 
-    public function destroy(Inventory $inventory)
+    public function destroy(Request $request, $uuid)
     {
-        $inventory->delete();
+        try {
+            $inventory = Inventory::where('uuid', $request->uuid)->firstOrFail();
+            $inventory->delete();
 
-        return response()->json(null, 204);
+            return response()->json([
+                'message' => 'Inventory deleted successfully'
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error deleting inventory',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

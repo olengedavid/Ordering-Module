@@ -10,7 +10,7 @@ import axios from "axios";
 import CustomPagination from "@/Components/CustomPagination.vue";
 import SuccessMessage from "@/Components/SuccessMessage.vue";
 import ErrorMessage from "@/Components/ErrorMessage.vue";
-import { formatCurrency, formatNumber } from '@/utils/formatters';
+import { formatCurrency, formatNumber } from "@/utils/formatters";
 
 const currentPage = ref(1);
 const perPage = ref(10);
@@ -146,7 +146,7 @@ const fetchInventories = async () => {
         uuid: supplier_uuid,
         page: currentPage.value,
         per_page: perPage.value,
-        search: searchQuery.value
+        search: searchQuery.value,
       })
     );
     inventories.value = response.data.data;
@@ -204,6 +204,28 @@ const getPrimaryImagePreviewPath = (product) => {
   }
 
   return "https://via.placeholder.com/50";
+};
+
+const deleteInventory = async (inventoryUuid) => {
+  if (!confirm("Are you sure you want to delete this inventory item?")) return;
+
+  try {
+    await axios.delete(
+      route("supplier.inventories.destroy", inventoryUuid)
+    );
+
+    successMessage.value = "Inventory deleted successfully";
+    setTimeout(() => {
+      successMessage.value = "";
+    }, 3000);
+
+    fetchInventories();
+  } catch (error) {
+    errorMessage.value = "Error deleting inventory";
+    setTimeout(() => {
+      errorMessage.value = "";
+    }, 3000);
+  }
 };
 
 defineProps({
@@ -273,7 +295,7 @@ onMounted(() => {
             <input
               type="text"
               class="search-input"
-              placeholder="Search inventory..."
+              placeholder="Search by product and warehouse name..."
               @keypress.enter="fetchInventories"
               v-model="searchQuery"
             />
@@ -318,9 +340,15 @@ onMounted(() => {
                   </td>
                   <td class="table-cell">{{ inventory.product?.name }}</td>
                   <td class="table-cell">{{ inventory.warehouse?.name }}</td>
-                  <td class="table-cell">{{ formatNumber(inventory.stock_quantity) }}</td>
-                  <td class="table-cell">KES {{ formatNumber(inventory.cost_price) }}</td>
-                  <td class="table-cell">KES {{ formatNumber(inventory.selling_price) }}</td>
+                  <td class="table-cell">
+                    {{ formatNumber(inventory.stock_quantity) }}
+                  </td>
+                  <td class="table-cell">
+                    KES {{ formatNumber(inventory.cost_price) }}
+                  </td>
+                  <td class="table-cell">
+                    KES {{ formatNumber(inventory.selling_price) }}
+                  </td>
                   <td class="table-cell whitespace-nowrap">
                     <span
                       :class="
@@ -339,7 +367,7 @@ onMounted(() => {
                     >
                       Edit
                     </button>
-                    <button class="action-btn delete-btn">Delete</button>
+                    <button  @click="deleteInventory(inventory.uuid)" class="action-btn delete-btn">Delete</button>
                   </td>
                 </tr>
                 <tr v-if="inventories.length === 0">

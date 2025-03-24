@@ -42,7 +42,7 @@ Route::middleware('auth')->group(function () {
     Route::post('supplier/inventories', [InventoryController::class, 'store'])->name('supplier.inventories.store');
     Route::put('supplier/inventories/update', [InventoryController::class, 'update'])->name('supplier.inventories.update');
     Route::put('supplier/inventories/update', [InventoryController::class, 'update'])->name('supplier.inventories.update');
-    Route::delete('supplier/inventories/{inventory}', [InventoryController::class, 'destroy'])->name('supplier.inventories.destroy');
+    Route::delete('supplier/inventories/{uuid}', [InventoryController::class, 'destroy'])->name('supplier.inventories.destroy');
 
     #Region Routes
     Route::get('admin/regions', [RegionController::class, 'index'])->name('admin.regions.index');
