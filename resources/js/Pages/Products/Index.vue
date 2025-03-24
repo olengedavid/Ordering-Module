@@ -293,6 +293,29 @@ const getPrimaryImagePreviewPath = (product) => {
   return "https://via.placeholder.com/50";
 };
 
+const deleteProduct = async (productUuid) => {
+  if (!confirm("Are you sure you want to delete this product?")) return;
+
+  try {
+    await axios.delete(
+      route("products.destroy", productUuid)
+    );
+
+    successMessage.value = "Product deleted successfully";
+    setTimeout(() => {
+      successMessage.value = "";
+    }, 3000);
+
+    fetchSupplierProducts();
+  } catch (error) {
+    errorMessage.value =
+      error.response?.data?.message || "Error deleting product";
+    setTimeout(() => {
+      errorMessage.value = "";
+    }, 3000);
+  }
+};
+
 onMounted(() => {
   fetchSupplierProducts();
 });
@@ -433,7 +456,12 @@ onMounted(() => {
                     >
                       Edit
                     </button>
-                    <button class="action-btn delete-btn">Delete</button>
+                    <button
+                      @click="deleteProduct(product.uuid)"
+                      class="action-btn delete-btn"
+                    >
+                      Delete
+                    </button>
                   </td>
                 </tr>
               </tbody>

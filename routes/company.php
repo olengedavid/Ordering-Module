@@ -34,6 +34,7 @@ Route::middleware('auth')->group(function () {
     Route::get('products/create', [ProductController::class, 'create'])->name('products.create');
     Route::post('products/create', [ProductController::class, 'store'])->name('products.store');
     Route::post('products/{uuid}', [ProductController::class, 'update'])->name('products.update');
+    Route::delete('products/{uuid}', [ProductController::class, 'destroy'])->name('products.destroy');
 
     #Inventory Routes
     // Route::get('supplier/inventories', [InventoryController::class, 'index'])->name('supplier.inventories.index');

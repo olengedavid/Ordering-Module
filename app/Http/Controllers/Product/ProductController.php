@@ -189,4 +189,21 @@ class ProductController extends Controller
             'product' => $product
         ]);
     }
+
+    public function destroy($uuid)
+    {
+        try {
+            $product = Product::where('uuid', $uuid)->firstOrFail();
+            $product->delete();
+
+            return response()->json([
+                'message' => 'Inventory deleted successfully'
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error deleting inventory',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
