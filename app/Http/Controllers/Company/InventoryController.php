@@ -21,9 +21,16 @@ class InventoryController extends Controller
     public function getInventoriesBySupplier(Request $request)
     {
         $company = Company::where('uuid', $request->uuid)->firstOrFail();
+        $search = $request->input('search');
 
         $inventories = Inventory::where('company_id', $company->id)
             ->with(['product', 'warehouse'])
+            ->whereHas('product', function($query) use ($search) {
+                $query->where('name', 'like', "%{$search}%");
+            })
+            ->orWhereHas('warehouse', function($query) use ($search) {
+                $query->where('name', 'like', "%{$search}%");
+            })
             ->latest()
             ->paginate($request->per_page);
 

@@ -5,12 +5,12 @@ import Modal from "@/Components/Modal.vue";
 import InputError from "@/Components/InputError.vue";
 import InputLabel from "@/Components/InputLabel.vue";
 import TextInput from "@/Components/TextInput.vue";
-import PrimaryButton from "@/Components/PrimaryButton.vue";
 import { ref, onMounted } from "vue";
 import axios from "axios";
 import CustomPagination from "@/Components/CustomPagination.vue";
 import SuccessMessage from "@/Components/SuccessMessage.vue";
 import ErrorMessage from "@/Components/ErrorMessage.vue";
+import { formatCurrency, formatNumber } from '@/utils/formatters';
 
 const currentPage = ref(1);
 const perPage = ref(10);
@@ -146,6 +146,7 @@ const fetchInventories = async () => {
         uuid: supplier_uuid,
         page: currentPage.value,
         per_page: perPage.value,
+        search: searchQuery.value
       })
     );
     inventories.value = response.data.data;
@@ -273,6 +274,7 @@ onMounted(() => {
               type="text"
               class="search-input"
               placeholder="Search inventory..."
+              @keypress.enter="fetchInventories"
               v-model="searchQuery"
             />
           </div>
@@ -288,6 +290,7 @@ onMounted(() => {
               <thead class="bg-gray-50">
                 <tr>
                   <th class="table-header table-header-sortable">Product</th>
+                  <th class="table-header table-header-sortable">Name</th>
                   <th class="table-header table-header-sortable">Warehouse</th>
                   <th class="table-header table-header-text">Stock Quantity</th>
                   <th class="table-header table-header-text">Cost Price</th>
@@ -315,9 +318,9 @@ onMounted(() => {
                   </td>
                   <td class="table-cell">{{ inventory.product?.name }}</td>
                   <td class="table-cell">{{ inventory.warehouse?.name }}</td>
-                  <td class="table-cell">{{ inventory.stock_quantity }}</td>
-                  <td class="table-cell">KES {{ inventory.cost_price }}</td>
-                  <td class="table-cell">KES {{ inventory.selling_price }}</td>
+                  <td class="table-cell">{{ formatNumber(inventory.stock_quantity) }}</td>
+                  <td class="table-cell">KES {{ formatNumber(inventory.cost_price) }}</td>
+                  <td class="table-cell">KES {{ formatNumber(inventory.selling_price) }}</td>
                   <td class="table-cell whitespace-nowrap">
                     <span
                       :class="
