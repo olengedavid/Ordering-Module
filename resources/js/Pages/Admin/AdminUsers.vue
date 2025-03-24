@@ -3,8 +3,15 @@
     <AdminNavbar />
     <div class="page-container">
       <div class="message-container">
-        <SuccessMessage v-if="successMessage" @close="successMessage = ''" v-slot>{{ successMessage }}</SuccessMessage>
-        <ErrorMessage v-if="errorMessage" @close="errorMessage = ''" v-slot>{{ errorMessage }}</ErrorMessage>
+        <SuccessMessage
+          v-if="successMessage"
+          @close="successMessage = ''"
+          v-slot
+          >{{ successMessage }}</SuccessMessage
+        >
+        <ErrorMessage v-if="errorMessage" @close="errorMessage = ''" v-slot>{{
+          errorMessage
+        }}</ErrorMessage>
       </div>
       <div class="content-container">
         <h1 class="page-title">Users</h1>
@@ -72,7 +79,11 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="user in filteredUsers" :key="user.id" class="data-row">
+                <tr
+                  v-for="user in filteredUsers"
+                  :key="user.id"
+                  class="data-row"
+                >
                   <td>{{ user.name }}</td>
                   <td>{{ user.email }}</td>
                   <td>{{ user.role }}</td>
@@ -80,8 +91,8 @@
                   <td>
                     <span
                       :class="[
-                        'status-pill',
-                        user.status === 'Active'
+                        'status-pill capitalize',
+                        user.status === 'active'
                           ? 'status-active'
                           : 'status-inactive',
                       ]"
@@ -128,15 +139,8 @@
             <form @submit.prevent="saveUser">
               <!-- Name Field -->
               <div class="form-group">
-                <label for="name"
-                  >Name <span class="required">*</span></label
-                >
-                <input
-                  type="text"
-                  id="name"
-                  v-model="form.name"
-                  required
-                />
+                <label for="name">Name <span class="required">*</span></label>
+                <input type="text" id="name" v-model="form.name" required />
               </div>
 
               <!-- Email Field -->
@@ -144,12 +148,7 @@
                 <label for="email"
                   >Email Address <span class="required">*</span></label
                 >
-                <input
-                  type="email"
-                  id="email"
-                  v-model="form.email"
-                  required
-                />
+                <input type="email" id="email" v-model="form.email" required />
               </div>
 
               <!-- Password Field with show/hide toggle -->
@@ -163,7 +162,9 @@
                     id="password"
                     v-model="form.password"
                     :required="!editingUser"
-                    :placeholder="editingUser ? 'Leave blank to keep current password' : ''"
+                    :placeholder="
+                      editingUser ? 'Leave blank to keep current password' : ''
+                    "
                   />
                   <button
                     type="button"
@@ -229,9 +230,7 @@
 
               <!-- Role Dropdown -->
               <div class="form-group">
-                <label for="role"
-                  >Role <span class="required">*</span></label
-                >
+                <label for="role">Role <span class="required">*</span></label>
                 <select id="role" v-model="form.role" required>
                   <option value="">Select a Role</option>
                   <option value="Admin">Admin</option>
@@ -251,16 +250,22 @@
                     class="toggle-checkbox"
                   />
                   <label for="status" class="toggle-label"></label>
-                  <span class="toggle-text">{{ form.active ? 'Active' : 'Inactive' }}</span>
+                  <span class="toggle-text">{{
+                    form.active ? "Active" : "Inactive"
+                  }}</span>
                 </div>
               </div>
 
               <div class="modal-actions">
-                <button type="button" class="cancel-btn" @click="closeUserModal">
+                <button
+                  type="button"
+                  class="cancel-btn"
+                  @click="closeUserModal"
+                >
                   Cancel
                 </button>
                 <button type="submit" class="save-btn">
-                  {{ editingUser ? 'Update' : 'Save' }}
+                  {{ editingUser ? "Update" : "Save" }}
                 </button>
               </div>
             </form>
@@ -272,13 +277,13 @@
 </template>
 
 <script>
-import { Link } from '@inertiajs/vue3';
-import AdminNavbar from '@/Components/AdminNavbar.vue';
-import CustomPagination from '@/Components/CustomPagination.vue';
-import SuccessMessage from '@/Components/SuccessMessage.vue';
-import ErrorMessage from '@/Components/ErrorMessage.vue';
-import { ref, computed, onMounted } from 'vue';
-import axios from 'axios';
+import { Link } from "@inertiajs/vue3";
+import AdminNavbar from "@/Components/AdminNavbar.vue";
+import CustomPagination from "@/Components/CustomPagination.vue";
+import SuccessMessage from "@/Components/SuccessMessage.vue";
+import ErrorMessage from "@/Components/ErrorMessage.vue";
+import { ref, computed, onMounted } from "vue";
+import axios from "axios";
 
 export default {
   components: {
@@ -286,98 +291,97 @@ export default {
     AdminNavbar,
     CustomPagination,
     SuccessMessage,
-    ErrorMessage
+    ErrorMessage,
   },
-  
+
   setup() {
     const users = ref([]);
-    const searchQuery = ref('');
-    const currentSort = ref({ field: 'name', direction: 'asc' });
+    const searchQuery = ref("");
+    const currentSort = ref({ field: "name", direction: "asc" });
     const currentPage = ref(1);
     const lastPage = ref(1);
     const perPage = ref(10);
     const showUserModal = ref(false);
     const editingUser = ref(null);
     const showPassword = ref(false);
-    const successMessage = ref('');
-    const errorMessage = ref('');
-    
+    const successMessage = ref("");
+    const errorMessage = ref("");
+
     const form = ref({
-      name: '',
-      email: '',
-      password: '',
-      role: '',
-      active: true
+      name: "",
+      email: "",
+      password: "",
+      role: "",
+      active: true,
     });
 
     const filteredUsers = computed(() => {
       let filtered = [...users.value];
-      
+
       if (searchQuery.value) {
         const query = searchQuery.value.toLowerCase();
         filtered = filtered.filter(
-          user => 
+          (user) =>
             user.name.toLowerCase().includes(query) ||
             user.email.toLowerCase().includes(query) ||
             user.role.toLowerCase().includes(query)
         );
       }
-      
+
       // Sort users
       filtered.sort((a, b) => {
-        const fieldA = String(a[currentSort.value.field] || '').toLowerCase();
-        const fieldB = String(b[currentSort.value.field] || '').toLowerCase();
-        
-        if (currentSort.value.direction === 'asc') {
+        const fieldA = String(a[currentSort.value.field] || "").toLowerCase();
+        const fieldB = String(b[currentSort.value.field] || "").toLowerCase();
+
+        if (currentSort.value.direction === "asc") {
           return fieldA.localeCompare(fieldB);
         } else {
           return fieldB.localeCompare(fieldA);
         }
       });
-      
+
       return filtered;
     });
 
     const fetchUsers = async () => {
       try {
-        // Set empty users array
-        users.value = [];
-        lastPage.value = 1;
-        
-        /* Temporarily comment out the API call until backend is fixed
-        const response = await axios.get(route('admin.users.list'), {
+        const response = await axios.get(route("admin.users.list"), {
           params: {
             page: currentPage.value,
-            perPage: perPage.value
-          }
+            perPage: perPage.value,
+          },
         });
-        
         users.value = response.data.data;
-        lastPage.value = response.data.last_page || response.data.meta?.last_page || 1;
-        */
+        currentPage.value = response.data.current_page;
+        lastPage.value = response.data.last_page;
+        perPage.value = response.data.per_page;
       } catch (error) {
-        errorMessage.value = 'Failed to load users. Please contact administrator.';
-        console.error('Error fetching users:', error);
+        errorMessage.value =
+          "Failed to load users. Please contact administrator.";
+        console.error("Error fetching users:", error);
         users.value = [];
       }
     };
 
     const sortBy = (field) => {
       if (currentSort.value.field === field) {
-        currentSort.value.direction = currentSort.value.direction === 'asc' ? 'desc' : 'asc';
+        currentSort.value.direction =
+          currentSort.value.direction === "asc" ? "desc" : "asc";
       } else {
         currentSort.value.field = field;
-        currentSort.value.direction = 'asc';
+        currentSort.value.direction = "asc";
       }
     };
 
     const getSortIcon = (field) => {
-      if (currentSort.value.field !== field) return 'fa fa-sort';
-      return currentSort.value.direction === 'asc' ? 'fa fa-sort-up' : 'fa fa-sort-down';
+      if (currentSort.value.field !== field) return "fa fa-sort";
+      return currentSort.value.direction === "asc"
+        ? "fa fa-sort-up"
+        : "fa fa-sort-down";
     };
 
     const formatDate = (dateString) => {
-      if (!dateString) return '';
+      if (!dateString) return "";
       const date = new Date(dateString);
       return date.toLocaleDateString();
     };
@@ -385,11 +389,11 @@ export default {
     const openAddUserModal = () => {
       editingUser.value = null;
       form.value = {
-        name: '',
-        email: '',
-        password: '',
-        role: '',
-        active: true
+        name: "",
+        email: "",
+        password: "",
+        role: "",
+        active: true,
       };
       showUserModal.value = true;
     };
@@ -399,9 +403,9 @@ export default {
       form.value = {
         name: user.name,
         email: user.email,
-        password: '',
+        password: "",
         role: user.role,
-        active: user.status === 'Active'
+        active: user.status === "Active",
       };
       showUserModal.value = true;
     };
@@ -416,8 +420,9 @@ export default {
 
     const saveUser = async () => {
       try {
-        successMessage.value = 'This feature is not available yet. Backend implementation required.';
-        
+        successMessage.value =
+          "This feature is not available yet. Backend implementation required.";
+
         /* API calls disabled until backend is implemented
         let response;
         
@@ -436,11 +441,13 @@ export default {
           fetchUsers();
         }
         */
-        
+
         showUserModal.value = false;
       } catch (error) {
-        errorMessage.value = error.response?.data?.message || 'An error occurred. Please try again.';
-        console.error('Error saving user:', error);
+        errorMessage.value =
+          error.response?.data?.message ||
+          "An error occurred. Please try again.";
+        console.error("Error saving user:", error);
       }
     };
 
@@ -459,15 +466,15 @@ export default {
     const showSuccess = (message) => {
       successMessage.value = message;
       setTimeout(() => {
-        successMessage.value = '';
+        successMessage.value = "";
       }, 3000);
     };
-    
+
     // Function to show error message with auto-clear
     const showError = (message) => {
       errorMessage.value = message;
       setTimeout(() => {
-        errorMessage.value = '';
+        errorMessage.value = "";
       }, 3000);
     };
 
@@ -500,9 +507,9 @@ export default {
       handlePageChange,
       handlePerPageChange,
       showSuccess,
-      showError
+      showError,
     };
-  }
+  },
 };
 </script>
 
@@ -784,7 +791,7 @@ export default {
 }
 
 .toggle-label::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 0.125rem;
   left: 0.125rem;
@@ -847,7 +854,7 @@ export default {
     gap: 1rem;
     align-items: stretch;
   }
-  
+
   .search-container {
     width: 100%;
   }

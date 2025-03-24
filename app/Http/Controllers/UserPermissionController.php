@@ -77,7 +77,7 @@ class UserPermissionController extends BaseController
                 ->with('error', 'Failed to create user and permissions: ' . $e->getMessage());
         }
     }
-    
+
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
@@ -124,7 +124,6 @@ class UserPermissionController extends BaseController
                 'message' => 'User updated successfully',
                 'user' => $user->load('userPermissions')
             ]);
-
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
@@ -155,6 +154,28 @@ class UserPermissionController extends BaseController
             })
             ->select('id', 'name', 'email', 'company_id', 'warehouse_id', 'status')
             ->paginate($request->perPage ?? 10);
+
+        return response()->json($users);
+    }
+
+    public function getAdminUsers(Request $request)
+    {
+        $perPage = $request->input('perPage', 10);
+
+        $users = User::with([
+            'company' => function ($q) {
+                $q->select('id', 'company_name', 'uuid');
+            },
+            'warehouse' => function ($q) {
+                $q->select('id', 'name', 'uuid');
+            },
+            'userPermissions' => function ($q) {
+                $q->select('id', 'permissions', 'entity_type');
+            }
+        ])
+            ->select('id', 'name', 'email', 'status', 'user_type','created_at', 'company_id', 'warehouse_id')
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage);
 
         return response()->json($users);
     }
