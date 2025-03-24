@@ -5,8 +5,8 @@ import Modal from "@/Components/Modal.vue";
 import { ref, onMounted } from "vue";
 import { useForm, usePage } from "@inertiajs/vue3";
 import CustomPagination from "@/Components/CustomPagination.vue";
-import SuccessMessage from '@/Components/SuccessMessage.vue';
-import ErrorMessage from '@/Components/ErrorMessage.vue';
+import SuccessMessage from "@/Components/SuccessMessage.vue";
+import ErrorMessage from "@/Components/ErrorMessage.vue";
 
 const showProductModal = ref(false);
 const editingProduct = ref(false);
@@ -19,9 +19,9 @@ const user = page.props.auth.user;
 const supplier_uuid = page.props.auth.user.company.uuid;
 const products = ref([]);
 const showingModal = ref(false);
-const successMessage = ref('');
-const errorMessage = ref('');
-const searchQuery = ref('');
+const successMessage = ref("");
+const errorMessage = ref("");
+const searchQuery = ref("");
 
 const currentPage = ref(1);
 const perPage = ref(10);
@@ -76,17 +76,17 @@ const submit = () => {
       closeModal();
       form.reset();
       fetchSupplierProducts();
-      successMessage.value = 'Product added successfully';
+      successMessage.value = "Product added successfully";
       setTimeout(() => {
-        successMessage.value = '';
+        successMessage.value = "";
       }, 3000);
     },
     onError: () => {
-      errorMessage.value = 'Error adding product';
+      errorMessage.value = "Error adding product";
       setTimeout(() => {
-        errorMessage.value = '';
+        errorMessage.value = "";
       }, 3000);
-    }
+    },
   });
 };
 
@@ -182,28 +182,33 @@ const editProduct = (product) => {
   form.description = product.description;
   form.manufucturer = product.manufucturer;
   form.status = product.status;
-  
+
   // Handle images
   if (product.images) {
-    const images = typeof product.images === 'string' ? JSON.parse(product.images) : product.images;
+    const images =
+      typeof product.images === "string"
+        ? JSON.parse(product.images)
+        : product.images;
     images.forEach(async (image) => {
       const response = await fetch(`/storage/${image.path}`);
       const blob = await response.blob();
-      const file = new File([blob], image.path.split('/').pop(), { type: blob.type });
-      
+      const file = new File([blob], image.path.split("/").pop(), {
+        type: blob.type,
+      });
+
       productImages.value.push({
         id: Date.now(),
         url: URL.createObjectURL(blob),
         file: file,
-        isPrimary: image.type === 'primary'
+        isPrimary: image.type === "primary",
       });
-      
-      if (image.type === 'primary') {
+
+      if (image.type === "primary") {
         imagePreview.value = URL.createObjectURL(blob);
       }
     });
   }
-  
+
   showProductModal.value = true;
 };
 
@@ -247,7 +252,7 @@ const saveProduct = () => {
         closeProductModal();
         fetchSupplierProducts();
       });
-  }else {
+  } else {
     axios
       .post(route("products.store"), formData, {
         headers: {
@@ -259,6 +264,33 @@ const saveProduct = () => {
         fetchSupplierProducts();
       });
   }
+};
+
+const getPrimaryImagePreviewPath = (product) => {
+  if (!product.images) return "https://via.placeholder.com/50";
+
+  try {
+    let images;
+    const parsedImages =
+      typeof product.images === "string"
+        ? JSON.parse(product.images)
+        : product.images;
+
+    // Handle both array and object formats
+    images = Array.isArray(parsedImages)
+      ? parsedImages
+      : Object.values(parsedImages);
+
+    const primaryImage = images.find((img) => img.type === "primary");
+
+    if (primaryImage?.path) {
+      return `/storage/${primaryImage.path}`;
+    }
+  } catch (error) {
+    console.error("Error processing product images:", error);
+  }
+
+  return "https://via.placeholder.com/50";
 };
 
 onMounted(() => {
@@ -273,10 +305,17 @@ onMounted(() => {
     <div class="page-container">
       <div class="content-container">
         <div class="message-container">
-          <SuccessMessage v-if="successMessage" @close="successMessage = ''" v-slot>{{ successMessage }}</SuccessMessage>
-          <ErrorMessage v-if="errorMessage" @close="errorMessage = ''" v-slot>{{ errorMessage }}</ErrorMessage>
+          <SuccessMessage
+            v-if="successMessage"
+            @close="successMessage = ''"
+            v-slot
+            >{{ successMessage }}</SuccessMessage
+          >
+          <ErrorMessage v-if="errorMessage" @close="errorMessage = ''" v-slot>{{
+            errorMessage
+          }}</ErrorMessage>
         </div>
-        
+
         <div class="header-container">
           <h1 class="page-title">Products</h1>
         </div>
@@ -326,6 +365,7 @@ onMounted(() => {
             <table class="data-table">
               <thead class="bg-gray-50">
                 <tr>
+                  <th class="table-header table-header-sortable">Product</th>
                   <th class="table-header table-header-sortable">Name</th>
                   <th class="table-header table-header-sortable">SKU</th>
 
@@ -345,6 +385,18 @@ onMounted(() => {
               </thead>
               <tbody class="bg-white divide-y divide-gray-200">
                 <tr v-for="product in products" :key="product.id">
+                  <td class="table-cell">
+                    <div class="product-image-container">
+                      <img
+                        :src="getPrimaryImagePreviewPath(product)"
+                        class="product-thumbnail"
+                        @error="
+                          $event.target.src = 'https://via.placeholder.com/50'
+                        "
+                      />
+                    </div>
+                  </td>
+
                   <td class="table-cell">
                     {{ product.name }}
                   </td>
@@ -375,12 +427,13 @@ onMounted(() => {
                     </span>
                   </td>
                   <td class="table-cell">
-                    <button @click="editProduct(product)" class="action-btn edit-btn">
+                    <button
+                      @click="editProduct(product)"
+                      class="action-btn edit-btn"
+                    >
                       Edit
                     </button>
-                    <button class="action-btn delete-btn">
-                      Delete
-                    </button>
+                    <button class="action-btn delete-btn">Delete</button>
                   </td>
                 </tr>
               </tbody>
@@ -663,5 +716,22 @@ onMounted(() => {
 </template>
 
 <style scoped>
-@import '../Supplier/SupplierComponents/SupplierSharedStyles.css';
+@import "../Supplier/SupplierComponents/SupplierSharedStyles.css";
+
+.product-image-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.product-thumbnail {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.product-name {
+  font-weight: 500;
+}
 </style>
