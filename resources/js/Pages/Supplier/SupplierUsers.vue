@@ -41,6 +41,7 @@
               class="search-input"
               placeholder="Search users..."
               v-model="searchQuery"
+              @keypress.enter="fetchSupplierUsers"
             />
           </div>
           <button @click="openAddUserModal" class="add-btn">

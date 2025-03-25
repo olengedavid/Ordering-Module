@@ -135,7 +135,8 @@ class UserPermissionController extends BaseController
     public function getSupplierUsers(Request $request)
     {
         $company = Company::where('uuid', $request->uuid)->firstOrFail();
-
+        $search = $request->input('search');
+        
         $users = User::where('company_id', $company->id)
             ->with([
                 'warehouse' => function ($q) {
