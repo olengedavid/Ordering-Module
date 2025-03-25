@@ -1,9 +1,10 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
-use Illuminate\Foundation\Application;
-use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Foundation\Application;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\StaticDataController;
 use App\Http\Controllers\UserPermissionController;
 
 Route::get('/', function () {
@@ -31,6 +32,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/admin/users', [UserPermissionController::class, 'storeAdminUser'])->name('admin.users.store');
     Route::put('/admin/users/{id}', [UserPermissionController::class, 'updateAdminUser'])->name('admin.users.update');
     Route::get('/admin/users/list', [UserPermissionController::class, 'getAdminUsers'])->name('admin.users.list');
+
+    // Static Data Routes
+    Route::get('static/units', [StaticDataController::class, 'getUnits'])->name('static.units');
 });
 
 require __DIR__ . '/auth.php';

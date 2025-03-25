@@ -27,13 +27,14 @@ const currentPage = ref(1);
 const perPage = ref(10);
 const lastPage = ref(1);
 
+const units = ref([]);
 
 const form = useForm({
   name: "",
   description: "",
   sku_number: "",
   category: "",
-  unit_of_measure: "",
+  unit_of_measure: "NO",
   manufucturer: "",
   company_id: user.company_id,
   primary_image: null,
@@ -289,8 +290,18 @@ const deleteProduct = async (productUuid) => {
   }
 };
 
+const fetchUnits = async () => {
+  try {
+    const response = await axios.get(route("static.units"));
+    units.value = response.data;
+  } catch (error) {
+    console.error("Error fetching units:", error);
+  }
+};
+
 onMounted(() => {
   fetchSupplierProducts();
+  fetchUnits();
 });
 </script>
 
@@ -307,9 +318,12 @@ onMounted(() => {
             v-slot="{}"
             >{{ successMessage }}</SuccessMessage
           >
-          <ErrorMessage v-if="errorMessage" @close="errorMessage = ''" v-slot="{}">{{
-            errorMessage
-          }}</ErrorMessage>
+          <ErrorMessage
+            v-if="errorMessage"
+            @close="errorMessage = ''"
+            v-slot="{}"
+            >{{ errorMessage }}</ErrorMessage
+          >
         </div>
 
         <div class="header-container">
@@ -645,16 +659,25 @@ onMounted(() => {
                 </div>
 
                 <div class="form-group">
-                  <label for="unitOfMeasure"
+                  <label for="unit"
                     >Unit of Measure <span class="required">*</span></label
                   >
-                  <input
-                    type="text"
-                    id="unitOfMeasure"
+                  <select
+                    id="unit"
                     v-model="form.unit_of_measure"
+                    class="form-select"
                     required
-                    placeholder="Enter unit of measure (e.g. kg, liter)"
-                  />
+                  >
+                    <option value="">Select unit</option>
+                    <option
+                      v-for="unit in units"
+                      :key="unit.value"
+                      :value="unit.value"
+                    >
+                      {{ unit.label }}
+                    </option>
+                  </select>
+                  <InputError :message="form.errors.unit" />
                 </div>
 
                 <div class="form-group">
