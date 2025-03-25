@@ -306,37 +306,32 @@
 
               <!-- Country Dropdown -->
               <div class="form-group">
-                <label for="country"
-                  >Country <span class="required">*</span></label
-                >
+                <label for="country">Country <span class="required">*</span></label>
                 <div class="custom-select-container country-select-container">
-                  <div
-                    class="custom-select-trigger country-select-trigger"
+                  <div 
+                    class="custom-select-trigger country-select-trigger" 
                     @click="toggleCountryDropdown"
                     :class="{ active: isCountryDropdownOpen }"
                   >
-                    <span>{{ form.country || "Select a country" }}</span>
-                    <svg
-                      class="dropdown-arrow"
+                    <span>{{ form.country || "Select country" }}</span>
+                    <svg 
+                      class="dropdown-arrow" 
                       :class="{ open: isCountryDropdownOpen }"
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
+                      xmlns="http://www.w3.org/2000/svg" 
+                      width="16" 
+                      height="16" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      stroke-width="2" 
+                      stroke-linecap="round" 
                       stroke-linejoin="round"
                     >
                       <polyline points="6 9 12 15 18 9"></polyline>
                     </svg>
                   </div>
-
-                  <div
-                    class="custom-select-dropdown country-select-dropdown"
-                    v-show="isCountryDropdownOpen"
-                  >
+                  
+                  <div class="custom-select-dropdown country-select-dropdown" v-show="isCountryDropdownOpen">
                     <div class="search-box">
                       <input
                         type="text"
@@ -345,9 +340,9 @@
                         placeholder="Search country..."
                         class="dropdown-search"
                         @click.stop
-                      />
+                      >
                     </div>
-
+                    
                     <div class="dropdown-options">
                       <div
                         v-for="country in filteredCountries"
@@ -357,10 +352,7 @@
                       >
                         {{ country }}
                       </div>
-                      <div
-                        v-if="filteredCountries.length === 0"
-                        class="no-results"
-                      >
+                      <div v-if="filteredCountries.length === 0" class="no-results">
                         No countries match your search
                       </div>
                     </div>
@@ -370,37 +362,32 @@
 
               <!-- Region Dropdown -->
               <div class="form-group">
-                <label for="region"
-                  >Region <span class="required">*</span></label
-                >
+                <label for="region">Region <span class="required">*</span></label>
                 <div class="custom-select-container region-select-container">
-                  <div
-                    class="custom-select-trigger region-select-trigger"
+                  <div 
+                    class="custom-select-trigger region-select-trigger" 
                     @click="toggleRegionDropdown"
                     :class="{ active: isRegionDropdownOpen }"
                   >
-                    <span>{{ form.region || "Select a region" }}</span>
-                    <svg
-                      class="dropdown-arrow"
+                    <span>{{ form.region || "Select region" }}</span>
+                    <svg 
+                      class="dropdown-arrow" 
                       :class="{ open: isRegionDropdownOpen }"
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
+                      xmlns="http://www.w3.org/2000/svg" 
+                      width="16" 
+                      height="16" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      stroke-width="2" 
+                      stroke-linecap="round" 
                       stroke-linejoin="round"
                     >
                       <polyline points="6 9 12 15 18 9"></polyline>
                     </svg>
                   </div>
-
-                  <div
-                    class="custom-select-dropdown region-select-dropdown"
-                    v-show="isRegionDropdownOpen"
-                  >
+                  
+                  <div class="custom-select-dropdown region-select-dropdown" v-show="isRegionDropdownOpen">
                     <div class="search-box">
                       <input
                         type="text"
@@ -409,9 +396,9 @@
                         placeholder="Search region..."
                         class="dropdown-search"
                         @click.stop
-                      />
+                      >
                     </div>
-
+                    
                     <div class="dropdown-options">
                       <div v-if="loadingRegions" class="loading-state">
                         Loading regions...
@@ -425,10 +412,7 @@
                         >
                           {{ region }}
                         </div>
-                        <div
-                          v-if="filteredRegions.length === 0"
-                          class="no-results"
-                        >
+                        <div v-if="filteredRegions.length === 0" class="no-results">
                           No regions match your search
                         </div>
                       </template>
@@ -1518,12 +1502,12 @@ onBeforeUnmount(() => {
   background-color: #0a4f83;
 }
 
-/* Custom dropdown styles */
+/* Updated dropdown styles */
 .custom-select-container {
   position: relative;
   width: 100%;
   box-sizing: border-box;
-  z-index: 5;
+  /* z-index: 5; */
 }
 
 .custom-select-trigger {
