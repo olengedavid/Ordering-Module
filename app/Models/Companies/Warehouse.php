@@ -23,10 +23,17 @@ class Warehouse extends Model
         'email',
         'uuid',
         'created_by',
+        'country',
+        'region',
+        'gps_location',
         'krapin',
         'contact_person',
         'status',
         'company_id'
+    ];
+
+    protected $casts = [
+        'gps_location' => 'json'
     ];
 
     protected static function boot()

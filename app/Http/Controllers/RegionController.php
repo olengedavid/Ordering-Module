@@ -19,8 +19,8 @@ class RegionController extends Controller
         $perPage = $request->input('per_page', 10);
 
         $regions = Region::with(['creator'])
-        ->orderBy('created_at', 'desc')
-        ->paginate($perPage);
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage);
 
         return response()->json($regions);
     }
@@ -60,5 +60,25 @@ class RegionController extends Controller
         $region->delete();
 
         return redirect()->back()->with('success', 'Region Deleted successfully');
+    }
+
+    public function searchRegions(Request $request)
+    {
+        $perPage = $request->input('per_page', 10);
+        $query = Region::query();
+
+        if ($request->has('country')) {
+            $query->where('country', 'like', '%' . $request->country . '%');
+        }
+
+        if ($request->has('region')) {
+            $query->where('region', 'like', '%' . $request->region . '%');
+        }
+
+        $regions = $query->with(['creator'])
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage);
+
+        return response()->json($regions);
     }
 }

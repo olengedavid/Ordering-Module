@@ -48,7 +48,9 @@ Route::middleware('auth')->group(function () {
     #Region Routes
     Route::get('admin/regions', [RegionController::class, 'index'])->name('admin.regions.index');
     Route::get('admin/regions/list', [RegionController::class, 'getRegions'])->name('admin.regions.list');
+    Route::get('admin/regions/search', [RegionController::class, 'searchRegions']) ->name('admin.regions.search');
     Route::post('admin/regions', [RegionController::class, 'store'])->name('admin.regions.store');
     Route::put('admin/regions/{uuid}', [RegionController::class, 'update'])->name('admin.regions.update');
     Route::delete('admin/regions/{uuid}', [RegionController::class, 'destroy'])->name('admin.regions.delete');
+    
 });

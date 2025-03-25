@@ -147,10 +147,8 @@
               </tbody>
             </table>
             <tr v-if="filteredWarehouses.length === 0">
-                  <td colspan="11" class="empty-state">
-                    No warehouses found
-                  </td>
-                </tr>
+              <td colspan="11" class="empty-state">No warehouses found</td>
+            </tr>
           </div>
         </div>
 
@@ -415,20 +413,25 @@
                     </div>
 
                     <div class="dropdown-options">
-                      <div
-                        v-for="region in filteredRegions"
-                        :key="region"
-                        class="dropdown-option"
-                        @click="selectRegion(region)"
-                      >
-                        {{ region }}
+                      <div v-if="loadingRegions" class="loading-state">
+                        Loading regions...
                       </div>
-                      <div
-                        v-if="filteredRegions.length === 0"
-                        class="no-results"
-                      >
-                        No regions match your search
-                      </div>
+                      <template v-else>
+                        <div
+                          v-for="region in filteredRegions"
+                          :key="region"
+                          class="dropdown-option"
+                          @click="selectRegion(region)"
+                        >
+                          {{ region }}
+                        </div>
+                        <div
+                          v-if="filteredRegions.length === 0"
+                          class="no-results"
+                        >
+                          No regions match your search
+                        </div>
+                      </template>
                     </div>
                   </div>
                 </div>
@@ -530,55 +533,8 @@ const filteredCountries = ref([...countries.value]);
 
 const isRegionDropdownOpen = ref(false);
 const regionSearch = ref("");
-const regions = ref([
-  "Baringo",
-  "Bomet",
-  "Bungoma",
-  "Busia",
-  "Elgeyo Marakwet",
-  "Embu",
-  "Garissa",
-  "Homa Bay",
-  "Isiolo",
-  "Kajiado",
-  "Kakamega",
-  "Kericho",
-  "Kiambu",
-  "Kilifi",
-  "Kirinyaga",
-  "Kisii",
-  "Kisumu",
-  "Kitui",
-  "Kwale",
-  "Laikipia",
-  "Lamu",
-  "Machakos",
-  "Makueni",
-  "Mandera",
-  "Marsabit",
-  "Meru",
-  "Migori",
-  "Mombasa",
-  "Murang'a",
-  "Nairobi",
-  "Nakuru",
-  "Nandi",
-  "Narok",
-  "Nyamira",
-  "Nyandarua",
-  "Nyeri",
-  "Samburu",
-  "Siaya",
-  "Taita Taveta",
-  "Tana River",
-  "Tharaka Nithi",
-  "Trans Nzoia",
-  "Turkana",
-  "Uasin Gishu",
-  "Vihiga",
-  "Wajir",
-  "West Pokot",
-]);
+const regions = ref([]);
+const loadingRegions = ref(false);
 const filteredRegions = ref([...regions.value]);
 const supplier_uuid = page.props.auth.user.company.uuid;
 // Form for warehouse
@@ -851,6 +807,9 @@ const filterCountries = () => {
 const selectCountry = (country) => {
   form.country = country;
   isCountryDropdownOpen.value = false;
+  // Reset and fetch new regions when country changes
+  form.region = "";
+  searchRegions(country);
 };
 
 const toggleRegionDropdown = () => {
@@ -923,9 +882,32 @@ const handlePerPageChange = (newPerPage) => {
   fetchSupplierWarehouses();
 };
 
+const searchRegions = async (country) => {
+  if (!country) return;
+
+  loadingRegions.value = true;
+  try {
+    const response = await axios.get(route("admin.regions.search"), {
+      params: {
+        country: country,
+        per_page: 10,
+      },
+    });
+    regions.value = response.data.data.map((region) => region.region);
+    filteredRegions.value = [...regions.value];
+  } catch (error) {
+    console.error("Error fetching regions:", error);
+    regions.value = [];
+    filteredRegions.value = [];
+  } finally {
+    loadingRegions.value = false;
+  }
+};
+
 // Lifecycle hooks
 onMounted(() => {
   // Initialize filtered countries and regions
+  searchRegions("Kenya");
   fetchSupplierWarehouses();
   filteredCountries.value = [...countries.value];
   filteredRegions.value = [...regions.value];
@@ -1075,6 +1057,12 @@ onBeforeUnmount(() => {
   font-weight: bold;
 }
 
+.loading-state {
+  padding: 12px 16px;
+  color: #64748b;
+  font-size: 0.9rem;
+  text-align: center;
+}
 /* Table styles with horizontal scroll */
 .table-container {
   position: relative;
@@ -1692,8 +1680,6 @@ onBeforeUnmount(() => {
 .dropdown-options::-webkit-scrollbar-thumb:hover {
   background-color: #94a3b8;
 }
-
-
 
 /* Responsive styles */
 @media (max-width: 768px) {

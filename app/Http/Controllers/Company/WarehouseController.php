@@ -13,15 +13,6 @@ use Inertia\Response;
 class WarehouseController extends Controller
 {
 
-    // public function index() : Response
-    //  {
-    //     $warehouses = Warehouse::latest()->get();
-
-    //     return Inertia::render('Supplier/SupplierWarehouses', [
-    //         'warehouses' => $warehouses
-    //     ]);
-    //  }
-
     public function index()
     {
         return Inertia::render('Supplier/SupplierWarehouses');
@@ -32,14 +23,26 @@ class WarehouseController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            //  'location' => 'required|string|max:255',
             'contact_person' => 'required|string|max:255',
             'phone_number' => 'required|string|max:20',
             'address' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:warehouses',
             'krapin' => 'required|string|max:10|unique:warehouses',
             'company_id' => 'required|integer|exists:companies,id',
-            'created_by' => 'required|integer|exists:users,id'
+            'created_by' => 'required|integer|exists:users,id',
+            'region' => 'required|string|max:255',
+            'country' => 'required|string|max:255',
+            'gps_location' => [
+                'nullable',
+                function ($attribute, $value, $fail) {
+                    if ($value) {
+                        $gps = json_decode($value, true);
+                        if (!isset($gps['latitude']) || !isset($gps['longitude'])) {
+                            $fail('GPS location must contain both latitude and longitude.');
+                        }
+                    }
+                }
+            ],
         ]);
 
         Warehouse::create($validated + ['status' => 'active']);
@@ -74,28 +77,33 @@ class WarehouseController extends Controller
     {
         try {
             $warehouse = Warehouse::where('uuid', $request->uuid)->firstOrFail();
-            // Check if user has permission to update this warehouse
-            // if ($warehouse->company_id !== auth()->user()->company_id) {
-            //     return response()->json([
-            //         'message' => 'Unauthorized action.'
-            //     ], 403);
-            // }
 
-            $warehouse->update([
-                'name' => $request->name,
-                'contact_person' => $request->contact_person,
-                'email' => $request->email,
-                'phone_number' => $request->phone_number,
-                'address' => $request->address,
-                'krapin' => $request->krapin,
-                'country' => $request->country,
-                'region' => $request->region,
-                'gps' => $request->gps,
-                'status' => $request->status,
-                // 'updated_by' => auth()->id()
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'contact_person' => 'required|string|max:255',
+                'phone_number' => 'required|string|max:20',
+                'address' => 'required|string|max:255',
+                'email' => 'required|string|email|max:255|unique:warehouses,email,' . $warehouse->id,
+                'krapin' => 'required|string|max:10|unique:warehouses,krapin,' . $warehouse->id,
+                'region' => 'required|string|max:255',
+                'country' => 'required|string|max:255',
+                'status' => 'required|in:active,inactive',
+                'gps_location' => [
+                    'nullable',
+                    function ($attribute, $value, $fail) {
+                        if ($value) {
+                            $gps = json_decode($value, true);
+                            if (!isset($gps['latitude']) || !isset($gps['longitude'])) {
+                                $fail('GPS location must contain both latitude and longitude.');
+                            }
+                        }
+                    }
+                ],
             ]);
 
-            return redirect()->back();
+            $warehouse->update($validated);
+
+            return redirect()->back()->with('success', 'Warehouse updated successfully');
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error updating warehouse',
@@ -103,7 +111,7 @@ class WarehouseController extends Controller
             ], 500);
         }
     }
-
+    
     public function destroy($uuid)
     {
         $warehouse = Warehouse::where('uuid', $uuid)->firstOrFail();
