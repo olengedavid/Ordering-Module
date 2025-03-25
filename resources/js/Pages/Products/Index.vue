@@ -236,10 +236,6 @@ const saveProduct = () => {
       formData.append("secondary_images[]", image.file);
     }
   });
-  // Log the FormData contents
-  for (let pair of formData.entries()) {
-    console.log(pair[0], pair[1]);
-  }
 
   if (editingProduct.value) {
     axios
@@ -251,6 +247,12 @@ const saveProduct = () => {
       .then(() => {
         closeProductModal();
         fetchSupplierProducts();
+
+        // Flash
+        successMessage.value = "Product updated successfully";
+        setTimeout(() => {
+          successMessage.value = "";
+        }, 3000);
       });
   } else {
     axios
@@ -262,6 +264,12 @@ const saveProduct = () => {
       .then(() => {
         closeProductModal();
         fetchSupplierProducts();
+
+        // Flash
+        successMessage.value = "Product created successfully";
+        setTimeout(() => {
+          successMessage.value = "";
+        }, 3000);
       });
   }
 };
@@ -297,9 +305,7 @@ const deleteProduct = async (productUuid) => {
   if (!confirm("Are you sure you want to delete this product?")) return;
 
   try {
-    await axios.delete(
-      route("products.destroy", productUuid)
-    );
+    await axios.delete(route("products.destroy", productUuid));
 
     successMessage.value = "Product deleted successfully";
     setTimeout(() => {
