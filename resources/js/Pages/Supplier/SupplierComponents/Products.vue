@@ -259,68 +259,66 @@
               </div>
             </div>
 
-            <div class="form-row">
-              <div class="form-group half-width">
-                <label for="productName"
-                  >Product Name <span class="required">*</span></label
-                >
-                <input
-                  type="text"
-                  id="productName"
-                  v-model="newProduct.productName"
-                  required
-                  placeholder="Enter product name"
-                />
-              </div>
-              <div class="form-group half-width">
-                <label for="skuNumber"
-                  >SKU Number <span class="required">*</span></label
-                >
-                <input
-                  type="text"
-                  id="skuNumber"
-                  v-model="newProduct.skuNumber"
-                  required
-                  placeholder="Enter SKU number"
-                />
-              </div>
+            <div class="form-group">
+              <label for="productName"
+                >Product Name <span class="required">*</span></label
+              >
+              <input
+                type="text"
+                id="productName"
+                v-model="newProduct.productName"
+                required
+                placeholder="Enter product name"
+              />
             </div>
 
-            <div class="form-row">
-              <div class="form-group half-width">
-                <label for="category"
-                  >Category <span class="required">*</span></label
+            <div class="form-group">
+              <label for="skuNumber"
+                >SKU Number <span class="required">*</span></label
+              >
+              <input
+                type="text"
+                id="skuNumber"
+                v-model="newProduct.skuNumber"
+                required
+                placeholder="Enter SKU number"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="category"
+                >Category <span class="required">*</span></label
+              >
+              <select id="category" v-model="newProduct.category" required>
+                <option value="" disabled selected>Select category</option>
+                <option
+                  v-for="category in productCategories"
+                  :key="category"
+                  :value="category"
                 >
-                <select id="category" v-model="newProduct.category" required>
-                  <option value="" disabled selected>Select category</option>
-                  <option
-                    v-for="category in productCategories"
-                    :key="category"
-                    :value="category"
-                  >
-                    {{ category }}
-                  </option>
-                </select>
-              </div>
-              <div class="form-group half-width">
-                <label for="unitOfMeasure"
-                  >Unit of Measure <span class="required">*</span></label
+                  {{ category }}
+                </option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="unitOfMeasure"
+                >Unit of Measure <span class="required">*</span></label
+              >
+              <select
+                id="unitOfMeasure"
+                v-model="newProduct.unitOfMeasure"
+                required
+              >
+                <option value="" disabled selected>Select unit</option>
+                <option
+                  v-for="unit in unitsOfMeasure"
+                  :key="unit"
+                  :value="unit"
                 >
-                <select
-                  id="unitOfMeasure"
-                  v-model="newProduct.unitOfMeasure"
-                  required
-                >
-                  <option value="" disabled selected>Select unit</option>
-                  <option
-                    v-for="unit in unitsOfMeasure"
-                    :key="unit"
-                    :value="unit"
-                  >
-                    {{ unit }}
-                  </option>
-                </select>
-              </div>
+                  {{ unit }}
+                </option>
+              </select>
             </div>
 
             <div class="form-group">
