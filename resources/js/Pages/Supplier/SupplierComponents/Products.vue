@@ -188,46 +188,13 @@
                     :key="image.id"
                     class="thumbnail-container"
                     :class="{ 'primary-thumbnail': image.isPrimary }"
+                    @click="setPrimaryImage(image.id)"
                   >
                     <img
                       :src="image.url"
                       alt="Product image"
                       class="thumbnail-img"
                     />
-                    <div class="thumbnail-actions">
-                      <button
-                        type="button"
-                        class="set-primary-btn"
-                        @click="setPrimaryImage(image.id)"
-                        :disabled="image.isPrimary"
-                        :title="
-                          image.isPrimary ? 'Primary Image' : 'Set as Primary'
-                        "
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        >
-                          <path
-                            d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-                          />
-                        </svg>
-                      </button>
-                      <button
-                        type="button"
-                        class="remove-thumbnail-btn"
-                        @click="removeImage(image.id)"
-                      >
-                        &times;
-                      </button>
-                    </div>
                   </div>
                   <div class="add-more-container">
                     <label for="additionalImages" class="add-more-btn">
@@ -956,20 +923,27 @@ export default {
     };
 
     const setPrimaryImage = (imageId) => {
-      // Reset all images to non-primary
-      productImages.value.forEach((img) => {
-        img.isPrimary = img.id === imageId;
-      });
-
-      // Update the preview with the new primary image
-      const primaryImage = productImages.value.find(
+      const selectedImageIndex = productImages.value.findIndex(
         (img) => img.id === imageId
       );
-      if (primaryImage) {
-        imagePreview.value = primaryImage.url;
-        selectedImageIndex.value = productImages.value.findIndex(
-          (img) => img.id === imageId
-        );
+      
+      if (selectedImageIndex !== -1) {
+        // Get the selected image
+        const selectedImage = productImages.value[selectedImageIndex];
+        
+        // Remove it from its current position
+        productImages.value.splice(selectedImageIndex, 1);
+        
+        // Add it to the front of the array
+        productImages.value.unshift(selectedImage);
+        
+        // Update primary status for all images
+        productImages.value.forEach((img, index) => {
+          img.isPrimary = index === 0;
+        });
+
+        // Update the preview with the new primary image
+        imagePreview.value = selectedImage.url;
       }
     };
 
@@ -1169,5 +1143,134 @@ export default {
 
 .product-name {
   font-weight: 500;
+}
+
+.image-upload-container {
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  margin-bottom: 15px;
+  transition: all 0.3s ease;
+  position: relative;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+}
+
+.upload-placeholder svg {
+  margin-bottom: 10px;
+}
+
+.upload-placeholder p {
+  margin: 0;
+}
+
+.add-more-container {
+  width: 70px;
+  height: 70px;
+  border: 2px dashed #cbd5e1;
+  border-radius: 6px;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.add-more-btn {
+  width: 24px;
+  height: 24px;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.add-more-btn svg {
+  width: 100%;
+  height: 100%;
+}
+
+.file-input {
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  cursor: pointer;
+}
+
+.thumbnail-container {
+  position: relative;
+  width: 70px;
+  height: 70px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 2px solid #e5e7eb;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.thumbnail-container:hover {
+  border-color: #0E64A5;
+  transform: scale(1.05);
+}
+
+.primary-thumbnail {
+  border-color: #0E64A5;
+  transform: scale(1.05);
+}
+
+.thumbnail-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.add-more-container {
+  width: 70px;
+  height: 70px;
+  border: 2px dashed #cbd5e1;
+  border-radius: 6px;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.add-more-btn {
+  width: 24px;
+  height: 24px;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.add-more-btn svg {
+  width: 100%;
+  height: 100%;
+}
+
+.file-input {
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  cursor: pointer;
 }
 </style> 
