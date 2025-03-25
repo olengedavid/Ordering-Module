@@ -84,11 +84,57 @@
           <form @submit.prevent="saveBankAccount">
             <div class="form-group">
               <label for="bankName">Bank Name <span class="required">*</span></label>
-              <SearchableDropdown
-                v-model="newBankAccount.bankName"
-                :items="banks"
-                placeholder="Select a bank"
-              />
+              <div class="custom-select-container">
+                <div 
+                  class="custom-select-trigger" 
+                  @click="toggleBankDropdown"
+                  :class="{ 'active': isBankDropdownOpen }"
+                >
+                  <span :data-has-value="!!newBankAccount.bankName">{{ newBankAccount.bankName || 'Select bank' }}</span>
+                  <svg 
+                    class="dropdown-arrow" 
+                    :class="{ 'open': isBankDropdownOpen }"
+                    xmlns="http://www.w3.org/2000/svg" 
+                    width="16" 
+                    height="16" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    stroke-width="2" 
+                    stroke-linecap="round" 
+                    stroke-linejoin="round"
+                  >
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </div>
+                
+                <div class="custom-select-dropdown" v-show="isBankDropdownOpen">
+                  <div class="search-box">
+                    <input
+                      type="text"
+                      v-model="bankSearch"
+                      @input="filterBanks"
+                      placeholder="Search bank..."
+                      class="dropdown-search"
+                      @click.stop
+                    >
+                  </div>
+                  
+                  <div class="dropdown-options">
+                    <div
+                      v-for="bank in filteredBanks"
+                      :key="bank"
+                      class="dropdown-option"
+                      @click="selectBank(bank)"
+                    >
+                      {{ bank }}
+                    </div>
+                    <div v-if="filteredBanks.length === 0" class="no-results">
+                      No banks match your search
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
             <div class="form-group">
               <label for="branch">Branch <span class="required">*</span></label>
@@ -117,14 +163,12 @@
 import { router } from '@inertiajs/vue3';
 import SuccessMessage from '@/Components/SuccessMessage.vue';
 import ErrorMessage from '@/Components/ErrorMessage.vue';
-import SearchableDropdown from '@/Components/SearchableDropdown.vue';
 
 export default {
   name: 'BankAccounts',
   components: {
     SuccessMessage,
-    ErrorMessage,
-    SearchableDropdown
+    ErrorMessage
   },
   props: {
     supplier: {
@@ -186,7 +230,10 @@ export default {
         'Stanbic Bank Kenya',
         'Standard Chartered Kenya',
         'Victoria Commercial Bank'
-      ]
+      ],
+      isBankDropdownOpen: false,
+      bankSearch: '',
+      filteredBanks: []
     }
   },
   computed: {
@@ -223,6 +270,14 @@ export default {
   mounted() {
     // Load bank accounts if not provided through props
     this.loadBankAccounts();
+    // Initialize filtered banks
+    this.filteredBanks = [...this.banks];
+    // Add event listener for closing dropdowns when clicking outside
+    document.addEventListener('click', this.closeDropdownsOutside);
+  },
+  beforeUnmount() {
+    // Clean up event listeners when component is destroyed
+    document.removeEventListener('click', this.closeDropdownsOutside);
   },
   methods: {
     getBankAccounts() {
@@ -488,6 +543,30 @@ export default {
           this.errorMessage = '';
         }
       }, 3000);
+    },
+    toggleBankDropdown() {
+      this.isBankDropdownOpen = !this.isBankDropdownOpen;
+    },
+    filterBanks() {
+      this.filteredBanks = this.banks.filter(bank => bank.toLowerCase().includes(this.bankSearch.toLowerCase()));
+    },
+    selectBank(bank) {
+      this.newBankAccount.bankName = bank;
+      this.isBankDropdownOpen = false;
+    },
+    closeDropdownsOutside(event) {
+      const dropdowns = document.querySelectorAll('.custom-select-container');
+      let clickedInside = false;
+      
+      dropdowns.forEach(dropdown => {
+        if (dropdown.contains(event.target)) {
+          clickedInside = true;
+        }
+      });
+
+      if (!clickedInside) {
+        this.isBankDropdownOpen = false;
+      }
     }
   }
 }
