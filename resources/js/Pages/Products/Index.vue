@@ -1,7 +1,6 @@
 <script setup>
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
-import { Head, Link } from "@inertiajs/vue3";
-import Modal from "@/Components/Modal.vue";
+import { Head } from "@inertiajs/vue3";
 import { ref, onMounted } from "vue";
 import { useForm, usePage } from "@inertiajs/vue3";
 import CustomPagination from "@/Components/CustomPagination.vue";
