@@ -18,7 +18,8 @@ class Company extends Model
         'industry',
         'status',
         'contact_person',
-        'created_by'
+        'created_by',
+        'country'
     ];
 
     protected $casts = [

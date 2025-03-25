@@ -1,10 +1,11 @@
 <script setup>
-import { Head, Link, useForm, router } from "@inertiajs/vue3";
+import { Head, Link, useForm, router, usePage } from "@inertiajs/vue3";
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import InputError from '@/Components/InputError.vue';
 import AdminNavbar from '@/Components/AdminNavbar.vue';
 import SuccessMessage from '@/Components/SuccessMessage.vue';
 import ErrorMessage from '@/Components/ErrorMessage.vue';
+
 
 const props = defineProps({
   suppliers: {
@@ -12,6 +13,9 @@ const props = defineProps({
     required: true,
   },
 });
+
+const page = usePage();
+const user = page.props.auth.user;
 
 // Tab system
 const activeTab = ref('active');
@@ -44,6 +48,41 @@ const industries = [
 ];
 const filteredIndustries = ref([...industries]);
 
+const isCountryDropdownOpen = ref(false);
+const countrySearch = ref('');
+const countries = [
+  'Kenya', 'Uganda', 'Tanzania', 'Rwanda', 'Burundi', 'Ethiopia', 
+  'Somalia', 'South Sudan', 'Democratic Republic of the Congo', 
+  'Mozambique', 'Zambia', 'Zimbabwe', 'Malawi', 'Madagascar'
+];
+const filteredCountries = ref([...countries]);
+
+// Add these methods with your other methods
+const toggleCountryDropdown = () => {
+  isCountryDropdownOpen.value = !isCountryDropdownOpen.value;
+  if (isCountryDropdownOpen.value) {
+    countrySearch.value = '';
+    filteredCountries.value = [...countries];
+  }
+};
+
+const filterCountries = () => {
+  if (countrySearch.value.trim() === '') {
+    filteredCountries.value = [...countries];
+  } else {
+    const query = countrySearch.value.toLowerCase();
+    filteredCountries.value = countries.filter(
+      country => country.toLowerCase().includes(query)
+    );
+  }
+};
+
+const selectCountry = (country) => {
+  form.country = country;
+  isCountryDropdownOpen.value = false;
+};
+
+
 // Basic state
 const searchQuery = ref('');
 const currentPage = ref(1);
@@ -63,7 +102,8 @@ const form = useForm({
   contact_person: '',
   industry: '',
   status: 'active',
-  created_by: 1
+  country: '',
+  created_by: user.id
 });
 
 // Add success and error message handling
@@ -79,11 +119,10 @@ const setActiveTab = (tabId) => {
 };
 
 // Industry dropdown functions
-const toggleIndustryDropdown = () => {
+const toggleIndustryDropdown = (event) => {
+  event.stopPropagation(); // Add this line
   isIndustryDropdownOpen.value = !isIndustryDropdownOpen.value;
-  
   if (isIndustryDropdownOpen.value) {
-    // Reset search when opening
     industrySearch.value = '';
     filteredIndustries.value = [...industries];
   }
@@ -93,6 +132,13 @@ const closeIndustryDropdownOutside = (event) => {
   const dropdown = document.querySelector('.custom-select-container');
   if (dropdown && !dropdown.contains(event.target)) {
     isIndustryDropdownOpen.value = false;
+  }
+};
+
+const closeCountryDropdownOutside = (event) => {
+  const dropdown = document.querySelector('.custom-select-container:nth-child(2)');
+  if (dropdown && !dropdown.contains(event.target)) {
+    isCountryDropdownOpen.value = false;
   }
 };
 
@@ -239,10 +285,12 @@ onMounted(() => {
   updateTabCounts();
   filteredIndustries.value = [...industries];
   document.addEventListener('click', closeIndustryDropdownOutside);
+  document.addEventListener('click', closeCountryDropdownOutside); // Add this for country dropdown
 });
 
 onBeforeUnmount(() => {
   document.removeEventListener('click', closeIndustryDropdownOutside);
+  document.removeEventListener('click', closeCountryDropdownOutside); // Add this for country dropdown
 });
 </script>
 
@@ -411,6 +459,62 @@ onBeforeUnmount(() => {
               placeholder="Enter office address"
             >
             <InputError :message="form.errors.office_address" />
+          </div>
+
+          <div class="form-group">
+            <label for="country">Country <span class="required">*</span></label>
+            <div class="custom-select-container">
+              <div 
+                class="custom-select-trigger" 
+                @click="toggleCountryDropdown"
+                :class="{ 'active': isCountryDropdownOpen }"
+              >
+                <span>{{ form.country || 'Select a country' }}</span>
+                <svg 
+                  class="dropdown-arrow" 
+                  :class="{ 'open': isCountryDropdownOpen }"
+                  xmlns="http://www.w3.org/2000/svg" 
+                  width="16" 
+                  height="16" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  stroke-width="2" 
+                  stroke-linecap="round" 
+                  stroke-linejoin="round"
+                >
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </div>
+              
+              <div class="custom-select-dropdown" v-show="isCountryDropdownOpen">
+                <div class="search-box">
+                  <input
+                    type="text"
+                    v-model="countrySearch"
+                    @input="filterCountries"
+                    placeholder="Search country..."
+                    class="dropdown-search"
+                    @click.stop
+                  >
+                </div>
+                
+                <div class="dropdown-options">
+                  <div
+                    v-for="country in filteredCountries"
+                    :key="country"
+                    class="dropdown-option"
+                    @click="selectCountry(country)"
+                  >
+                    {{ country }}
+                  </div>
+                  <div v-if="filteredCountries.length === 0" class="no-results">
+                    No countries match your search
+                  </div>
+                </div>
+              </div>
+            </div>
+            <InputError :message="form.errors.country" />
           </div>
 
           <div class="form-group">

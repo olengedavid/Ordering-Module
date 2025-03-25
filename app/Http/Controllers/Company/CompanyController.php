@@ -68,6 +68,7 @@ class CompanyController extends Controller
             'contact_person' => 'required|string|max:255',
             'industry' => 'required|string|max:255',
             'status' => 'required|string|in:active',
+            'country' =>'required|string|max:255',
         ]);
 
         try {
@@ -146,6 +147,7 @@ class CompanyController extends Controller
             'krapin' => 'required|string|max:10',
             'contact_person' => 'required|string|max:255',
             'industry' => 'required|string|max:255',
+            'country' =>'required|string|max:255',
         ]);
 
         $company = Company::where('uuid', $request->uuid)->firstOrFail();
