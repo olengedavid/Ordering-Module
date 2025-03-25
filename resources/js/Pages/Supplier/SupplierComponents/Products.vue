@@ -599,7 +599,7 @@ export default {
         product.unit_of_measure || product.unitOfMeasure;
       newProduct.description = product.description;
       newProduct.manufacturer = product.manufucturer || product.manufacturer;
-      newProduct.status = product.status;
+      newProduct.status = product.status.charAt(0).toUpperCase() + product.status.slice(1);
 
       // Handle images
       if (product.imageUrl) {
