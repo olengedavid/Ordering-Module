@@ -16,6 +16,10 @@ const currentPage = ref(1);
 const perPage = ref(10);
 const lastPage = ref(1);
 
+// Add sorting state
+const sortKey = ref("name");
+const sortDir = ref("asc");
+
 const showingModal = ref(false);
 const page = usePage();
 const user = page.props.auth.user;
@@ -158,6 +162,8 @@ const fetchInventories = async () => {
         page: currentPage.value,
         per_page: perPage.value,
         search: searchQuery.value,
+        sort_key: sortKey.value,
+        sort_direction: sortDir.value,
       })
     );
     inventories.value = response.data.data;
@@ -175,11 +181,6 @@ const fetchInventories = async () => {
 const handlePageChange = (page) => {
   currentPage.value = page;
   fetchInventories(page);
-};
-
-const handleInputChange = () => {
-  form.clearErrors();
-  formErrors.value = {};
 };
 
 const closeModal = () => {
@@ -307,6 +308,21 @@ const closeDropdownsOutside = (event) => {
   }
 };
 
+// Add sorting methods
+const sortBy = (key) => {
+  if (sortKey.value === key) {
+    sortDir.value = sortDir.value === "asc" ? "desc" : "asc";
+  } else {
+    sortKey.value = key;
+    sortDir.value = "asc";
+  }
+};
+
+const getSortIcon = (key) => {
+  if (sortKey.value !== key) return "sort-icon sort-none";
+  return sortDir.value === "asc" ? "sort-icon sort-asc" : "sort-icon sort-desc";
+};
+
 defineProps({
   //   inventories: {
   //     type: Array
@@ -326,6 +342,56 @@ onUnmounted(() => {
 
 <style scoped>
 @import "../Supplier/SupplierComponents/SupplierSharedStyles.css";
+
+.product-image-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.product-thumbnail {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.product-name {
+  font-weight: 500;
+}
+
+.table-header-sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.sort-icon {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background-repeat: no-repeat;
+  background-position: center;
+  margin-left: 4px;
+  vertical-align: text-bottom;
+}
+
+.sort-none::after {
+  content: "⇵";
+  opacity: 0.3;
+  font-size: 12px;
+}
+
+.sort-asc::after {
+  content: "↑";
+  color: #2563eb;
+  font-size: 12px;
+}
+
+.sort-desc::after {
+  content: "↓";
+  color: #2563eb;
+  font-size: 12px;
+}
 </style> 
 
 <template>
@@ -398,13 +464,13 @@ onUnmounted(() => {
             <table class="data-table">
               <thead class="bg-gray-50">
                 <tr>
-                  <th class="table-header table-header-sortable">Product</th>
-                  <th class="table-header table-header-sortable">Name</th>
-                  <th class="table-header table-header-sortable">Warehouse</th>
-                  <th class="table-header table-header-text">Stock Quantity</th>
-                  <th class="table-header table-header-text">Cost Price</th>
-                  <th class="table-header table-header-text">Selling Price</th>
-                  <th class="table-header table-header-text">Status</th>
+                  <th class="table-header table-header-sortable" @click="sortBy('product')">Product <i :class="getSortIcon('product')"></i></th>
+                  <th class="table-header table-header-sortable" @click="sortBy('name')">Name <i :class="getSortIcon('name')"></i></th>
+                  <th class="table-header table-header-sortable" @click="sortBy('warehouse')">Warehouse <i :class="getSortIcon('warehouse')"></i></th>
+                  <th class="table-header table-header-sortable" @click="sortBy('stock_quantity')">Stock Quantity <i :class="getSortIcon('stock_quantity')"></i></th>
+                  <th class="table-header table-header-sortable" @click="sortBy('cost_price')">Cost Price <i :class="getSortIcon('cost_price')"></i></th>
+                  <th class="table-header table-header-sortable" @click="sortBy('selling_price')">Selling Price <i :class="getSortIcon('selling_price')"></i></th>
+                  <th class="table-header table-header-sortable" @click="sortBy('status')">Status <i :class="getSortIcon('status')"></i></th>
                   <th class="table-header actions-column">Actions</th>
                 </tr>
               </thead>
@@ -825,5 +891,38 @@ onUnmounted(() => {
 
 .product-name {
   font-weight: 500;
+}
+
+.table-header-sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.sort-icon {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background-repeat: no-repeat;
+  background-position: center;
+  margin-left: 4px;
+  vertical-align: text-bottom;
+}
+
+.sort-none::after {
+  content: "⇵";
+  opacity: 0.3;
+  font-size: 12px;
+}
+
+.sort-asc::after {
+  content: "↑";
+  color: #2563eb;
+  font-size: 12px;
+}
+
+.sort-desc::after {
+  content: "↓";
+  color: #2563eb;
+  font-size: 12px;
 }
 </style>
