@@ -1102,12 +1102,35 @@ const paginatedUsers = computed(() => {
   display: flex;
   align-items: center;
   gap: 8px;
+  padding: 8px;
+  border-radius: 4px;
 }
 
 .permission-checkbox input[type="checkbox"] {
-  width: auto;
+  appearance: none;
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #e2e8f0;
+  border-radius: 4px;
   margin-right: 8px;
   cursor: pointer;
+  position: relative;
+  background: white;
+}
+
+.permission-checkbox input[type="checkbox"]:checked {
+  background-color: #1e293b;
+  border-color: #1e293b;
+}
+
+.permission-checkbox input[type="checkbox"]:checked::after {
+  content: '✓';
+  position: absolute;
+  color: white;
+  font-size: 14px;
+  left: 3px;
+  top: -1px;
 }
 
 .permission-checkbox label {
