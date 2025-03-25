@@ -79,13 +79,13 @@
             <!-- Warehouse Name Dropdown -->
             <div class="form-group">
               <label for="warehouseName">Warehouse Name <span class="required">*</span></label>
-              <div class="custom-select-container warehouse-select-container">
+              <div class="custom-select-container">
                 <div 
-                  class="custom-select-trigger warehouse-select-trigger" 
+                  class="custom-select-trigger" 
                   @click="toggleWarehouseDropdown"
                   :class="{ 'active': isWarehouseDropdownOpen }"
                 >
-                  <span>{{ getWarehouseName(form.warehouse_id) || 'Select a warehouse' }}</span>
+                  <span :data-has-value="!!form.warehouse_id">{{ getWarehouseName(form.warehouse_id) || 'Select warehouse' }}</span>
                   <svg 
                     class="dropdown-arrow" 
                     :class="{ 'open': isWarehouseDropdownOpen }"
@@ -103,7 +103,7 @@
                   </svg>
                 </div>
                 
-                <div class="custom-select-dropdown warehouse-select-dropdown" v-show="isWarehouseDropdownOpen">
+                <div class="custom-select-dropdown" v-show="isWarehouseDropdownOpen">
                   <div class="search-box">
                     <input
                       type="text"
@@ -145,10 +145,57 @@
             
             <div class="form-group">
               <label for="status">Status <span class="required">*</span></label>
-              <select id="status" v-model="form.status" required>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
+              <div class="custom-select-container">
+                <div 
+                  class="custom-select-trigger" 
+                  @click="toggleStatusDropdown"
+                  :class="{ 'active': isStatusDropdownOpen }"
+                >
+                  <span :data-has-value="!!form.status">{{ capitalizeFirstLetter(form.status) || 'Select status' }}</span>
+                  <svg 
+                    class="dropdown-arrow" 
+                    :class="{ 'open': isStatusDropdownOpen }"
+                    xmlns="http://www.w3.org/2000/svg" 
+                    width="16" 
+                    height="16" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    stroke-width="2" 
+                    stroke-linecap="round" 
+                    stroke-linejoin="round"
+                  >
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </div>
+                
+                <div class="custom-select-dropdown" v-show="isStatusDropdownOpen">
+                  <div class="search-box">
+                    <input
+                      type="text"
+                      v-model="statusSearch"
+                      @input="filterStatuses"
+                      placeholder="Search status..."
+                      class="dropdown-search"
+                      @click.stop
+                    >
+                  </div>
+                  
+                  <div class="dropdown-options">
+                    <div
+                      v-for="status in filteredStatuses"
+                      :key="status"
+                      class="dropdown-option"
+                      @click="selectStatus(status)"
+                    >
+                      {{ capitalizeFirstLetter(status) }}
+                    </div>
+                    <div v-if="filteredStatuses.length === 0" class="no-results">
+                      No statuses match your search
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
             
             <div class="form-actions">
@@ -216,6 +263,11 @@ export default {
       warehouseSearch: '',
       filteredWarehouses: [],
       
+      // Status dropdown
+      isStatusDropdownOpen: false,
+      statusSearch: '',
+      filteredStatuses: ['active', 'inactive'],
+      
       // Message state
       successMessage: '',
       errorMessage: '',
@@ -274,7 +326,7 @@ export default {
   },
   mounted() {
     // Add event listeners for closing dropdowns when clicking outside
-    document.addEventListener('click', this.closeWarehouseDropdownOutside);
+    document.addEventListener('click', this.closeDropdownsOutside);
     
     // Fetch data
     this.$nextTick(() => {
@@ -284,7 +336,7 @@ export default {
   },
   beforeUnmount() {
     // Clean up event listeners when component is destroyed
-    document.removeEventListener('click', this.closeWarehouseDropdownOutside);
+    document.removeEventListener('click', this.closeDropdownsOutside);
   },
   methods: {
     // API methods
@@ -455,23 +507,30 @@ export default {
     // Warehouse dropdown methods
     toggleWarehouseDropdown() {
       this.isWarehouseDropdownOpen = !this.isWarehouseDropdownOpen;
-      
       if (this.isWarehouseDropdownOpen) {
-        // Reset search when opening
         this.warehouseSearch = '';
         this.filteredWarehouses = [...this.warehouses];
       }
     },
     
-    closeWarehouseDropdownOutside(event) {
-      const dropdown = document.querySelector('.warehouse-select-container');
-      if (dropdown && !dropdown.contains(event.target)) {
+    closeDropdownsOutside(event) {
+      const dropdowns = document.querySelectorAll('.custom-select-container');
+      let clickedInside = false;
+      
+      dropdowns.forEach(dropdown => {
+        if (dropdown.contains(event.target)) {
+          clickedInside = true;
+        }
+      });
+
+      if (!clickedInside) {
         this.isWarehouseDropdownOpen = false;
+        this.isStatusDropdownOpen = false;
       }
     },
     
     filterWarehouses() {
-      if (this.warehouseSearch.trim() === '') {
+      if (!this.warehouseSearch.trim()) {
         this.filteredWarehouses = [...this.warehouses];
       } else {
         const query = this.warehouseSearch.toLowerCase();
@@ -485,6 +544,7 @@ export default {
       if (warehouse && warehouse.id) {
         this.form.warehouse_id = warehouse.id;
         this.isWarehouseDropdownOpen = false;
+        this.warehouseSearch = '';
       }
     },
     
@@ -521,6 +581,34 @@ export default {
     capitalizeFirstLetter(string) {
       if (!string) return '';
       return string.charAt(0).toUpperCase() + string.slice(1);
+    },
+    
+    // Status dropdown methods
+    toggleStatusDropdown() {
+      this.isStatusDropdownOpen = !this.isStatusDropdownOpen;
+      if (this.isStatusDropdownOpen) {
+        this.statusSearch = '';
+        this.filteredStatuses = ['active', 'inactive'];
+      }
+    },
+    
+    filterStatuses() {
+      if (!this.statusSearch.trim()) {
+        this.filteredStatuses = ['active', 'inactive'];
+      } else {
+        const query = this.statusSearch.toLowerCase();
+        this.filteredStatuses = ['active', 'inactive'].filter(status => 
+          status.toLowerCase().includes(query)
+        );
+      }
+    },
+    
+    selectStatus(status) {
+      if (status) {
+        this.form.status = status;
+        this.isStatusDropdownOpen = false;
+        this.statusSearch = '';
+      }
     }
   }
 };

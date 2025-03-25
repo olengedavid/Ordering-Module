@@ -130,13 +130,13 @@
           <!-- Country Dropdown -->
           <div class="form-group">
             <label for="country">Country <span class="required">*</span></label>
-            <div class="custom-select-container country-select-container">
+            <div class="custom-select-container">
               <div 
-                class="custom-select-trigger country-select-trigger" 
+                class="custom-select-trigger" 
                 @click="toggleCountryDropdown"
                 :class="{ 'active': isCountryDropdownOpen }"
               >
-                <span>{{ form.country || 'Select a country' }}</span>
+                <span :data-has-value="!!form.country">{{ form.country || 'Select a country' }}</span>
                 <svg 
                   class="dropdown-arrow" 
                   :class="{ 'open': isCountryDropdownOpen }"
@@ -154,7 +154,7 @@
                 </svg>
               </div>
               
-              <div class="custom-select-dropdown country-select-dropdown" v-show="isCountryDropdownOpen">
+              <div class="custom-select-dropdown" v-show="isCountryDropdownOpen">
                 <div class="search-box">
                   <input
                     type="text"
@@ -186,13 +186,13 @@
           <!-- Region Dropdown -->
           <div class="form-group">
             <label for="region">Region <span class="required">*</span></label>
-            <div class="custom-select-container region-select-container">
+            <div class="custom-select-container">
               <div 
-                class="custom-select-trigger region-select-trigger" 
+                class="custom-select-trigger" 
                 @click="toggleRegionDropdown"
                 :class="{ 'active': isRegionDropdownOpen }"
               >
-                <span>{{ form.region || 'Select a region' }}</span>
+                <span :data-has-value="!!form.region">{{ form.region || 'Select a region' }}</span>
                 <svg 
                   class="dropdown-arrow" 
                   :class="{ 'open': isRegionDropdownOpen }"
@@ -210,7 +210,7 @@
                 </svg>
               </div>
               
-              <div class="custom-select-dropdown region-select-dropdown" v-show="isRegionDropdownOpen">
+              <div class="custom-select-dropdown" v-show="isRegionDropdownOpen">
                 <div class="search-box">
                   <input
                     type="text"
@@ -246,10 +246,57 @@
           
           <div class="form-group">
             <label for="status">Status <span class="required">*</span></label>
-            <select id="status" v-model="form.status" required>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
+            <div class="custom-select-container">
+              <div 
+                class="custom-select-trigger" 
+                @click="toggleStatusDropdown"
+                :class="{ 'active': isStatusDropdownOpen }"
+              >
+                <span :data-has-value="!!form.status">{{ capitalizeFirstLetter(form.status) || 'Select status' }}</span>
+                <svg 
+                  class="dropdown-arrow" 
+                  :class="{ 'open': isStatusDropdownOpen }"
+                  xmlns="http://www.w3.org/2000/svg" 
+                  width="16" 
+                  height="16" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  stroke-width="2" 
+                  stroke-linecap="round" 
+                  stroke-linejoin="round"
+                >
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </div>
+              
+              <div class="custom-select-dropdown" v-show="isStatusDropdownOpen">
+                <div class="search-box">
+                  <input
+                    type="text"
+                    v-model="statusSearch"
+                    @input="filterStatuses"
+                    placeholder="Search status..."
+                    class="dropdown-search"
+                    @click.stop
+                  >
+                </div>
+                
+                <div class="dropdown-options">
+                  <div
+                    v-for="status in filteredStatuses"
+                    :key="status"
+                    class="dropdown-option"
+                    @click="selectStatus(status)"
+                  >
+                    {{ capitalizeFirstLetter(status) }}
+                  </div>
+                  <div v-if="filteredStatuses.length === 0" class="no-results">
+                    No statuses match your search
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
           
           <div class="form-actions">
@@ -314,6 +361,10 @@ const regions = ref([
   'Uasin Gishu', 'Vihiga', 'Wajir', 'West Pokot'
 ]);
 const filteredRegions = ref([...regions.value]);
+
+const isStatusDropdownOpen = ref(false);
+const statusSearch = ref('');
+const filteredStatuses = ref(['active', 'inactive']);
 
 // Form for warehouse
 const form = useForm({
@@ -425,6 +476,7 @@ const openAddWarehouseModal = () => {
   showWarehouseModal.value = true;
   isCountryDropdownOpen.value = false;
   isRegionDropdownOpen.value = false;
+  isStatusDropdownOpen.value = false;
 };
 
 const closeWarehouseModal = () => {
@@ -452,6 +504,7 @@ const editWarehouse = (warehouse) => {
   showWarehouseModal.value = true;
   isCountryDropdownOpen.value = false;
   isRegionDropdownOpen.value = false;
+  isStatusDropdownOpen.value = false;
 };
 
 const deleteWarehouse = (warehouseUuid) => {
@@ -553,114 +606,100 @@ const autoDismissMessage = (type) => {
 // Dropdown methods
 const toggleCountryDropdown = () => {
   isCountryDropdownOpen.value = !isCountryDropdownOpen.value;
-  
   if (isCountryDropdownOpen.value) {
-    // Reset search when opening
     countrySearch.value = '';
     filteredCountries.value = [...countries.value];
-    
-    // Close the other dropdown if open
-    isRegionDropdownOpen.value = false;
-    
-    // Calculate dropdown position
-    nextTick(() => {
-      const trigger = document.querySelector('.country-select-trigger');
-      const dropdown = document.querySelector('.country-select-dropdown');
-      
-      if (!trigger || !dropdown) return;
-      
-      const triggerRect = trigger.getBoundingClientRect();
-      const viewportHeight = window.innerHeight;
-      
-      const spaceBelow = viewportHeight - triggerRect.bottom;
-      const dropdownHeight = Math.min(250, filteredCountries.value.length * 36 + 70);
-      
-      if (spaceBelow < dropdownHeight) {
-        dropdown.classList.add('dropdown-top');
-      } else {
-        dropdown.classList.remove('dropdown-top');
-      }
-    });
   }
 };
 
-const closeCountryDropdownOutside = (event) => {
-  const dropdown = document.querySelector('.country-select-container');
-  if (dropdown && !dropdown.contains(event.target)) {
+const closeDropdownsOutside = (event) => {
+  const dropdowns = document.querySelectorAll('.custom-select-container');
+  let clickedInside = false;
+  
+  dropdowns.forEach(dropdown => {
+    if (dropdown.contains(event.target)) {
+      clickedInside = true;
+    }
+  });
+
+  if (!clickedInside) {
     isCountryDropdownOpen.value = false;
+    isRegionDropdownOpen.value = false;
+    isStatusDropdownOpen.value = false;
   }
 };
 
 const filterCountries = () => {
-  if (countrySearch.value.trim() === '') {
+  if (!countrySearch.value.trim()) {
     filteredCountries.value = [...countries.value];
   } else {
     const query = countrySearch.value.toLowerCase();
-    filteredCountries.value = countries.value.filter(
-      country => country.toLowerCase().includes(query)
+    filteredCountries.value = countries.value.filter(country => 
+      country.toLowerCase().includes(query)
     );
   }
 };
 
 const selectCountry = (country) => {
-  form.country = country;
-  isCountryDropdownOpen.value = false;
+  if (country) {
+    form.country = country;
+    isCountryDropdownOpen.value = false;
+    countrySearch.value = '';
+  }
 };
 
 const toggleRegionDropdown = () => {
   isRegionDropdownOpen.value = !isRegionDropdownOpen.value;
-  
   if (isRegionDropdownOpen.value) {
-    // Reset search when opening
     regionSearch.value = '';
     filteredRegions.value = [...regions.value];
-    
-    // Close the other dropdown if open
-    isCountryDropdownOpen.value = false;
-    
-    // Calculate dropdown position
-    nextTick(() => {
-      const trigger = document.querySelector('.region-select-trigger');
-      const dropdown = document.querySelector('.region-select-dropdown');
-      
-      if (!trigger || !dropdown) return;
-      
-      const triggerRect = trigger.getBoundingClientRect();
-      const viewportHeight = window.innerHeight;
-      
-      const spaceBelow = viewportHeight - triggerRect.bottom;
-      const dropdownHeight = Math.min(250, filteredRegions.value.length * 36 + 70);
-      
-      if (spaceBelow < dropdownHeight) {
-        dropdown.classList.add('dropdown-top');
-      } else {
-        dropdown.classList.remove('dropdown-top');
-      }
-    });
-  }
-};
-
-const closeRegionDropdownOutside = (event) => {
-  const dropdown = document.querySelector('.region-select-container');
-  if (dropdown && !dropdown.contains(event.target)) {
-    isRegionDropdownOpen.value = false;
   }
 };
 
 const filterRegions = () => {
-  if (regionSearch.value.trim() === '') {
+  if (!regionSearch.value.trim()) {
     filteredRegions.value = [...regions.value];
   } else {
     const query = regionSearch.value.toLowerCase();
-    filteredRegions.value = regions.value.filter(
-      region => region.toLowerCase().includes(query)
+    filteredRegions.value = regions.value.filter(region => 
+      region.toLowerCase().includes(query)
     );
   }
 };
 
 const selectRegion = (region) => {
-  form.region = region;
-  isRegionDropdownOpen.value = false;
+  if (region) {
+    form.region = region;
+    isRegionDropdownOpen.value = false;
+    regionSearch.value = '';
+  }
+};
+
+const toggleStatusDropdown = () => {
+  isStatusDropdownOpen.value = !isStatusDropdownOpen.value;
+  if (isStatusDropdownOpen.value) {
+    statusSearch.value = '';
+    filteredStatuses.value = ['active', 'inactive'];
+  }
+};
+
+const filterStatuses = () => {
+  if (!statusSearch.value.trim()) {
+    filteredStatuses.value = ['active', 'inactive'];
+  } else {
+    const query = statusSearch.value.toLowerCase();
+    filteredStatuses.value = ['active', 'inactive'].filter(status => 
+      status.toLowerCase().includes(query)
+    );
+  }
+};
+
+const selectStatus = (status) => {
+  if (status) {
+    form.status = status;
+    isStatusDropdownOpen.value = false;
+    statusSearch.value = '';
+  }
 };
 
 // Lifecycle hooks
@@ -673,15 +712,19 @@ onMounted(() => {
   filteredRegions.value = [...regions.value];
   
   // Add click outside listener for dropdowns
-  document.addEventListener('click', closeCountryDropdownOutside);
-  document.addEventListener('click', closeRegionDropdownOutside);
+  document.addEventListener('click', closeDropdownsOutside);
 });
 
 onBeforeUnmount(() => {
   // Clean up the event listeners
-  document.removeEventListener('click', closeCountryDropdownOutside);
-  document.removeEventListener('click', closeRegionDropdownOutside);
+  document.removeEventListener('click', closeDropdownsOutside);
 });
+
+// Add capitalizeFirstLetter helper function if not already present
+const capitalizeFirstLetter = (string) => {
+  if (!string) return '';
+  return string.charAt(0).toUpperCase() + string.slice(1);
+};
 </script>
 
 <style scoped>

@@ -84,15 +84,13 @@
           <form @submit.prevent="saveBankAccount">
             <div class="form-group">
               <label for="bankName">Bank Name <span class="required">*</span></label>
-              
-              <!-- Custom searchable dropdown for banks -->
               <div class="custom-select-container">
                 <div 
                   class="custom-select-trigger" 
                   @click="toggleBankDropdown"
                   :class="{ 'active': isBankDropdownOpen }"
                 >
-                  <span>{{ newBankAccount.bankName || 'Select a bank' }}</span>
+                  <span :data-has-value="!!newBankAccount.bankName">{{ newBankAccount.bankName || 'Select bank' }}</span>
                   <svg 
                     class="dropdown-arrow" 
                     :class="{ 'open': isBankDropdownOpen }"
@@ -194,9 +192,6 @@ export default {
       },
       editingBankAccount: false,
       editingBankAccountId: null,
-      isBankDropdownOpen: false,
-      bankSearch: '',
-      filteredBanks: [],
       localBankAccounts: [],
       loading: false,
       banks: [
@@ -235,7 +230,10 @@ export default {
         'Stanbic Bank Kenya',
         'Standard Chartered Kenya',
         'Victoria Commercial Bank'
-      ]
+      ],
+      isBankDropdownOpen: false,
+      bankSearch: '',
+      filteredBanks: []
     }
   },
   computed: {
@@ -270,18 +268,16 @@ export default {
     },
   },
   mounted() {
-    // Initialize the filteredBanks with all banks
-    this.filteredBanks = [...this.banks];
-    
-    // Add event listener for closing dropdowns when clicking outside
-    document.addEventListener('click', this.closeBankDropdownOutside);
-    
     // Load bank accounts if not provided through props
     this.loadBankAccounts();
+    // Initialize filtered banks
+    this.filteredBanks = [...this.banks];
+    // Add event listener for closing dropdowns when clicking outside
+    document.addEventListener('click', this.closeDropdownsOutside);
   },
-  beforeDestroy() {
-    // Remove event listener when component is destroyed
-    document.removeEventListener('click', this.closeBankDropdownOutside);
+  beforeUnmount() {
+    // Clean up event listeners when component is destroyed
+    document.removeEventListener('click', this.closeDropdownsOutside);
   },
   methods: {
     getBankAccounts() {
@@ -352,7 +348,6 @@ export default {
         isPrimary: this.getBankAccounts().length === 0 // Set as primary if it's the first account
       };
       this.showBankAccountModal = true;
-      this.isBankDropdownOpen = false;
     },
     closeBankAccountModal() {
       this.showBankAccountModal = false;
@@ -365,7 +360,6 @@ export default {
         accountNumber: '',
         isPrimary: false
       };
-      this.isBankDropdownOpen = false;
     },
     sortBy(key) {
       if (this.sortKey === key) {
@@ -530,66 +524,6 @@ export default {
         }
       });
     },
-    // Bank dropdown methods
-    toggleBankDropdown() {
-      this.isBankDropdownOpen = !this.isBankDropdownOpen;
-      
-      if (this.isBankDropdownOpen) {
-        // Reset search when opening
-        this.bankSearch = '';
-        this.filteredBanks = [...this.banks];
-        
-        // Position dropdown after Vue has updated the DOM
-        this.$nextTick(() => {
-          const trigger = document.querySelector('.custom-select-trigger');
-          const dropdown = document.querySelector('.custom-select-dropdown');
-          
-          if (!trigger || !dropdown) return;
-          
-          // Get element positions
-          const triggerRect = trigger.getBoundingClientRect();
-          const viewportHeight = window.innerHeight;
-          
-          // Calculate available space below
-          const spaceBelow = viewportHeight - triggerRect.bottom;
-          
-          // Dropdown height (with some buffer)
-          const dropdownHeight = Math.min(250, this.filteredBanks.length * 36 + 70);
-          
-          // Determine if dropdown should open upward or downward
-          if (spaceBelow < dropdownHeight) {
-            // Not enough space below
-            dropdown.classList.add('dropdown-top');
-          } else {
-            // Default: show below
-            dropdown.classList.remove('dropdown-top');
-          }
-        });
-      }
-    },
-    closeBankDropdownOutside(event) {
-      // Close the dropdown if clicking outside of it
-      const dropdown = document.querySelector('.custom-select-container');
-      if (dropdown && !dropdown.contains(event.target)) {
-        this.isBankDropdownOpen = false;
-      }
-    },
-    filterBanks() {
-      if (this.bankSearch.trim() === '') {
-        // If search is empty, show all banks
-        this.filteredBanks = [...this.banks];
-      } else {
-        // Filter banks based on search input
-        const query = this.bankSearch.toLowerCase();
-        this.filteredBanks = this.banks.filter(
-          bank => bank.toLowerCase().includes(query)
-        );
-      }
-    },
-    selectBank(bank) {
-      this.newBankAccount.bankName = bank;
-      this.isBankDropdownOpen = false;
-    },
     normalizeBankAccount(account) {
       return {
         id: account.id,
@@ -609,6 +543,30 @@ export default {
           this.errorMessage = '';
         }
       }, 3000);
+    },
+    toggleBankDropdown() {
+      this.isBankDropdownOpen = !this.isBankDropdownOpen;
+    },
+    filterBanks() {
+      this.filteredBanks = this.banks.filter(bank => bank.toLowerCase().includes(this.bankSearch.toLowerCase()));
+    },
+    selectBank(bank) {
+      this.newBankAccount.bankName = bank;
+      this.isBankDropdownOpen = false;
+    },
+    closeDropdownsOutside(event) {
+      const dropdowns = document.querySelectorAll('.custom-select-container');
+      let clickedInside = false;
+      
+      dropdowns.forEach(dropdown => {
+        if (dropdown.contains(event.target)) {
+          clickedInside = true;
+        }
+      });
+
+      if (!clickedInside) {
+        this.isBankDropdownOpen = false;
+      }
     }
   }
 }

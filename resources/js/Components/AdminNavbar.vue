@@ -260,7 +260,7 @@ export default {
 }
 
 .navbar-container {
-    max-width: 1200px;
+    max-width: 1250px;
     width: 100%;
     height: 100%;
     margin: 0 auto;

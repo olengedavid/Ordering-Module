@@ -66,11 +66,9 @@
               <td>
                 <div class="product-image-container">
                   <img
-                    :src="getPrimaryImageUrl(product)"
+                    :src="getPrimaryImagePreviewPath(product)"
                     class="product-thumbnail"
-                    @error="
-                      $event.target.src = 'https://via.placeholder.com/50'
-                    "
+                    @error="$event.target.src = 'https://via.placeholder.com/50'"
                   />
                 </div>
               </td>
@@ -190,46 +188,13 @@
                     :key="image.id"
                     class="thumbnail-container"
                     :class="{ 'primary-thumbnail': image.isPrimary }"
+                    @click="setPrimaryImage(image.id)"
                   >
                     <img
                       :src="image.url"
                       alt="Product image"
                       class="thumbnail-img"
                     />
-                    <div class="thumbnail-actions">
-                      <button
-                        type="button"
-                        class="set-primary-btn"
-                        @click="setPrimaryImage(image.id)"
-                        :disabled="image.isPrimary"
-                        :title="
-                          image.isPrimary ? 'Primary Image' : 'Set as Primary'
-                        "
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        >
-                          <path
-                            d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-                          />
-                        </svg>
-                      </button>
-                      <button
-                        type="button"
-                        class="remove-thumbnail-btn"
-                        @click="removeImage(image.id)"
-                      >
-                        &times;
-                      </button>
-                    </div>
                   </div>
                   <div class="add-more-container">
                     <label for="additionalImages" class="add-more-btn">
@@ -261,67 +226,139 @@
               </div>
             </div>
 
-            <div class="form-row">
-              <div class="form-group half-width">
-                <label for="productName"
-                  >Product Name <span class="required">*</span></label
+            <div class="form-group">
+              <label for="productName"
+                >Product Name <span class="required">*</span></label
+              >
+              <input
+                type="text"
+                id="productName"
+                v-model="newProduct.productName"
+                required
+                placeholder="Enter product name"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="skuNumber"
+                >SKU Number <span class="required">*</span></label
+              >
+              <input
+                type="text"
+                id="skuNumber"
+                v-model="newProduct.skuNumber"
+                required
+                placeholder="Enter SKU number"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="category">Category <span class="required">*</span></label>
+              <div class="custom-select-container">
+                <div 
+                  class="custom-select-trigger" 
+                  @click="toggleCategoryDropdown"
+                  :class="{ 'active': isCategoryOpen }"
                 >
-                <input
-                  type="text"
-                  id="productName"
-                  v-model="newProduct.productName"
-                  required
-                  placeholder="Enter product name"
-                />
-              </div>
-              <div class="form-group half-width">
-                <label for="skuNumber"
-                  >SKU Number <span class="required">*</span></label
-                >
-                <input
-                  type="text"
-                  id="skuNumber"
-                  v-model="newProduct.skuNumber"
-                  required
-                  placeholder="Enter SKU number"
-                />
+                  <span :data-has-value="!!newProduct.category">{{ newProduct.category || 'Select category' }}</span>
+                  <svg 
+                    class="dropdown-arrow" 
+                    :class="{ 'open': isCategoryOpen }"
+                    xmlns="http://www.w3.org/2000/svg" 
+                    width="16" 
+                    height="16" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    stroke-width="2" 
+                    stroke-linecap="round" 
+                    stroke-linejoin="round"
+                  >
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </div>
+                
+                <div class="custom-select-dropdown" v-show="isCategoryOpen">
+                  <div class="search-box">
+                    <input
+                      type="text"
+                      v-model="categorySearchQuery"
+                      @input="filterCategories"
+                      placeholder="Search categories..."
+                      class="dropdown-search"
+                      @click.stop
+                    >
+                  </div>
+                  
+                  <div class="dropdown-options">
+                    <div
+                      v-for="category in filteredCategories"
+                      :key="category"
+                      class="dropdown-option"
+                      @click="selectCategory(category)"
+                    >
+                      {{ category }}
+                    </div>
+                    <div v-if="filteredCategories.length === 0" class="no-results">
+                      No categories match your search
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div class="form-row">
-              <div class="form-group half-width">
-                <label for="category"
-                  >Category <span class="required">*</span></label
+            <div class="form-group">
+              <label for="unitOfMeasure">Unit of Measure <span class="required">*</span></label>
+              <div class="custom-select-container">
+                <div 
+                  class="custom-select-trigger" 
+                  @click="toggleUnitDropdown"
+                  :class="{ 'active': isUnitOpen }"
                 >
-                <select id="category" v-model="newProduct.category" required>
-                  <option value="" disabled selected>Select category</option>
-                  <option
-                    v-for="category in productCategories"
-                    :key="category"
-                    :value="category"
+                  <span :data-has-value="!!newProduct.unitOfMeasure">{{ newProduct.unitOfMeasure || 'Select unit' }}</span>
+                  <svg 
+                    class="dropdown-arrow" 
+                    :class="{ 'open': isUnitOpen }"
+                    xmlns="http://www.w3.org/2000/svg" 
+                    width="16" 
+                    height="16" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    stroke-width="2" 
+                    stroke-linecap="round" 
+                    stroke-linejoin="round"
                   >
-                    {{ category }}
-                  </option>
-                </select>
-              </div>
-              <div class="form-group half-width">
-                <label for="unitOfMeasure"
-                  >Unit of Measure <span class="required">*</span></label
-                >
-                <select
-                  id="unitOfMeasure"
-                  v-model="newProduct.unitOfMeasure"
-                  required
-                >
-                  <option value="" disabled selected>Select unit</option>
-                  <option
-                    v-for="unit in unitsOfMeasure"
-                    :key="unit"
-                    :value="unit"
-                  >
-                    {{ unit }}
-                  </option>
-                </select>
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </div>
+                
+                <div class="custom-select-dropdown" v-show="isUnitOpen">
+                  <div class="search-box">
+                    <input
+                      type="text"
+                      v-model="unitSearchQuery"
+                      @input="filterUnits"
+                      placeholder="Search units..."
+                      class="dropdown-search"
+                      @click.stop
+                    >
+                  </div>
+                  
+                  <div class="dropdown-options">
+                    <div
+                      v-for="unit in filteredUnits"
+                      :key="unit"
+                      class="dropdown-option"
+                      @click="selectUnit(unit)"
+                    >
+                      {{ unit }}
+                    </div>
+                    <div v-if="filteredUnits.length === 0" class="no-results">
+                      No units match your search
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -353,10 +390,57 @@
 
             <div class="form-group">
               <label for="status">Status</label>
-              <select id="status" v-model="newProduct.status">
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-              </select>
+              <div class="custom-select-container">
+                <div 
+                  class="custom-select-trigger" 
+                  @click="toggleStatusDropdown"
+                  :class="{ 'active': isStatusOpen }"
+                >
+                  <span :data-has-value="!!newProduct.status">{{ newProduct.status || 'Select status' }}</span>
+                  <svg 
+                    class="dropdown-arrow" 
+                    :class="{ 'open': isStatusOpen }"
+                    xmlns="http://www.w3.org/2000/svg" 
+                    width="16" 
+                    height="16" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    stroke-width="2" 
+                    stroke-linecap="round" 
+                    stroke-linejoin="round"
+                  >
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </div>
+                
+                <div class="custom-select-dropdown" v-show="isStatusOpen">
+                  <div class="search-box">
+                    <input
+                      type="text"
+                      v-model="statusSearchQuery"
+                      @input="filterStatuses"
+                      placeholder="Search statuses..."
+                      class="dropdown-search"
+                      @click.stop
+                    >
+                  </div>
+                  
+                  <div class="dropdown-options">
+                    <div
+                      v-for="status in filteredStatuses"
+                      :key="status"
+                      class="dropdown-option"
+                      @click="selectStatus(status)"
+                    >
+                      {{ status }}
+                    </div>
+                    <div v-if="filteredStatuses.length === 0" class="no-results">
+                      No statuses match your search
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div class="form-actions">
@@ -384,7 +468,7 @@
 
 <script>
 import { router, useForm, usePage } from "@inertiajs/vue3";
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import CustomPagination from "@/Components/CustomPagination.vue";
 import SuccessMessage from "@/Components/SuccessMessage.vue";
 import ErrorMessage from "@/Components/ErrorMessage.vue";
@@ -495,6 +579,17 @@ export default {
     const successMessage = ref("");
     const errorMessage = ref("");
 
+    // Dropdown states
+    const isCategoryOpen = ref(false);
+    const isUnitOpen = ref(false);
+    const isStatusOpen = ref(false);
+    const categorySearchQuery = ref('');
+    const unitSearchQuery = ref('');
+    const statusSearchQuery = ref('');
+    const filteredCategories = ref([...productCategories]);
+    const filteredUnits = ref([...unitsOfMeasure]);
+    const filteredStatuses = ref(['Active', 'Inactive']);
+
     // Computed properties
     const sortedProducts = computed(() => {
       const productsList = [...products.value];
@@ -601,28 +696,35 @@ export default {
         product.unit_of_measure || product.unitOfMeasure;
       newProduct.description = product.description;
       newProduct.manufacturer = product.manufucturer || product.manufacturer;
-      newProduct.status = product.status;
+      newProduct.status = product.status.charAt(0).toUpperCase() + product.status.slice(1);
 
       // Handle images
-      if (product.imageUrl) {
-        imagePreview.value = product.imageUrl;
-      } else if (product.images) {
-        const images =
-          typeof product.images === "string"
-            ? JSON.parse(product.images)
-            : product.images;
+      if (product.images) {
+        try {
+          let images;
+          const parsedImages =
+            typeof product.images === "string"
+              ? JSON.parse(product.images)
+              : product.images;
 
-        if (images && images.length > 0) {
+          // Handle both array and object formats
+          images = Array.isArray(parsedImages)
+            ? parsedImages
+            : Object.values(parsedImages);
+
           productImages.value = images.map((img, index) => ({
             id: index + 1,
-            url: img.path || img.url,
-            isPrimary: img.type === "primary" || img.isPrimary,
+            url: `/storage/${img.path}`,
+            isPrimary: img.type === "primary",
+            path: img.path
           }));
 
           const primaryImage = productImages.value.find((img) => img.isPrimary);
           if (primaryImage) {
             imagePreview.value = primaryImage.url;
           }
+        } catch (error) {
+          console.error("Error processing product images:", error);
         }
       }
 
@@ -630,10 +732,7 @@ export default {
     };
 
     const saveProduct = () => {
-      // Prepare form data for submission
       const formData = new FormData();
-
-      // Add basic product information
       formData.append("name", newProduct.productName);
       formData.append("sku_number", newProduct.skuNumber);
       formData.append("category", newProduct.category);
@@ -641,87 +740,80 @@ export default {
       formData.append("description", newProduct.description);
       formData.append("manufucturer", newProduct.manufacturer);
       formData.append("status", newProduct.status.toLowerCase());
+      formData.append("company_id", companyId);
+      formData.append("created_by", userId);
 
-      // Add supplier_id if available
-      if (props.supplier && props.supplier.id) {
-        formData.append("supplier_id", parseInt(props.supplier.id));
-      }
-
-      // IMPORTANT: Ensure company_id is included as an integer
-      // Use the supplier's company_id first, as it should be the most reliable source
-      const companyIdToUse = props.supplier.company_id
-        ? parseInt(props.supplier.company_id)
-        : props.supplier.id
-        ? parseInt(props.supplier.id)
-        : user?.company?.id
-        ? parseInt(user.company.id)
-        : user?.company_id
-        ? parseInt(user.company_id)
-        : null;
-
-      // Company ID is required - ensure it's always included and is an integer
-      if (companyIdToUse) {
-        formData.append("company_id", companyIdToUse);
-        console.log("Using company_id:", companyIdToUse);
-      } else {
-        console.error("No company_id available - this will cause an error");
-        // Fallback to a default if absolutely necessary (modify based on your app structure)
-        formData.append("company_id", parseInt(props.supplier.id));
-      }
-
-      // Add created_by user ID if available
-      const userIdToUse = userId || (user?.id ? parseInt(user.id) : null);
-      if (userIdToUse) {
-        formData.append("created_by", userIdToUse);
-      }
-
-      // Add primary image
+      // Add images
       const primaryImage = productImages.value.find((img) => img.isPrimary);
-      if (primaryImage && primaryImage.file) {
-        formData.append("primary_image", primaryImage.file);
+      if (primaryImage) {
+        if (primaryImage.file) {
+          formData.append("primary_image", primaryImage.file);
+        } else if (primaryImage.path) {
+          formData.append("primary_image_path", primaryImage.path);
+        }
       }
 
       // Add secondary images
-      const secondaryImages = productImages.value.filter(
-        (img) => !img.isPrimary
-      );
-      secondaryImages.forEach((img) => {
-        if (img.file) {
-          formData.append("secondary_images[]", img.file);
+      productImages.value.forEach((image) => {
+        if (!image.isPrimary) {
+          if (image.file) {
+            formData.append("secondary_images[]", image.file);
+          } else if (image.path) {
+            formData.append("secondary_image_paths[]", image.path);
+          }
         }
       });
 
-      // Determine endpoint
-      const endpoint = editingProduct.value
-        ? route("products.update", editingProductId.value)
-        : route("products.store");
+      // Log the FormData contents
+      for (let pair of formData.entries()) {
+        console.log(pair[0], pair[1]);
+      }
 
-      // Submit form
-      router.post(endpoint, formData, {
-        onSuccess: () => {
-          successMessage.value = editingProduct.value
-            ? "Product updated successfully"
-            : "Product added successfully";
-          closeProductModal();
-          fetchProducts();
-          // Call autoDismissMessage directly
-          console.log("Setting success message in Products");
-          setTimeout(() => {
-            successMessage.value = "";
-            console.log("Clearing success message in Products");
-          }, 3000);
-        },
-        onError: (errors) => {
-          errorMessage.value = "Error saving product";
-          console.error("Error saving product:", errors);
-          // Call autoDismissMessage directly
-          console.log("Setting error message in Products");
-          setTimeout(() => {
-            errorMessage.value = "";
-            console.log("Clearing error message in Products");
-          }, 3000);
-        },
-      });
+      if (editingProduct.value) {
+        axios
+          .post(route("products.update", editingProductId.value), formData, {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          })
+          .then(() => {
+            closeProductModal();
+            fetchProducts();
+            successMessage.value = "Product updated successfully";
+            setTimeout(() => {
+              successMessage.value = "";
+            }, 3000);
+          })
+          .catch((error) => {
+            errorMessage.value = "Error updating product";
+            console.error("Error updating product:", error);
+            setTimeout(() => {
+              errorMessage.value = "";
+            }, 3000);
+          });
+      } else {
+        axios
+          .post(route("products.store"), formData, {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          })
+          .then(() => {
+            closeProductModal();
+            fetchProducts();
+            successMessage.value = "Product added successfully";
+            setTimeout(() => {
+              successMessage.value = "";
+            }, 3000);
+          })
+          .catch((error) => {
+            errorMessage.value = "Error adding product";
+            console.error("Error adding product:", error);
+            setTimeout(() => {
+              errorMessage.value = "";
+            }, 3000);
+          });
+      }
     };
 
     // Auto-dismiss messages after 3 seconds
@@ -736,7 +828,7 @@ export default {
       }, 3000);
     };
 
-    const getPrimaryImageUrl = async (product) => {
+    const getPrimaryImagePreviewPath = (product) => {
       if (!product.images) return "https://via.placeholder.com/50";
 
       try {
@@ -761,9 +853,6 @@ export default {
       }
 
       return "https://via.placeholder.com/50";
-
-      // Default image if none found
-      // return "https://image.made-in-china.com/202f0j00SKpWwAoscucy/High-Quality-BOPP-Laminated-PP-Woven-Chemicals-Urea-Fertilizer-Bag-25kg-50kg-100kg.jpg";
     };
 
     const handleImageError = (event) => {
@@ -849,26 +938,146 @@ export default {
     };
 
     const setPrimaryImage = (imageId) => {
-      // Reset all images to non-primary
-      productImages.value.forEach((img) => {
-        img.isPrimary = img.id === imageId;
-      });
-
-      // Update the preview with the new primary image
-      const primaryImage = productImages.value.find(
+      const selectedImageIndex = productImages.value.findIndex(
         (img) => img.id === imageId
       );
-      if (primaryImage) {
-        imagePreview.value = primaryImage.url;
-        selectedImageIndex.value = productImages.value.findIndex(
-          (img) => img.id === imageId
+      
+      if (selectedImageIndex !== -1) {
+        // Get the selected image
+        const selectedImage = productImages.value[selectedImageIndex];
+        
+        // Remove it from its current position
+        productImages.value.splice(selectedImageIndex, 1);
+        
+        // Add it to the front of the array
+        productImages.value.unshift(selectedImage);
+        
+        // Update primary status for all images
+        productImages.value.forEach((img, index) => {
+          img.isPrimary = index === 0;
+        });
+
+        // Update the preview with the new primary image
+        imagePreview.value = selectedImage.url;
+      }
+    };
+
+    // Dropdown methods
+    const toggleCategoryDropdown = () => {
+      isCategoryOpen.value = !isCategoryOpen.value;
+      if (isCategoryOpen.value) {
+        categorySearchQuery.value = '';
+        filteredCategories.value = [...productCategories];
+      }
+      // Close other dropdowns
+      isUnitOpen.value = false;
+      isStatusOpen.value = false;
+    };
+
+    const toggleUnitDropdown = () => {
+      isUnitOpen.value = !isUnitOpen.value;
+      if (isUnitOpen.value) {
+        unitSearchQuery.value = '';
+        filteredUnits.value = [...unitsOfMeasure];
+      }
+      // Close other dropdowns
+      isCategoryOpen.value = false;
+      isStatusOpen.value = false;
+    };
+
+    const toggleStatusDropdown = () => {
+      isStatusOpen.value = !isStatusOpen.value;
+      if (isStatusOpen.value) {
+        statusSearchQuery.value = '';
+        filteredStatuses.value = ['Active', 'Inactive'];
+      }
+      // Close other dropdowns
+      isCategoryOpen.value = false;
+      isUnitOpen.value = false;
+    };
+
+    const filterCategories = () => {
+      if (!categorySearchQuery.value.trim()) {
+        filteredCategories.value = [...productCategories];
+      } else {
+        const query = categorySearchQuery.value.toLowerCase();
+        filteredCategories.value = productCategories.filter(
+          category => category.toLowerCase().includes(query)
         );
       }
     };
 
-    // Initialize
+    const filterUnits = () => {
+      if (!unitSearchQuery.value.trim()) {
+        filteredUnits.value = [...unitsOfMeasure];
+      } else {
+        const query = unitSearchQuery.value.toLowerCase();
+        filteredUnits.value = unitsOfMeasure.filter(
+          unit => unit.toLowerCase().includes(query)
+        );
+      }
+    };
+
+    const filterStatuses = () => {
+      if (!statusSearchQuery.value.trim()) {
+        filteredStatuses.value = ['Active', 'Inactive'];
+      } else {
+        const query = statusSearchQuery.value.toLowerCase();
+        filteredStatuses.value = ['Active', 'Inactive'].filter(
+          status => status.toLowerCase().includes(query)
+        );
+      }
+    };
+
+    const selectCategory = (category) => {
+      newProduct.category = category;
+      isCategoryOpen.value = false;
+      categorySearchQuery.value = '';
+    };
+
+    const selectUnit = (unit) => {
+      newProduct.unitOfMeasure = unit;
+      isUnitOpen.value = false;
+      unitSearchQuery.value = '';
+    };
+
+    const selectStatus = (status) => {
+      newProduct.status = status;
+      isStatusOpen.value = false;
+      statusSearchQuery.value = '';
+    };
+
+    // Close dropdowns when clicking outside
+    const closeDropdownsOutside = (event) => {
+      const dropdowns = document.querySelectorAll('.custom-select-container');
+      let clickedInside = false;
+      
+      dropdowns.forEach(dropdown => {
+        if (dropdown.contains(event.target)) {
+          clickedInside = true;
+        }
+      });
+
+      if (!clickedInside) {
+        isCategoryOpen.value = false;
+        isUnitOpen.value = false;
+        isStatusOpen.value = false;
+      }
+    };
+
+    // Initialize dropdowns
     onMounted(() => {
       fetchProducts();
+      document.addEventListener('click', closeDropdownsOutside);
+      // Initialize filtered arrays
+      filteredCategories.value = [...productCategories];
+      filteredUnits.value = [...unitsOfMeasure];
+      filteredStatuses.value = ['Active', 'Inactive'];
+    });
+
+    // Remove event listener when component is unmounted
+    onUnmounted(() => {
+      document.removeEventListener('click', closeDropdownsOutside);
     });
 
     return {
@@ -906,8 +1115,26 @@ export default {
       addImageToGallery,
       removeImage,
       setPrimaryImage,
-      getPrimaryImageUrl,
+      getPrimaryImagePreviewPath,
       autoDismissMessage,
+      isCategoryOpen,
+      isUnitOpen,
+      isStatusOpen,
+      categorySearchQuery,
+      unitSearchQuery,
+      statusSearchQuery,
+      filteredCategories,
+      filteredUnits,
+      filteredStatuses,
+      toggleCategoryDropdown,
+      toggleUnitDropdown,
+      toggleStatusDropdown,
+      filterCategories,
+      filterUnits,
+      filterStatuses,
+      selectCategory,
+      selectUnit,
+      selectStatus,
     };
   },
 };
@@ -915,4 +1142,150 @@ export default {
 
 <style scoped>
 @import "./SupplierSharedStyles.css";
+
+.product-image-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.product-thumbnail {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.product-name {
+  font-weight: 500;
+}
+
+.image-upload-container {
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  margin-bottom: 15px;
+  transition: all 0.3s ease;
+  position: relative;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+}
+
+.upload-placeholder svg {
+  margin-bottom: 10px;
+}
+
+.upload-placeholder p {
+  margin: 0;
+}
+
+.add-more-container {
+  width: 70px;
+  height: 70px;
+  border: 2px dashed #cbd5e1;
+  border-radius: 6px;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.add-more-btn {
+  width: 24px;
+  height: 24px;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.add-more-btn svg {
+  width: 100%;
+  height: 100%;
+}
+
+.file-input {
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  cursor: pointer;
+}
+
+.thumbnail-container {
+  position: relative;
+  width: 70px;
+  height: 70px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 2px solid #e5e7eb;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.thumbnail-container:hover {
+  border-color: #0E64A5;
+  transform: scale(1.05);
+}
+
+.primary-thumbnail {
+  border-color: #0E64A5;
+  transform: scale(1.05);
+}
+
+.thumbnail-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.add-more-container {
+  width: 70px;
+  height: 70px;
+  border: 2px dashed #cbd5e1;
+  border-radius: 6px;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.add-more-btn {
+  width: 24px;
+  height: 24px;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.add-more-btn svg {
+  width: 100%;
+  height: 100%;
+}
+
+.file-input {
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  cursor: pointer;
+}
 </style> 
