@@ -5,7 +5,7 @@ import Modal from "@/Components/Modal.vue";
 import InputError from "@/Components/InputError.vue";
 import InputLabel from "@/Components/InputLabel.vue";
 import TextInput from "@/Components/TextInput.vue";
-import { ref, onMounted } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import axios from "axios";
 import CustomPagination from "@/Components/CustomPagination.vue";
 import SuccessMessage from "@/Components/SuccessMessage.vue";
@@ -48,6 +48,15 @@ const form = useForm({
 });
 
 const formErrors = ref({});
+const isProductDropdownOpen = ref(false);
+const isWarehouseDropdownOpen = ref(false);
+const isStatusDropdownOpen = ref(false);
+const productSearch = ref("");
+const warehouseSearch = ref("");
+const statusSearch = ref("");
+const filteredProducts = ref([]);
+const filteredWarehouses = ref([]);
+const filteredStatuses = ref(["active", "inactive"]);
 
 const editInventoryItem = (inventory) => {
   editingInventory.value = true;
@@ -120,6 +129,7 @@ const fetchProducts = async () => {
       })
     );
     products.value = response.data;
+    filteredProducts.value = response.data;
   } catch (error) {
     console.error("Error fetching products:", error);
   }
@@ -133,6 +143,7 @@ const fetchWarehouses = async () => {
       })
     );
     warehouses.value = response.data;
+    filteredWarehouses.value = response.data;
   } catch (error) {
     console.error("Error fetching warehouses:", error);
   }
@@ -226,6 +237,76 @@ const deleteInventory = async (inventoryUuid) => {
   }
 };
 
+const toggleProductDropdown = () => {
+  isProductDropdownOpen.value = !isProductDropdownOpen.value;
+};
+
+const toggleWarehouseDropdown = () => {
+  isWarehouseDropdownOpen.value = !isWarehouseDropdownOpen.value;
+};
+
+const toggleStatusDropdown = () => {
+  isStatusDropdownOpen.value = !isStatusDropdownOpen.value;
+};
+
+const filterProducts = () => {
+  filteredProducts.value = products.value.filter(product => 
+    product.name.toLowerCase().includes(productSearch.value.toLowerCase())
+  );
+};
+
+const filterWarehouses = () => {
+  filteredWarehouses.value = warehouses.value.filter(warehouse => 
+    warehouse.name.toLowerCase().includes(warehouseSearch.value.toLowerCase())
+  );
+};
+
+const filterStatuses = () => {
+  if (!statusSearch.value.trim()) {
+    filteredStatuses.value = ["active", "inactive"];
+  } else {
+    const query = statusSearch.value.toLowerCase();
+    filteredStatuses.value = ["active", "inactive"].filter(status => 
+      status.toLowerCase().includes(query)
+    );
+  }
+};
+
+const selectProduct = (product) => {
+  form.product_id = product.id;
+  isProductDropdownOpen.value = false;
+  productSearch.value = "";
+};
+
+const selectWarehouse = (warehouse) => {
+  form.warehouse_id = warehouse.id;
+  isWarehouseDropdownOpen.value = false;
+  warehouseSearch.value = "";
+};
+
+const selectStatus = (status) => {
+  form.status = status;
+  isStatusDropdownOpen.value = false;
+  statusSearch.value = "";
+};
+
+const closeDropdownsOutside = (event) => {
+  const dropdowns = document.querySelectorAll('.custom-select-container');
+  let clickedInside = false;
+  
+  dropdowns.forEach(dropdown => {
+    if (dropdown.contains(event.target)) {
+      clickedInside = true;
+    }
+  });
+
+  if (!clickedInside) {
+    isProductDropdownOpen.value = false;
+    isWarehouseDropdownOpen.value = false;
+    isStatusDropdownOpen.value = false;
+  }
+};
+
 defineProps({
   //   inventories: {
   //     type: Array
@@ -235,6 +316,11 @@ onMounted(() => {
   fetchInventories();
   fetchProducts();
   fetchWarehouses();
+  document.addEventListener('click', closeDropdownsOutside);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('click', closeDropdownsOutside);
 });
 </script>
 
@@ -417,46 +503,172 @@ onMounted(() => {
                 <!-- Product Dropdown -->
                 <div class="form-group">
                   <label>Product Name <span class="required">*</span></label>
-                  <select
-                    class="custom-select"
-                    v-model="form.product_id"
-                    required
-                    :disabled="editingInventory"
-                  >
-                    <option value="">Select Product</option>
-                    <option
-                      v-for="product in products"
-                      :key="product.id"
-                      :value="product.id"
+                  <div class="custom-select-container">
+                    <div 
+                      class="custom-select-trigger" 
+                      @click="toggleProductDropdown"
+                      :class="{ 'active': isProductDropdownOpen }"
                     >
-                      {{ product.name }}
-                    </option>
-                  </select>
+                      <span :data-has-value="!!form.product_id">{{ products.find(p => p.id === form.product_id)?.name || 'Select product' }}</span>
+                      <svg 
+                        class="dropdown-arrow" 
+                        :class="{ 'open': isProductDropdownOpen }"
+                        xmlns="http://www.w3.org/2000/svg" 
+                        width="16" 
+                        height="16" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        stroke-width="2" 
+                        stroke-linecap="round" 
+                        stroke-linejoin="round"
+                      >
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                      </svg>
+                    </div>
+                    
+                    <div class="custom-select-dropdown" v-show="isProductDropdownOpen">
+                      <div class="search-box">
+                        <input
+                          type="text"
+                          v-model="productSearch"
+                          @input="filterProducts"
+                          placeholder="Search product..."
+                          class="dropdown-search"
+                          @click.stop
+                        >
+                      </div>
+                      
+                      <div class="dropdown-options">
+                        <div
+                          v-for="product in filteredProducts"
+                          :key="product.id"
+                          class="dropdown-option"
+                          @click="selectProduct(product)"
+                        >
+                          {{ product.name }}
+                        </div>
+                        <div v-if="filteredProducts.length === 0" class="no-results">
+                          No products match your search
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                   <InputError class="mt-2" :message="form.errors.product_id" />
                 </div>
 
                 <!-- Warehouse Dropdown -->
                 <div class="form-group">
                   <label>Warehouse <span class="required">*</span></label>
-                  <select
-                    class="custom-select"
-                    v-model="form.warehouse_id"
-                    @input="handleInputChange"
-                    required
-                  >
-                    <option value="">Select Warehouse</option>
-                    <option
-                      v-for="warehouse in warehouses"
-                      :key="warehouse.id"
-                      :value="warehouse.id"
+                  <div class="custom-select-container">
+                    <div 
+                      class="custom-select-trigger" 
+                      @click="toggleWarehouseDropdown"
+                      :class="{ 'active': isWarehouseDropdownOpen }"
                     >
-                      {{ warehouse.name }}
-                    </option>
-                  </select>
-                  <InputError
-                    class="mt-2"
-                    :message="form.errors.warehouse_id"
-                  />
+                      <span :data-has-value="!!form.warehouse_id">{{ warehouses.find(w => w.id === form.warehouse_id)?.name || 'Select warehouse' }}</span>
+                      <svg 
+                        class="dropdown-arrow" 
+                        :class="{ 'open': isWarehouseDropdownOpen }"
+                        xmlns="http://www.w3.org/2000/svg" 
+                        width="16" 
+                        height="16" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        stroke-width="2" 
+                        stroke-linecap="round" 
+                        stroke-linejoin="round"
+                      >
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                      </svg>
+                    </div>
+                    
+                    <div class="custom-select-dropdown" v-show="isWarehouseDropdownOpen">
+                      <div class="search-box">
+                        <input
+                          type="text"
+                          v-model="warehouseSearch"
+                          @input="filterWarehouses"
+                          placeholder="Search warehouse..."
+                          class="dropdown-search"
+                          @click.stop
+                        >
+                      </div>
+                      
+                      <div class="dropdown-options">
+                        <div
+                          v-for="warehouse in filteredWarehouses"
+                          :key="warehouse.id"
+                          class="dropdown-option"
+                          @click="selectWarehouse(warehouse)"
+                        >
+                          {{ warehouse.name }}
+                        </div>
+                        <div v-if="filteredWarehouses.length === 0" class="no-results">
+                          No warehouses match your search
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <InputError class="mt-2" :message="form.errors.warehouse_id" />
+                </div>
+
+                <!-- Status Dropdown -->
+                <div class="form-group">
+                  <label>Status <span class="required">*</span></label>
+                  <div class="custom-select-container">
+                    <div 
+                      class="custom-select-trigger" 
+                      @click="toggleStatusDropdown"
+                      :class="{ 'active': isStatusDropdownOpen }"
+                    >
+                      <span :data-has-value="!!form.status">{{ form.status || 'Select status' }}</span>
+                      <svg 
+                        class="dropdown-arrow" 
+                        :class="{ 'open': isStatusDropdownOpen }"
+                        xmlns="http://www.w3.org/2000/svg" 
+                        width="16" 
+                        height="16" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        stroke-width="2" 
+                        stroke-linecap="round" 
+                        stroke-linejoin="round"
+                      >
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                      </svg>
+                    </div>
+                    
+                    <div class="custom-select-dropdown" v-show="isStatusDropdownOpen">
+                      <div class="search-box">
+                        <input
+                          type="text"
+                          v-model="statusSearch"
+                          @input="filterStatuses"
+                          placeholder="Search status..."
+                          class="dropdown-search"
+                          @click.stop
+                        >
+                      </div>
+                      
+                      <div class="dropdown-options">
+                        <div
+                          v-for="status in filteredStatuses"
+                          :key="status"
+                          class="dropdown-option"
+                          @click="selectStatus(status)"
+                        >
+                          {{ status }}
+                        </div>
+                        <div v-if="filteredStatuses.length === 0" class="no-results">
+                          No statuses match your search
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <InputError class="mt-2" :message="form.errors.status" />
                 </div>
 
                 <!-- Cost Price -->
