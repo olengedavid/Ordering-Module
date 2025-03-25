@@ -1,7 +1,7 @@
 <script setup>
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head } from "@inertiajs/vue3";
-import { ref, onMounted, onUnmounted } from "vue";
+import { ref, onMounted, onUnmounted, computed } from "vue";
 import { useForm, usePage } from "@inertiajs/vue3";
 import CustomPagination from "@/Components/CustomPagination.vue";
 import SuccessMessage from "@/Components/SuccessMessage.vue";
@@ -20,6 +20,8 @@ const products = ref([]);
 const successMessage = ref("");
 const errorMessage = ref("");
 const searchQuery = ref("");
+const sortKey = ref("name");
+const sortDir = ref("asc");
 
 const currentPage = ref(1);
 const perPage = ref(10);
@@ -446,6 +448,72 @@ const fetchUnits = async () => {
   }
 };
 
+// Computed properties for filtering and sorting
+const filteredProducts = computed(() => {
+  if (searchQuery.value.trim() === "") {
+    return products.value;
+  }
+
+  const query = searchQuery.value.toLowerCase();
+  return products.value.filter((product) => {
+    return Object.values(product).some((value) => {
+      if (value === null || value === undefined) return false;
+      return String(value).toLowerCase().includes(query);
+    });
+  });
+});
+
+const sortedProducts = computed(() => {
+  const products = [...filteredProducts.value];
+  products.sort((a, b) => {
+    let modifier = sortDir.value === "asc" ? 1 : -1;
+
+    // Map frontend keys to backend keys
+    const keyMap = {
+      sku: "sku_number",
+      unitOfMeasure: "unit_of_measure",
+      manufacturer: "manufucturer"
+    };
+
+    let aKey = keyMap[sortKey.value] || sortKey.value;
+    let bKey = keyMap[sortKey.value] || sortKey.value;
+
+    let aValue = a[aKey];
+    let bValue = b[bKey];
+
+    // Handle undefined or null values
+    if (aValue === undefined || aValue === null) {
+      aValue = "";
+    }
+    if (bValue === undefined || bValue === null) {
+      bValue = "";
+    }
+
+    if (typeof aValue === "number" && typeof bValue === "number") {
+      return aValue < bValue ? -1 * modifier : 1 * modifier;
+    } else {
+      return aValue.toString().localeCompare(bValue.toString()) * modifier;
+    }
+  });
+
+  return products;
+});
+
+// Event handlers
+const sortBy = (key) => {
+  if (sortKey.value === key) {
+    sortDir.value = sortDir.value === "asc" ? "desc" : "asc";
+  } else {
+    sortKey.value = key;
+    sortDir.value = "asc";
+  }
+};
+
+const getSortIcon = (key) => {
+  if (sortKey.value !== key) return "sort-icon sort-none";
+  return sortDir.value === "asc" ? "sort-icon sort-asc" : "sort-icon sort-desc";
+};
+
 onMounted(() => {
   fetchSupplierProducts();
   fetchUnits();
@@ -530,26 +598,33 @@ onUnmounted(() => {
             <table class="data-table">
               <thead class="bg-gray-50">
                 <tr>
-                  <th class="table-header table-header-sortable">Product</th>
-                  <th class="table-header table-header-sortable">Name</th>
-                  <th class="table-header table-header-sortable">SKU</th>
-
-                  <th class="table-header table-header-sortable">Category</th>
-                  <th class="table-header table-header-sortable">
-                    Unit of Measure
+                  <th class="table-header">Product</th>
+                  <th @click="sortBy('name')" class="table-header table-header-sortable">
+                    Name <i :class="getSortIcon('name')"></i>
                   </th>
-                  <th class="table-header table-header-sortable">
-                    Description
+                  <th @click="sortBy('sku')" class="table-header table-header-sortable">
+                    SKU <i :class="getSortIcon('sku')"></i>
                   </th>
-                  <th class="table-header table-header-sortable">
-                    Manufucturer
+                  <th @click="sortBy('category')" class="table-header table-header-sortable">
+                    Category <i :class="getSortIcon('category')"></i>
                   </th>
-                  <th class="table-header table-header-sortable">Status</th>
+                  <th @click="sortBy('unitOfMeasure')" class="table-header table-header-sortable">
+                    Unit of Measure <i :class="getSortIcon('unitOfMeasure')"></i>
+                  </th>
+                  <th @click="sortBy('description')" class="table-header table-header-sortable">
+                    Description <i :class="getSortIcon('description')"></i>
+                  </th>
+                  <th @click="sortBy('manufacturer')" class="table-header table-header-sortable">
+                    Manufacturer <i :class="getSortIcon('manufacturer')"></i>
+                  </th>
+                  <th @click="sortBy('status')" class="table-header table-header-sortable">
+                    Status <i :class="getSortIcon('status')"></i>
+                  </th>
                   <th class="table-header actions-column">Actions</th>
                 </tr>
               </thead>
               <tbody class="bg-white divide-y divide-gray-200">
-                <tr v-for="product in products" :key="product.id">
+                <tr v-for="product in sortedProducts" :key="product.id">
                   <td class="table-cell">
                     <div class="product-image-container">
                       <img
@@ -1178,5 +1253,38 @@ onUnmounted(() => {
   padding: 8px 12px;
   color: #6b7280;
   text-align: center;
+}
+
+.table-header-sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.sort-icon {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background-repeat: no-repeat;
+  background-position: center;
+  margin-left: 4px;
+  vertical-align: text-bottom;
+}
+
+.sort-none::after {
+  content: "⇵";
+  opacity: 0.3;
+  font-size: 12px;
+}
+
+.sort-asc::after {
+  content: "↑";
+  color: #2563eb;
+  font-size: 12px;
+}
+
+.sort-desc::after {
+  content: "↓";
+  color: #2563eb;
+  font-size: 12px;
 }
 </style>
