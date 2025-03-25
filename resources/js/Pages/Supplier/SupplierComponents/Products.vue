@@ -686,14 +686,13 @@ export default {
 
     const editProduct = (product) => {
       editingProduct.value = true;
-      editingProductId.value = product.id;
+      editingProductId.value = product.uuid;
 
       // Map API fields to form fields
       newProduct.productName = product.name || product.productName;
       newProduct.skuNumber = product.sku_number || product.skuNumber;
       newProduct.category = product.category;
-      newProduct.unitOfMeasure =
-        product.unit_of_measure || product.unitOfMeasure;
+      newProduct.unitOfMeasure = product.unit_of_measure || product.unitOfMeasure;
       newProduct.description = product.description;
       newProduct.manufacturer = product.manufucturer || product.manufacturer;
       newProduct.status = product.status.charAt(0).toUpperCase() + product.status.slice(1);
@@ -702,15 +701,10 @@ export default {
       if (product.images) {
         try {
           let images;
-          const parsedImages =
-            typeof product.images === "string"
-              ? JSON.parse(product.images)
-              : product.images;
+          const parsedImages = typeof product.images === "string" ? JSON.parse(product.images) : product.images;
 
           // Handle both array and object formats
-          images = Array.isArray(parsedImages)
-            ? parsedImages
-            : Object.values(parsedImages);
+          images = Array.isArray(parsedImages) ? parsedImages : Object.values(parsedImages);
 
           productImages.value = images.map((img, index) => ({
             id: index + 1,
@@ -763,11 +757,6 @@ export default {
           }
         }
       });
-
-      // Log the FormData contents
-      for (let pair of formData.entries()) {
-        console.log(pair[0], pair[1]);
-      }
 
       if (editingProduct.value) {
         axios
