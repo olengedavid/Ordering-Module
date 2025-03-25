@@ -286,39 +286,113 @@
             </div>
 
             <div class="form-group">
-              <label for="category"
-                >Category <span class="required">*</span></label
-              >
-              <select id="category" v-model="newProduct.category" required>
-                <option value="" disabled selected>Select category</option>
-                <option
-                  v-for="category in productCategories"
-                  :key="category"
-                  :value="category"
+              <label for="category">Category <span class="required">*</span></label>
+              <div class="custom-select-container">
+                <div 
+                  class="custom-select-trigger" 
+                  @click="toggleCategoryDropdown"
+                  :class="{ 'active': isCategoryOpen }"
                 >
-                  {{ category }}
-                </option>
-              </select>
+                  <span :data-has-value="!!newProduct.category">{{ newProduct.category || 'Select category' }}</span>
+                  <svg 
+                    class="dropdown-arrow" 
+                    :class="{ 'open': isCategoryOpen }"
+                    xmlns="http://www.w3.org/2000/svg" 
+                    width="16" 
+                    height="16" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    stroke-width="2" 
+                    stroke-linecap="round" 
+                    stroke-linejoin="round"
+                  >
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </div>
+                
+                <div class="custom-select-dropdown" v-show="isCategoryOpen">
+                  <div class="search-box">
+                    <input
+                      type="text"
+                      v-model="categorySearchQuery"
+                      @input="filterCategories"
+                      placeholder="Search categories..."
+                      class="dropdown-search"
+                      @click.stop
+                    >
+                  </div>
+                  
+                  <div class="dropdown-options">
+                    <div
+                      v-for="category in filteredCategories"
+                      :key="category"
+                      class="dropdown-option"
+                      @click="selectCategory(category)"
+                    >
+                      {{ category }}
+                    </div>
+                    <div v-if="filteredCategories.length === 0" class="no-results">
+                      No categories match your search
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div class="form-group">
-              <label for="unitOfMeasure"
-                >Unit of Measure <span class="required">*</span></label
-              >
-              <select
-                id="unitOfMeasure"
-                v-model="newProduct.unitOfMeasure"
-                required
-              >
-                <option value="" disabled selected>Select unit</option>
-                <option
-                  v-for="unit in unitsOfMeasure"
-                  :key="unit"
-                  :value="unit"
+              <label for="unitOfMeasure">Unit of Measure <span class="required">*</span></label>
+              <div class="custom-select-container">
+                <div 
+                  class="custom-select-trigger" 
+                  @click="toggleUnitDropdown"
+                  :class="{ 'active': isUnitOpen }"
                 >
-                  {{ unit }}
-                </option>
-              </select>
+                  <span :data-has-value="!!newProduct.unitOfMeasure">{{ newProduct.unitOfMeasure || 'Select unit' }}</span>
+                  <svg 
+                    class="dropdown-arrow" 
+                    :class="{ 'open': isUnitOpen }"
+                    xmlns="http://www.w3.org/2000/svg" 
+                    width="16" 
+                    height="16" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    stroke-width="2" 
+                    stroke-linecap="round" 
+                    stroke-linejoin="round"
+                  >
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </div>
+                
+                <div class="custom-select-dropdown" v-show="isUnitOpen">
+                  <div class="search-box">
+                    <input
+                      type="text"
+                      v-model="unitSearchQuery"
+                      @input="filterUnits"
+                      placeholder="Search units..."
+                      class="dropdown-search"
+                      @click.stop
+                    >
+                  </div>
+                  
+                  <div class="dropdown-options">
+                    <div
+                      v-for="unit in filteredUnits"
+                      :key="unit"
+                      class="dropdown-option"
+                      @click="selectUnit(unit)"
+                    >
+                      {{ unit }}
+                    </div>
+                    <div v-if="filteredUnits.length === 0" class="no-results">
+                      No units match your search
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div class="form-group">
@@ -349,10 +423,57 @@
 
             <div class="form-group">
               <label for="status">Status</label>
-              <select id="status" v-model="newProduct.status">
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-              </select>
+              <div class="custom-select-container">
+                <div 
+                  class="custom-select-trigger" 
+                  @click="toggleStatusDropdown"
+                  :class="{ 'active': isStatusOpen }"
+                >
+                  <span :data-has-value="!!newProduct.status">{{ newProduct.status || 'Select status' }}</span>
+                  <svg 
+                    class="dropdown-arrow" 
+                    :class="{ 'open': isStatusOpen }"
+                    xmlns="http://www.w3.org/2000/svg" 
+                    width="16" 
+                    height="16" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    stroke-width="2" 
+                    stroke-linecap="round" 
+                    stroke-linejoin="round"
+                  >
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </div>
+                
+                <div class="custom-select-dropdown" v-show="isStatusOpen">
+                  <div class="search-box">
+                    <input
+                      type="text"
+                      v-model="statusSearchQuery"
+                      @input="filterStatuses"
+                      placeholder="Search statuses..."
+                      class="dropdown-search"
+                      @click.stop
+                    >
+                  </div>
+                  
+                  <div class="dropdown-options">
+                    <div
+                      v-for="status in filteredStatuses"
+                      :key="status"
+                      class="dropdown-option"
+                      @click="selectStatus(status)"
+                    >
+                      {{ status }}
+                    </div>
+                    <div v-if="filteredStatuses.length === 0" class="no-results">
+                      No statuses match your search
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div class="form-actions">
@@ -380,7 +501,7 @@
 
 <script>
 import { router, useForm, usePage } from "@inertiajs/vue3";
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import CustomPagination from "@/Components/CustomPagination.vue";
 import SuccessMessage from "@/Components/SuccessMessage.vue";
 import ErrorMessage from "@/Components/ErrorMessage.vue";
@@ -490,6 +611,17 @@ export default {
     // Message state
     const successMessage = ref("");
     const errorMessage = ref("");
+
+    // Dropdown states
+    const isCategoryOpen = ref(false);
+    const isUnitOpen = ref(false);
+    const isStatusOpen = ref(false);
+    const categorySearchQuery = ref('');
+    const unitSearchQuery = ref('');
+    const statusSearchQuery = ref('');
+    const filteredCategories = ref([...productCategories]);
+    const filteredUnits = ref([...unitsOfMeasure]);
+    const filteredStatuses = ref(['Active', 'Inactive']);
 
     // Computed properties
     const sortedProducts = computed(() => {
@@ -841,9 +973,122 @@ export default {
       }
     };
 
-    // Initialize
+    // Dropdown methods
+    const toggleCategoryDropdown = () => {
+      isCategoryOpen.value = !isCategoryOpen.value;
+      if (isCategoryOpen.value) {
+        categorySearchQuery.value = '';
+        filteredCategories.value = [...productCategories];
+      }
+      // Close other dropdowns
+      isUnitOpen.value = false;
+      isStatusOpen.value = false;
+    };
+
+    const toggleUnitDropdown = () => {
+      isUnitOpen.value = !isUnitOpen.value;
+      if (isUnitOpen.value) {
+        unitSearchQuery.value = '';
+        filteredUnits.value = [...unitsOfMeasure];
+      }
+      // Close other dropdowns
+      isCategoryOpen.value = false;
+      isStatusOpen.value = false;
+    };
+
+    const toggleStatusDropdown = () => {
+      isStatusOpen.value = !isStatusOpen.value;
+      if (isStatusOpen.value) {
+        statusSearchQuery.value = '';
+        filteredStatuses.value = ['Active', 'Inactive'];
+      }
+      // Close other dropdowns
+      isCategoryOpen.value = false;
+      isUnitOpen.value = false;
+    };
+
+    const filterCategories = () => {
+      if (!categorySearchQuery.value.trim()) {
+        filteredCategories.value = [...productCategories];
+      } else {
+        const query = categorySearchQuery.value.toLowerCase();
+        filteredCategories.value = productCategories.filter(
+          category => category.toLowerCase().includes(query)
+        );
+      }
+    };
+
+    const filterUnits = () => {
+      if (!unitSearchQuery.value.trim()) {
+        filteredUnits.value = [...unitsOfMeasure];
+      } else {
+        const query = unitSearchQuery.value.toLowerCase();
+        filteredUnits.value = unitsOfMeasure.filter(
+          unit => unit.toLowerCase().includes(query)
+        );
+      }
+    };
+
+    const filterStatuses = () => {
+      if (!statusSearchQuery.value.trim()) {
+        filteredStatuses.value = ['Active', 'Inactive'];
+      } else {
+        const query = statusSearchQuery.value.toLowerCase();
+        filteredStatuses.value = ['Active', 'Inactive'].filter(
+          status => status.toLowerCase().includes(query)
+        );
+      }
+    };
+
+    const selectCategory = (category) => {
+      newProduct.category = category;
+      isCategoryOpen.value = false;
+      categorySearchQuery.value = '';
+    };
+
+    const selectUnit = (unit) => {
+      newProduct.unitOfMeasure = unit;
+      isUnitOpen.value = false;
+      unitSearchQuery.value = '';
+    };
+
+    const selectStatus = (status) => {
+      newProduct.status = status;
+      isStatusOpen.value = false;
+      statusSearchQuery.value = '';
+    };
+
+    // Close dropdowns when clicking outside
+    const closeDropdownsOutside = (event) => {
+      const dropdowns = document.querySelectorAll('.custom-select-container');
+      let clickedInside = false;
+      
+      dropdowns.forEach(dropdown => {
+        if (dropdown.contains(event.target)) {
+          clickedInside = true;
+        }
+      });
+
+      if (!clickedInside) {
+        isCategoryOpen.value = false;
+        isUnitOpen.value = false;
+        isStatusOpen.value = false;
+      }
+    };
+
+    // Initialize dropdowns
     onMounted(() => {
       fetchProducts();
+      document.addEventListener('click', closeDropdownsOutside);
+      // Initialize filtered arrays
+      filteredCategories.value = [...productCategories];
+      filteredUnits.value = [...unitsOfMeasure];
+      filteredStatuses.value = ['Active', 'Inactive'];
+    });
+
+    // Remove event listener when component is unmounted
+    onUnmounted(() => {
+      document.removeEventListener('click', closeDropdownsOutside);
     });
 
     return {
@@ -883,6 +1128,24 @@ export default {
       setPrimaryImage,
       getPrimaryImagePreviewPath,
       autoDismissMessage,
+      isCategoryOpen,
+      isUnitOpen,
+      isStatusOpen,
+      categorySearchQuery,
+      unitSearchQuery,
+      statusSearchQuery,
+      filteredCategories,
+      filteredUnits,
+      filteredStatuses,
+      toggleCategoryDropdown,
+      toggleUnitDropdown,
+      toggleStatusDropdown,
+      filterCategories,
+      filterUnits,
+      filterStatuses,
+      selectCategory,
+      selectUnit,
+      selectStatus,
     };
   },
 };

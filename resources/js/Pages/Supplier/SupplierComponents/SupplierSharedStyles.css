@@ -453,24 +453,35 @@
 
 .custom-select-trigger {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  width: 100%;
-  padding: 10px 14px;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  background-color: white;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
   cursor: pointer;
-  transition: all 0.2s;
+  background-color: white;
+  transition: all 0.2s ease;
+}
+
+.custom-select-trigger:hover {
+  border-color: #999;
 }
 
 .custom-select-trigger.active {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+  border-color: #ddd;
+}
+
+.custom-select-trigger span {
+  color: #6B7280;
+}
+
+.custom-select-trigger span[data-has-value="true"] {
+  color: #000;
 }
 
 .dropdown-arrow {
-  transition: transform 0.2s;
+  transition: transform 0.2s ease;
+  color: #6B7280;
 }
 
 .dropdown-arrow.open {
@@ -481,14 +492,14 @@
   position: absolute;
   top: 100%;
   left: 0;
-  width: 100%;
-  background-color: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  margin-top: 5px;
-  z-index: 10;
-  max-height: 300px;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-top: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  max-height: 250px;
   overflow-y: auto;
 }
 
@@ -496,46 +507,51 @@
   top: auto;
   bottom: 100%;
   margin-top: 0;
-  margin-bottom: 5px;
+  margin-bottom: 4px;
 }
 
 .search-box {
-  padding: 10px 12px;
-  border-bottom: 1px solid #e5e7eb;
+  padding: 8px;
+  border-bottom: 1px solid #eee;
 }
 
 .dropdown-search {
   width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #cbd5e1;
+  padding: 8px;
+  border: 1px solid #ddd;
   border-radius: 4px;
-  font-size: 0.9rem;
+  outline: none;
+  color: #000;
+}
+
+.dropdown-search::placeholder {
+  color: #6B7280;
 }
 
 .dropdown-search:focus {
-  outline: none;
-  border-color: #2563eb;
+  border-color: #ddd;
 }
 
 .dropdown-options {
-  max-height: 220px;
+  max-height: 200px;
   overflow-y: auto;
 }
 
 .dropdown-option {
-  padding: 10px 14px;
+  padding: 8px 12px;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s ease;
+  color: #000;
 }
 
 .dropdown-option:hover {
-  background-color: #f1f5f9;
+  background-color: #f7fafc;
 }
 
 .no-results {
-  padding: 14px;
+  padding: 12px;
   text-align: center;
-  color: #64748b;
+  color: #718096;
   font-style: italic;
 }
 
