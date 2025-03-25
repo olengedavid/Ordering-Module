@@ -78,11 +78,14 @@ class UserPermissionController extends BaseController
         }
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, $uuid)
     {
+         // Update user
+         $user = User::where('uuid', $uuid)->firstOrFail();
+
         $validated = $request->validate([
             'username' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $id,
+            'email' => 'required|email|unique:users,email,'.$user->id,
             'password' => 'nullable|min:8',
             'permissions' => ['array', 'distinct', 'required'],
             'warehouse_id' => 'nullable|exists:warehouses,id',
@@ -93,8 +96,6 @@ class UserPermissionController extends BaseController
         try {
             DB::beginTransaction();
 
-            // Update user
-            $user = User::findOrFail($id);
             $userData = [
                 'name' => $validated['username'],
                 'email' => $validated['email'],
@@ -110,7 +111,7 @@ class UserPermissionController extends BaseController
             $user->update($userData);
 
             // Update permissions
-            $userPermission = userPermission::where('user_id', $id)->first();
+            $userPermission = userPermission::where('user_id', $user->id)->first();
             if ($userPermission) {
                 $userPermission->update([
                     'permissions' => json_encode($validated['permissions']),
@@ -120,10 +121,8 @@ class UserPermissionController extends BaseController
 
             DB::commit();
 
-            return response()->json([
-                'message' => 'User updated successfully',
-                'user' => $user->load('userPermissions')
-            ]);
+            return redirect()->back()
+                ->with('success', 'User updated successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
@@ -152,7 +151,7 @@ class UserPermissionController extends BaseController
                         ->orWhere('email', 'like', "%{$search}%");
                 });
             })
-            ->select('id', 'name', 'email', 'company_id', 'warehouse_id', 'status')
+            ->select('id', 'uuid', 'name', 'email', 'company_id', 'warehouse_id', 'status')
             ->paginate($request->perPage ?? 10);
 
         return response()->json($users);

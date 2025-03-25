@@ -3,8 +3,8 @@
     <div class="page-container">
       <div class="content-container">
         <div class="message-container">
-          <SuccessMessage v-if="successMessage" @close="successMessage = ''" v-slot>{{ successMessage }}</SuccessMessage>
-          <ErrorMessage v-if="errorMessage" @close="errorMessage = ''" v-slot>{{ errorMessage }}</ErrorMessage>
+          <SuccessMessage v-if="successMessage" @close="successMessage = ''" v-slot="{}">{{ successMessage }}</SuccessMessage>
+          <ErrorMessage v-if="errorMessage" @close="errorMessage = ''" v-slot="{}">{{ errorMessage }}</ErrorMessage>
         </div>
         <div class="header-container">
           <h1 class="page-title">Supplier Users</h1>
@@ -85,8 +85,8 @@
                   <td>
                     <span
                       :class="[
-                        'status-pill',
-                        user.status === 'Active'
+                        'status-pill capitalize',
+                        user.status === 'active'
                           ? 'status-active'
                           : 'status-inactive',
                       ]"
@@ -236,12 +236,12 @@
                 <label for="warehouse"
                   >Warehouse <span class="required">*</span></label
                 >
-                <select id="warehouse" v-model="form.warehouse" required>
+                <select id="warehouse" v-model="form.warehouse_id" required>
                   <option value="">Select a Warehouse</option>
                   <option
                     v-for="warehouse in warehouses"
                     :key="warehouse.id"
-                    :value="warehouse.name"
+                    :value="warehouse.id"
                   >
                     {{ warehouse.name }}
                   </option>
@@ -302,6 +302,7 @@ import { ref, onMounted, computed } from "vue";
 import { usePage, useForm } from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import CustomPagination from "@/Components/CustomPagination.vue";
+import SuccessMessage from "@/Components/SuccessMessage.vue";
 
 const page = usePage();
 const user = page.props.auth.user;
@@ -312,11 +313,13 @@ const showUserModal = ref(false);
 const showPassword = ref(false);
 const editingUser = ref(false);
 const editingUserId = ref(null);
+const editingUserUuid = ref(null);
 const sortKey = ref("username");
 const sortDir = ref("asc");
 const currentPage = ref(1);
 const perPage = ref(10);
 const lastPage = ref(1);
+const successMessage = ref("");
 
 // Data from API
 const supplier_uuid = page.props.auth.user.company.uuid;
@@ -383,14 +386,14 @@ const fetchSupplierUsers = async () => {
     // Transform API response to match UI format
 
     users.value = response.data.data.map((user) => ({
-      id: user.id,
+      ...user,
       username: user.name,
       email: user.email,
       password: "securepass", // Placeholder for display
       displayPassword: "••••••••",
       warehouse: user.warehouse?.name || "",
       permissions: parsePermissions(user.user_permissions?.[0]?.permissions),
-      status: user.status.charAt(0).toUpperCase() + user.status.slice(1), // Capitalize status
+      status:  user.status,
     }));
 
     currentPage.value = response.data.current_page;
@@ -423,6 +426,7 @@ const mapPermissionsToApi = (permissions) => {
 const openAddUserModal = () => {
   editingUser.value = false;
   editingUserId.value = null;
+  editingUserUuid.value = null;
   selectedPermissions.value = [];
   form.reset();
   showUserModal.value = true;
@@ -443,6 +447,7 @@ const editUser = (user) => {
   console.log("Editing user:", user);
   editingUser.value = true;
   editingUserId.value = user.id;
+  editingUserUuid.value = user.uuid;
   // Set the form data
   form.username = user.username;
   form.email = user.email;
@@ -457,12 +462,19 @@ const editUser = (user) => {
 // Save user (create or update)
 const saveUser = () => {
   if (editingUser.value) {
-    form.put(route("supplier.users.update", { uuid: editingUser.value.uuid }), {
+    // Log the UUID to verify it exists
+    form.put(route("supplier.users.update", editingUserUuid.value), {
       preserveScroll: true,
       onSuccess: () => {
         closeUserModal();
         form.reset();
         fetchSupplierUsers();
+
+        // Flash
+        successMessage.value = "User updated successfully";
+          setTimeout(() => {
+            successMessage.value = "";
+          }, 3000);
       },
     });
   } else {
@@ -472,6 +484,12 @@ const saveUser = () => {
         closeUserModal();
         form.reset();
         fetchSupplierUsers();
+
+        // Flash
+        successMessage.value = "User created successfully";
+          setTimeout(() => {
+            successMessage.value = "";
+          }, 3000);
       },
     });
   }

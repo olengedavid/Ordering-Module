@@ -252,12 +252,15 @@ onMounted(() => {
           <SuccessMessage
             v-if="successMessage"
             @close="successMessage = ''"
-            v-slot
+            v-slot="{}"
             >{{ successMessage }}</SuccessMessage
           >
-          <ErrorMessage v-if="errorMessage" @close="errorMessage = ''" v-slot>{{
-            errorMessage
-          }}</ErrorMessage>
+          <ErrorMessage
+            v-if="errorMessage"
+            @close="errorMessage = ''"
+            v-slot="{}"
+            >{{ errorMessage }}</ErrorMessage
+          >
         </div>
 
         <div class="header-container">
