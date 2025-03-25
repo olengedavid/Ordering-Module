@@ -451,6 +451,11 @@ onMounted(() => {
                     </button>
                   </td>
                 </tr>
+                <tr v-if="products.length === 0">
+                  <td colspan="9" class="px-6 py-4 text-center text-gray-500">
+                    No products found
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -729,10 +734,6 @@ onMounted(() => {
               </form>
             </div>
           </div>
-        </div>
-
-        <div v-if="products.length === 0" class="text-center py-12">
-          <p class="text-gray-500">No products found</p>
         </div>
       </div>
     </div>
