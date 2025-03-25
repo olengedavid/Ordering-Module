@@ -87,12 +87,6 @@ class ProductController extends Controller
 
     {
 
-        // Debug the request
-        // \Illuminate\Support\Facades\Log::info('Request data:', [
-        //     'has_file' => $request->hasFile('primary_image'),
-        //     'all_data' => $request->all(),
-        //     'files' => $request->allFiles()
-        // ]);
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'sku_number' => 'required|string|unique:products',
@@ -172,7 +166,6 @@ class ProductController extends Controller
             $primaryPath = $primaryImage->storeAs('products', $uniqueRef . '.' . $extension, 'public');
 
             // Remove old primary image
-            // Remove old primary image
             $images = array_values(array_filter($images, fn($img) => $img['type'] !== 'primary'));
 
             // Add new primary image
@@ -200,7 +193,7 @@ class ProductController extends Controller
 
         $product->update([
             ...$validated,
-            'images' => json_encode($images),
+            'images' => json_encode(array_values($images)),
         ]);
 
         return response()->json([
