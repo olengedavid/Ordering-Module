@@ -355,7 +355,6 @@ onMounted(() => {
             Add Product
           </button>
         </div>
-
         <!-- Table -->
         <div class="table-container">
           <div class="table-wrapper">

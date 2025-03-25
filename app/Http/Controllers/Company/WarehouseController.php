@@ -58,7 +58,15 @@ class WarehouseController extends Controller
     public function getPaginatedSupplierWarehouses(Request $request)
     {
         $company = Company::where('uuid', $request->uuid)->firstOrFail();
-        $warehouses = Warehouse::where('company_id', $company->id)->paginate($request->pageSize);
+        $search = $request->input('search');
+
+
+        $warehouses = Warehouse::where('company_id', $company->id)
+            ->when($search, function ($query) use ($search) {
+                $query->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($search) . '%']);
+            })
+            ->paginate($request->pageSize);
+
         return response()->json($warehouses);
     }
 
@@ -102,7 +110,7 @@ class WarehouseController extends Controller
         try {
             $warehouse->delete();
             return redirect()->back()
-            ->with('success', 'Warehouse deleted successfully.');
+                ->with('success', 'Warehouse deleted successfully.');
         } catch (\Exception $e) {
             return response()->json(['message' => 'Error deleting warehouse'], 500);
         }

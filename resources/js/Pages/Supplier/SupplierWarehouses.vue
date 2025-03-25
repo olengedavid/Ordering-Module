@@ -1,38 +1,69 @@
 <template>
   <AuthenticatedLayout>
     <Head title="Supplier Warehouses" />
-    
+
     <div class="page-container">
       <div class="content-container">
         <div class="message-container">
-          <SuccessMessage v-if="successMessage" @close="successMessage = ''" v-slot>{{ successMessage }}</SuccessMessage>
-          <ErrorMessage v-if="errorMessage" @close="errorMessage = ''" v-slot>{{ errorMessage }}</ErrorMessage>
+          <SuccessMessage
+            v-if="successMessage"
+            @close="successMessage = ''"
+            v-slot
+            >{{ successMessage }}</SuccessMessage
+          >
+          <ErrorMessage v-if="errorMessage" @close="errorMessage = ''" v-slot>{{
+            errorMessage
+          }}</ErrorMessage>
         </div>
         <div class="header-container">
-          <h1 class="page-title">Warehouses </h1>
+          <h1 class="page-title">Warehouses</h1>
         </div>
-        
+
         <!-- Table Controls with Search Bar -->
         <div class="table-controls">
           <div class="search-container">
             <div class="search-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" color="#000000" fill="none">
-                <path opacity="0.4" fill-rule="evenodd" clip-rule="evenodd" d="M16.7929 16.7929C17.1834 16.4024 17.8166 16.4024 18.2071 16.7929L22.7071 21.2929C23.0976 21.6834 23.0976 22.3166 22.7071 22.7071C22.3166 23.0976 21.6834 23.0976 21.2929 22.7071L16.7929 18.2071C16.4024 17.8166 16.4024 17.1834 16.7929 16.7929Z" fill="currentColor" />
-                <path fill-rule="evenodd" clip-rule="evenodd" d="M1 11C1 5.47715 5.47715 1 11 1C16.5228 1 21 5.47715 21 11C21 16.5228 16.5228 21 11 21C5.47715 21 1 16.5228 1 11ZM11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3Z" fill="currentColor" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="20"
+                height="20"
+                color="#000000"
+                fill="none"
+              >
+                <path
+                  opacity="0.4"
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M16.7929 16.7929C17.1834 16.4024 17.8166 16.4024 18.2071 16.7929L22.7071 21.2929C23.0976 21.6834 23.0976 22.3166 22.7071 22.7071C22.3166 23.0976 21.6834 23.0976 21.2929 22.7071L16.7929 18.2071C16.4024 17.8166 16.4024 17.1834 16.7929 16.7929Z"
+                  fill="currentColor"
+                />
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M1 11C1 5.47715 5.47715 1 11 1C16.5228 1 21 5.47715 21 11C21 16.5228 16.5228 21 11 21C5.47715 21 1 16.5228 1 11ZM11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3Z"
+                  fill="currentColor"
+                />
               </svg>
             </div>
-            <input type="text" class="search-input" placeholder="Search warehouses..." v-model="searchQuery">
+            <input
+              type="text"
+              class="search-input"
+              placeholder="Search by name..."
+              v-model="searchQuery"
+              @keypress.enter="fetchSupplierWarehouses"
+            />
           </div>
           <button @click="openAddWarehouseModal" class="add-btn">
             <span class="plus-icon">+</span>
             Add Warehouse
           </button>
         </div>
-        
+
         <!-- Warehouses Table -->
         <div class="table-container">
           <div class="table-wrapper">
-            <table class="data-table">
+            <table v-if="filteredWarehouses.length" class="data-table">
               <thead>
                 <tr>
                   <th @click="sortBy('name')" class="sortable">
@@ -69,48 +100,68 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="warehouse in warehouses" :key="warehouse.id" class="data-row">
+                <tr
+                  v-for="warehouse in warehouses"
+                  :key="warehouse.id"
+                  class="data-row"
+                >
                   <td>{{ warehouse.name }}</td>
                   <td>{{ warehouse.contact_person }}</td>
                   <td>{{ warehouse.email }}</td>
                   <td>{{ warehouse.phone_number }}</td>
                   <td>{{ warehouse.address }}</td>
                   <td>{{ warehouse.krapin }}</td>
-                  <td>{{ warehouse.country || 'Kenya' }}</td>
+                  <td>{{ warehouse.country || "Kenya" }}</td>
                   <td>{{ warehouse.region || warehouse.location }}</td>
-                  <td>{{ warehouse.gps || '--' }}</td>
+                  <td>{{ warehouse.gps || "--" }}</td>
                   <td>
-                    <span :class="['status-pill', warehouse.status === 'active' ? 'status-active' : 'status-inactive']">
-                      {{ warehouse.status.charAt(0).toUpperCase() + warehouse.status.slice(1) }}
+                    <span
+                      :class="[
+                        'status-pill',
+                        warehouse.status === 'active'
+                          ? 'status-active'
+                          : 'status-inactive',
+                      ]"
+                    >
+                      {{
+                        warehouse.status.charAt(0).toUpperCase() +
+                        warehouse.status.slice(1)
+                      }}
                     </span>
                   </td>
                   <td class="actions-column">
-                    <button @click="editWarehouse(warehouse)" class="action-btn edit-btn">
+                    <button
+                      @click="editWarehouse(warehouse)"
+                      class="action-btn edit-btn"
+                    >
                       Edit
                     </button>
-                    <button @click="deleteWarehouse(warehouse.uuid)" class="action-btn delete-btn">
+                    <button
+                      @click="deleteWarehouse(warehouse.uuid)"
+                      class="action-btn delete-btn"
+                    >
                       Delete
                     </button>
                   </td>
                 </tr>
-                <tr v-if="filteredWarehouses.length === 0">
+              </tbody>
+            </table>
+            <tr v-if="filteredWarehouses.length === 0">
                   <td colspan="11" class="empty-state">
                     No warehouses found
                   </td>
                 </tr>
-              </tbody>
-            </table>
           </div>
         </div>
-        
+
         <!-- Pagination Controls -->
         <CustomPagination
-            :current-page="currentPage"
-            :last-page="lastPage"
-            :per-page="perPage"
-            @page-changed="handlePageChange"
-            @update:per-page="handlePerPageChange"
-          />
+          :current-page="currentPage"
+          :last-page="lastPage"
+          :per-page="perPage"
+          @page-changed="handlePageChange"
+          @update:per-page="handlePerPageChange"
+        />
         <!-- <div class="pagination-controls">
           <div class="per-page">
             <span>Show</span>
@@ -138,75 +189,156 @@
           </div>
         </div> -->
       </div>
-      
+
       <!-- Add/Edit Warehouse Modal -->
-      <div v-if="showWarehouseModal" class="modal-overlay" @click.self="closeWarehouseModal">
+      <div
+        v-if="showWarehouseModal"
+        class="modal-overlay"
+        @click.self="closeWarehouseModal"
+      >
         <div class="modal-container">
           <div class="modal-header">
-            <h2>{{ editingWarehouse ? 'Edit Warehouse' : 'Add New Warehouse' }}</h2>
-            <button class="close-btn" @click="closeWarehouseModal">&times;</button>
+            <h2>
+              {{ editingWarehouse ? "Edit Warehouse" : "Add New Warehouse" }}
+            </h2>
+            <button class="close-btn" @click="closeWarehouseModal">
+              &times;
+            </button>
           </div>
           <div class="modal-body">
             <form @submit.prevent="saveWarehouse">
               <div class="form-group">
-                <label for="warehouseName">Warehouse Name <span class="required">*</span></label>
-                <input type="text" id="warehouseName" v-model="form.name" required placeholder="Enter warehouse name">
-                <div v-if="form.errors.name" class="text-red-500 text-sm mt-1">{{ form.errors.name }}</div>
+                <label for="warehouseName"
+                  >Warehouse Name <span class="required">*</span></label
+                >
+                <input
+                  type="text"
+                  id="warehouseName"
+                  v-model="form.name"
+                  required
+                  placeholder="Enter warehouse name"
+                />
+                <div v-if="form.errors.name" class="text-red-500 text-sm mt-1">
+                  {{ form.errors.name }}
+                </div>
               </div>
               <div class="form-group">
-                <label for="contactPerson">Contact Person <span class="required">*</span></label>
-                <input type="text" id="contactPerson" v-model="form.contact_person" required placeholder="Enter contact person">
-                <div v-if="form.errors.contact_person" class="text-red-500 text-sm mt-1">{{ form.errors.contact_person }}</div>
+                <label for="contactPerson"
+                  >Contact Person <span class="required">*</span></label
+                >
+                <input
+                  type="text"
+                  id="contactPerson"
+                  v-model="form.contact_person"
+                  required
+                  placeholder="Enter contact person"
+                />
+                <div
+                  v-if="form.errors.contact_person"
+                  class="text-red-500 text-sm mt-1"
+                >
+                  {{ form.errors.contact_person }}
+                </div>
               </div>
               <div class="form-group">
                 <label for="email">Email <span class="required">*</span></label>
-                <input type="email" id="email" v-model="form.email" required placeholder="Enter email address">
-                <div v-if="form.errors.email" class="text-red-500 text-sm mt-1">{{ form.errors.email }}</div>
+                <input
+                  type="email"
+                  id="email"
+                  v-model="form.email"
+                  required
+                  placeholder="Enter email address"
+                />
+                <div v-if="form.errors.email" class="text-red-500 text-sm mt-1">
+                  {{ form.errors.email }}
+                </div>
               </div>
               <div class="form-group">
                 <label for="phone">Phone <span class="required">*</span></label>
-                <input type="text" id="phone" v-model="form.phone_number" required placeholder="Enter phone number">
-                <div v-if="form.errors.phone_number" class="text-red-500 text-sm mt-1">{{ form.errors.phone_number }}</div>
+                <input
+                  type="text"
+                  id="phone"
+                  v-model="form.phone_number"
+                  required
+                  placeholder="Enter phone number"
+                />
+                <div
+                  v-if="form.errors.phone_number"
+                  class="text-red-500 text-sm mt-1"
+                >
+                  {{ form.errors.phone_number }}
+                </div>
               </div>
               <div class="form-group">
-                <label for="address">Address <span class="required">*</span></label>
-                <input type="text" id="address" v-model="form.address" required placeholder="Enter physical address">
-                <div v-if="form.errors.address" class="text-red-500 text-sm mt-1">{{ form.errors.address }}</div>
+                <label for="address"
+                  >Address <span class="required">*</span></label
+                >
+                <input
+                  type="text"
+                  id="address"
+                  v-model="form.address"
+                  required
+                  placeholder="Enter physical address"
+                />
+                <div
+                  v-if="form.errors.address"
+                  class="text-red-500 text-sm mt-1"
+                >
+                  {{ form.errors.address }}
+                </div>
               </div>
               <div class="form-group">
-                <label for="kraPin">KRA PIN <span class="required">*</span></label>
-                <input type="text" id="kraPin" v-model="form.krapin" required placeholder="Enter KRA PIN">
-                <div v-if="form.errors.krapin" class="text-red-500 text-sm mt-1">{{ form.errors.krapin }}</div>
+                <label for="kraPin"
+                  >KRA PIN <span class="required">*</span></label
+                >
+                <input
+                  type="text"
+                  id="kraPin"
+                  v-model="form.krapin"
+                  required
+                  placeholder="Enter KRA PIN"
+                />
+                <div
+                  v-if="form.errors.krapin"
+                  class="text-red-500 text-sm mt-1"
+                >
+                  {{ form.errors.krapin }}
+                </div>
               </div>
-              
+
               <!-- Country Dropdown -->
               <div class="form-group">
-                <label for="country">Country <span class="required">*</span></label>
+                <label for="country"
+                  >Country <span class="required">*</span></label
+                >
                 <div class="custom-select-container country-select-container">
-                  <div 
-                    class="custom-select-trigger country-select-trigger" 
+                  <div
+                    class="custom-select-trigger country-select-trigger"
                     @click="toggleCountryDropdown"
-                    :class="{ 'active': isCountryDropdownOpen }"
+                    :class="{ active: isCountryDropdownOpen }"
                   >
-                    <span>{{ form.country || 'Select a country' }}</span>
-                    <svg 
-                      class="dropdown-arrow" 
-                      :class="{ 'open': isCountryDropdownOpen }"
-                      xmlns="http://www.w3.org/2000/svg" 
-                      width="16" 
-                      height="16" 
-                      viewBox="0 0 24 24" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      stroke-width="2" 
-                      stroke-linecap="round" 
+                    <span>{{ form.country || "Select a country" }}</span>
+                    <svg
+                      class="dropdown-arrow"
+                      :class="{ open: isCountryDropdownOpen }"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
                       stroke-linejoin="round"
                     >
                       <polyline points="6 9 12 15 18 9"></polyline>
                     </svg>
                   </div>
-                  
-                  <div class="custom-select-dropdown country-select-dropdown" v-show="isCountryDropdownOpen">
+
+                  <div
+                    class="custom-select-dropdown country-select-dropdown"
+                    v-show="isCountryDropdownOpen"
+                  >
                     <div class="search-box">
                       <input
                         type="text"
@@ -215,9 +347,9 @@
                         placeholder="Search country..."
                         class="dropdown-search"
                         @click.stop
-                      >
+                      />
                     </div>
-                    
+
                     <div class="dropdown-options">
                       <div
                         v-for="country in filteredCountries"
@@ -227,42 +359,50 @@
                       >
                         {{ country }}
                       </div>
-                      <div v-if="filteredCountries.length === 0" class="no-results">
+                      <div
+                        v-if="filteredCountries.length === 0"
+                        class="no-results"
+                      >
                         No countries match your search
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-              
+
               <!-- Region Dropdown -->
               <div class="form-group">
-                <label for="region">Region <span class="required">*</span></label>
+                <label for="region"
+                  >Region <span class="required">*</span></label
+                >
                 <div class="custom-select-container region-select-container">
-                  <div 
-                    class="custom-select-trigger region-select-trigger" 
+                  <div
+                    class="custom-select-trigger region-select-trigger"
                     @click="toggleRegionDropdown"
-                    :class="{ 'active': isRegionDropdownOpen }"
+                    :class="{ active: isRegionDropdownOpen }"
                   >
-                    <span>{{ form.region || 'Select a region' }}</span>
-                    <svg 
-                      class="dropdown-arrow" 
-                      :class="{ 'open': isRegionDropdownOpen }"
-                      xmlns="http://www.w3.org/2000/svg" 
-                      width="16" 
-                      height="16" 
-                      viewBox="0 0 24 24" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      stroke-width="2" 
-                      stroke-linecap="round" 
+                    <span>{{ form.region || "Select a region" }}</span>
+                    <svg
+                      class="dropdown-arrow"
+                      :class="{ open: isRegionDropdownOpen }"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
                       stroke-linejoin="round"
                     >
                       <polyline points="6 9 12 15 18 9"></polyline>
                     </svg>
                   </div>
-                  
-                  <div class="custom-select-dropdown region-select-dropdown" v-show="isRegionDropdownOpen">
+
+                  <div
+                    class="custom-select-dropdown region-select-dropdown"
+                    v-show="isRegionDropdownOpen"
+                  >
                     <div class="search-box">
                       <input
                         type="text"
@@ -271,9 +411,9 @@
                         placeholder="Search region..."
                         class="dropdown-search"
                         @click.stop
-                      >
+                      />
                     </div>
-                    
+
                     <div class="dropdown-options">
                       <div
                         v-for="region in filteredRegions"
@@ -283,31 +423,51 @@
                       >
                         {{ region }}
                       </div>
-                      <div v-if="filteredRegions.length === 0" class="no-results">
+                      <div
+                        v-if="filteredRegions.length === 0"
+                        class="no-results"
+                      >
                         No regions match your search
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-              
+
               <div class="form-group">
                 <label for="gps">GPS Coordinates</label>
-                <input type="text" id="gps" v-model="form.gps" placeholder="Enter GPS coordinates (latitude,longitude)">
+                <input
+                  type="text"
+                  id="gps"
+                  v-model="form.gps"
+                  placeholder="Enter GPS coordinates (latitude,longitude)"
+                />
               </div>
-              
+
               <div class="form-group">
-                <label for="status">Status <span class="required">*</span></label>
+                <label for="status"
+                  >Status <span class="required">*</span></label
+                >
                 <select id="status" v-model="form.status" required>
                   <option value="active">Active</option>
                   <option value="inactive">Inactive</option>
                 </select>
               </div>
-              
+
               <div class="form-actions">
-                <button type="button" class="cancel-btn" @click="closeWarehouseModal">Cancel</button>
-                <button type="submit" class="submit-btn" :disabled="form.processing">
-                  {{ editingWarehouse ? 'Update Warehouse' : 'Save Warehouse' }}
+                <button
+                  type="button"
+                  class="cancel-btn"
+                  @click="closeWarehouseModal"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  class="submit-btn"
+                  :disabled="form.processing"
+                >
+                  {{ editingWarehouse ? "Update Warehouse" : "Save Warehouse" }}
                 </button>
               </div>
             </form>
@@ -319,11 +479,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, nextTick } from "vue";
 import { Head, Link, useForm, usePage } from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
-import SuccessMessage from '@/Components/SuccessMessage.vue';
-import ErrorMessage from '@/Components/ErrorMessage.vue';
+import SuccessMessage from "@/Components/SuccessMessage.vue";
+import ErrorMessage from "@/Components/ErrorMessage.vue";
 import CustomPagination from "@/Components/CustomPagination.vue";
 
 // const props = defineProps({
@@ -333,16 +493,16 @@ import CustomPagination from "@/Components/CustomPagination.vue";
 //   },
 // });
 const warehouses = ref([]);
-const successMessage = ref('');
-const errorMessage = ref('');
+const successMessage = ref("");
+const errorMessage = ref("");
 
 const page = usePage();
 const user = page.props.auth.user;
 
 // Table state
-const searchQuery = ref('');
-const sortKey = ref('name');
-const sortDir = ref('asc');
+const searchQuery = ref("");
+const sortKey = ref("name");
+const sortDir = ref("asc");
 
 // Pagination
 const currentPage = ref(1);
@@ -356,51 +516,97 @@ const editingWarehouseId = ref(null);
 
 // Dropdown state
 const isCountryDropdownOpen = ref(false);
-const countrySearch = ref('');
+const countrySearch = ref("");
 const countries = ref([
-  'Kenya', 'Uganda', 'Tanzania', 'Rwanda', 'Burundi', 'Ethiopia', 'South Sudan'
+  "Kenya",
+  "Uganda",
+  "Tanzania",
+  "Rwanda",
+  "Burundi",
+  "Ethiopia",
+  "South Sudan",
 ]);
 const filteredCountries = ref([...countries.value]);
 
 const isRegionDropdownOpen = ref(false);
-const regionSearch = ref('');
+const regionSearch = ref("");
 const regions = ref([
-  'Baringo', 'Bomet', 'Bungoma', 'Busia', 'Elgeyo Marakwet', 'Embu', 'Garissa', 
-  'Homa Bay', 'Isiolo', 'Kajiado', 'Kakamega', 'Kericho', 'Kiambu', 'Kilifi', 
-  'Kirinyaga', 'Kisii', 'Kisumu', 'Kitui', 'Kwale', 'Laikipia', 'Lamu', 'Machakos', 
-  'Makueni', 'Mandera', 'Marsabit', 'Meru', 'Migori', 'Mombasa', 'Murang\'a', 
-  'Nairobi', 'Nakuru', 'Nandi', 'Narok', 'Nyamira', 'Nyandarua', 'Nyeri', 'Samburu', 
-  'Siaya', 'Taita Taveta', 'Tana River', 'Tharaka Nithi', 'Trans Nzoia', 'Turkana', 
-  'Uasin Gishu', 'Vihiga', 'Wajir', 'West Pokot'
+  "Baringo",
+  "Bomet",
+  "Bungoma",
+  "Busia",
+  "Elgeyo Marakwet",
+  "Embu",
+  "Garissa",
+  "Homa Bay",
+  "Isiolo",
+  "Kajiado",
+  "Kakamega",
+  "Kericho",
+  "Kiambu",
+  "Kilifi",
+  "Kirinyaga",
+  "Kisii",
+  "Kisumu",
+  "Kitui",
+  "Kwale",
+  "Laikipia",
+  "Lamu",
+  "Machakos",
+  "Makueni",
+  "Mandera",
+  "Marsabit",
+  "Meru",
+  "Migori",
+  "Mombasa",
+  "Murang'a",
+  "Nairobi",
+  "Nakuru",
+  "Nandi",
+  "Narok",
+  "Nyamira",
+  "Nyandarua",
+  "Nyeri",
+  "Samburu",
+  "Siaya",
+  "Taita Taveta",
+  "Tana River",
+  "Tharaka Nithi",
+  "Trans Nzoia",
+  "Turkana",
+  "Uasin Gishu",
+  "Vihiga",
+  "Wajir",
+  "West Pokot",
 ]);
 const filteredRegions = ref([...regions.value]);
 const supplier_uuid = page.props.auth.user.company.uuid;
 // Form for warehouse
 const form = useForm({
-  name: '',
-  address: '',
-  email: '',
-  krapin: '',
-  contact_person: '',
-  phone_number: '',
-  status: 'active',
-  country: 'Kenya',
-  region: '',
-  gps: '',
+  name: "",
+  address: "",
+  email: "",
+  krapin: "",
+  contact_person: "",
+  phone_number: "",
+  status: "active",
+  country: "Kenya",
+  region: "",
+  gps: "",
   company_id: user.company_id,
   created_by: user.id,
-  uuid: '',
+  uuid: "",
 });
 
 // Computed properties for filtering and sorting
 const filteredWarehouses = computed(() => {
-  if (searchQuery.value.trim() === '') {
+  if (searchQuery.value.trim() === "") {
     return warehouses.value;
   }
-  
+
   const query = searchQuery.value.toLowerCase();
-  return warehouses.value.filter(warehouse => {
-    return Object.values(warehouse).some(value => {
+  return warehouses.value.filter((warehouse) => {
+    return Object.values(warehouse).some((value) => {
       if (value === null || value === undefined) return false;
       return String(value).toLowerCase().includes(query);
     });
@@ -410,36 +616,36 @@ const filteredWarehouses = computed(() => {
 const sortedWarehouses = computed(() => {
   const warehouses = [...filteredWarehouses.value];
   warehouses.sort((a, b) => {
-    let modifier = sortDir.value === 'asc' ? 1 : -1;
-    
+    let modifier = sortDir.value === "asc" ? 1 : -1;
+
     // Map frontend keys to backend keys
     const keyMap = {
-      'contactPerson': 'contact_person',
-      'phone': 'phone_number',
-      'kraPin': 'krapin'
+      contactPerson: "contact_person",
+      phone: "phone_number",
+      kraPin: "krapin",
     };
-    
+
     let aKey = keyMap[sortKey.value] || sortKey.value;
     let bKey = keyMap[sortKey.value] || sortKey.value;
-    
+
     let aValue = a[aKey];
     let bValue = b[bKey];
-    
+
     // Handle undefined or null values
     if (aValue === undefined || aValue === null) {
-      aValue = '';
+      aValue = "";
     }
     if (bValue === undefined || bValue === null) {
-      bValue = '';
+      bValue = "";
     }
-    
-    if (typeof aValue === 'number' && typeof bValue === 'number') {
+
+    if (typeof aValue === "number" && typeof bValue === "number") {
       return aValue < bValue ? -1 * modifier : 1 * modifier;
     } else {
       return aValue.toString().localeCompare(bValue.toString()) * modifier;
     }
   });
-  
+
   return warehouses;
 });
 
@@ -456,16 +662,16 @@ const totalPages = computed(() => {
 // Event handlers
 const sortBy = (key) => {
   if (sortKey.value === key) {
-    sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
+    sortDir.value = sortDir.value === "asc" ? "desc" : "asc";
   } else {
     sortKey.value = key;
-    sortDir.value = 'asc';
+    sortDir.value = "asc";
   }
 };
 
 const getSortIcon = (key) => {
-  if (sortKey.value !== key) return 'sort-icon sort-none';
-  return sortDir.value === 'asc' ? 'sort-icon sort-asc' : 'sort-icon sort-desc';
+  if (sortKey.value !== key) return "sort-icon sort-none";
+  return sortDir.value === "asc" ? "sort-icon sort-asc" : "sort-icon sort-desc";
 };
 
 const openAddWarehouseModal = () => {
@@ -487,7 +693,7 @@ const closeWarehouseModal = () => {
 const editWarehouse = (warehouse) => {
   editingWarehouse.value = true;
   editingWarehouseId.value = warehouse.id;
-  
+
   // Map warehouse fields to form
   form.name = warehouse.name;
   form.contact_person = warehouse.contact_person;
@@ -495,75 +701,75 @@ const editWarehouse = (warehouse) => {
   form.phone_number = warehouse.phone_number;
   form.address = warehouse.address;
   form.krapin = warehouse.krapin;
-  form.country = warehouse.country || 'Kenya';
+  form.country = warehouse.country || "Kenya";
   form.region = warehouse.region || warehouse.location;
-  form.gps = warehouse.gps || '';
+  form.gps = warehouse.gps || "";
   form.status = warehouse.status;
   form.uuid = warehouse.uuid;
-  
+
   showWarehouseModal.value = true;
   isCountryDropdownOpen.value = false;
   isRegionDropdownOpen.value = false;
 };
 
 const deleteWarehouse = (warehouseUuid) => {
-  if (confirm('Are you sure you want to delete this warehouse?')) {
-    useForm().delete(route('supplierwarehouse.delete', warehouseUuid), {
+  if (confirm("Are you sure you want to delete this warehouse?")) {
+    useForm().delete(route("supplierwarehouse.delete", warehouseUuid), {
       preserveScroll: true,
       onSuccess: () => {
         // Message will be handled by the inertia success flash message
         fetchSupplierWarehouses();
-        successMessage.value = 'Warehouse deleted successfully';
+        successMessage.value = "Warehouse deleted successfully";
         setTimeout(() => {
-          successMessage.value = '';
+          successMessage.value = "";
         }, 3000);
       },
       onError: () => {
-        errorMessage.value = 'Error deleting warehouse';
+        errorMessage.value = "Error deleting warehouse";
         setTimeout(() => {
-          errorMessage.value = '';
+          errorMessage.value = "";
         }, 3000);
-      }
+      },
     });
   }
 };
 
 const saveWarehouse = () => {
   if (editingWarehouse.value) {
-    form.put(route('supplierwarehouse.update', editingWarehouseId.value), {
+    form.put(route("supplierwarehouse.update", editingWarehouseId.value), {
       preserveScroll: true,
       onSuccess: () => {
         closeWarehouseModal();
         fetchSupplierWarehouses();
-        successMessage.value = 'Warehouse updated successfully';
+        successMessage.value = "Warehouse updated successfully";
         setTimeout(() => {
-          successMessage.value = '';
+          successMessage.value = "";
         }, 3000);
       },
       onError: () => {
-        errorMessage.value = 'Error updating warehouse';
+        errorMessage.value = "Error updating warehouse";
         setTimeout(() => {
-          errorMessage.value = '';
+          errorMessage.value = "";
         }, 3000);
-      }
+      },
     });
   } else {
-    form.post(route('supplierwarehouse.create'), {
+    form.post(route("supplierwarehouse.create"), {
       preserveScroll: true,
       onSuccess: () => {
         closeWarehouseModal();
         fetchSupplierWarehouses();
-        successMessage.value = 'Warehouse added successfully';
+        successMessage.value = "Warehouse added successfully";
         setTimeout(() => {
-          successMessage.value = '';
+          successMessage.value = "";
         }, 3000);
       },
       onError: () => {
-        errorMessage.value = 'Error adding warehouse';
+        errorMessage.value = "Error adding warehouse";
         setTimeout(() => {
-          errorMessage.value = '';
+          errorMessage.value = "";
         }, 3000);
-      }
+      },
     });
   }
 };
@@ -575,6 +781,7 @@ const fetchSupplierWarehouses = async () => {
         uuid: supplier_uuid,
         page: currentPage.value,
         pageSize: perPage.value,
+        search: searchQuery.value.trim(),
       })
     );
     warehouses.value = response.data.data;
@@ -589,51 +796,54 @@ const fetchSupplierWarehouses = async () => {
 // Dropdown methods
 const toggleCountryDropdown = () => {
   isCountryDropdownOpen.value = !isCountryDropdownOpen.value;
-  
+
   if (isCountryDropdownOpen.value) {
     // Reset search when opening
-    countrySearch.value = '';
+    countrySearch.value = "";
     filteredCountries.value = [...countries.value];
-    
+
     // Close the other dropdown if open
     isRegionDropdownOpen.value = false;
-    
+
     // Calculate dropdown position
     nextTick(() => {
-      const trigger = document.querySelector('.country-select-trigger');
-      const dropdown = document.querySelector('.country-select-dropdown');
-      
+      const trigger = document.querySelector(".country-select-trigger");
+      const dropdown = document.querySelector(".country-select-dropdown");
+
       if (!trigger || !dropdown) return;
-      
+
       const triggerRect = trigger.getBoundingClientRect();
       const viewportHeight = window.innerHeight;
-      
+
       const spaceBelow = viewportHeight - triggerRect.bottom;
-      const dropdownHeight = Math.min(250, filteredCountries.value.length * 36 + 70);
-      
+      const dropdownHeight = Math.min(
+        250,
+        filteredCountries.value.length * 36 + 70
+      );
+
       if (spaceBelow < dropdownHeight) {
-        dropdown.classList.add('dropdown-top');
+        dropdown.classList.add("dropdown-top");
       } else {
-        dropdown.classList.remove('dropdown-top');
+        dropdown.classList.remove("dropdown-top");
       }
     });
   }
 };
 
 const closeCountryDropdownOutside = (event) => {
-  const dropdown = document.querySelector('.country-select-container');
+  const dropdown = document.querySelector(".country-select-container");
   if (dropdown && !dropdown.contains(event.target)) {
     isCountryDropdownOpen.value = false;
   }
 };
 
 const filterCountries = () => {
-  if (countrySearch.value.trim() === '') {
+  if (countrySearch.value.trim() === "") {
     filteredCountries.value = [...countries.value];
   } else {
     const query = countrySearch.value.toLowerCase();
-    filteredCountries.value = countries.value.filter(
-      country => country.toLowerCase().includes(query)
+    filteredCountries.value = countries.value.filter((country) =>
+      country.toLowerCase().includes(query)
     );
   }
 };
@@ -645,51 +855,54 @@ const selectCountry = (country) => {
 
 const toggleRegionDropdown = () => {
   isRegionDropdownOpen.value = !isRegionDropdownOpen.value;
-  
+
   if (isRegionDropdownOpen.value) {
     // Reset search when opening
-    regionSearch.value = '';
+    regionSearch.value = "";
     filteredRegions.value = [...regions.value];
-    
+
     // Close the other dropdown if open
     isCountryDropdownOpen.value = false;
-    
+
     // Calculate dropdown position
     nextTick(() => {
-      const trigger = document.querySelector('.region-select-trigger');
-      const dropdown = document.querySelector('.region-select-dropdown');
-      
+      const trigger = document.querySelector(".region-select-trigger");
+      const dropdown = document.querySelector(".region-select-dropdown");
+
       if (!trigger || !dropdown) return;
-      
+
       const triggerRect = trigger.getBoundingClientRect();
       const viewportHeight = window.innerHeight;
-      
+
       const spaceBelow = viewportHeight - triggerRect.bottom;
-      const dropdownHeight = Math.min(250, filteredRegions.value.length * 36 + 70);
-      
+      const dropdownHeight = Math.min(
+        250,
+        filteredRegions.value.length * 36 + 70
+      );
+
       if (spaceBelow < dropdownHeight) {
-        dropdown.classList.add('dropdown-top');
+        dropdown.classList.add("dropdown-top");
       } else {
-        dropdown.classList.remove('dropdown-top');
+        dropdown.classList.remove("dropdown-top");
       }
     });
   }
 };
 
 const closeRegionDropdownOutside = (event) => {
-  const dropdown = document.querySelector('.region-select-container');
+  const dropdown = document.querySelector(".region-select-container");
   if (dropdown && !dropdown.contains(event.target)) {
     isRegionDropdownOpen.value = false;
   }
 };
 
 const filterRegions = () => {
-  if (regionSearch.value.trim() === '') {
+  if (regionSearch.value.trim() === "") {
     filteredRegions.value = [...regions.value];
   } else {
     const query = regionSearch.value.toLowerCase();
-    filteredRegions.value = regions.value.filter(
-      region => region.toLowerCase().includes(query)
+    filteredRegions.value = regions.value.filter((region) =>
+      region.toLowerCase().includes(query)
     );
   }
 };
@@ -716,27 +929,59 @@ onMounted(() => {
   fetchSupplierWarehouses();
   filteredCountries.value = [...countries.value];
   filteredRegions.value = [...regions.value];
-  
+
   // Add click outside listener for dropdowns
-  document.addEventListener('click', closeCountryDropdownOutside);
-  document.addEventListener('click', closeRegionDropdownOutside);
+  document.addEventListener("click", closeCountryDropdownOutside);
+  document.addEventListener("click", closeRegionDropdownOutside);
 });
 
 onBeforeUnmount(() => {
   // Clean up the event listeners
-  document.removeEventListener('click', closeCountryDropdownOutside);
-  document.removeEventListener('click', closeRegionDropdownOutside);
+  document.removeEventListener("click", closeCountryDropdownOutside);
+  document.removeEventListener("click", closeRegionDropdownOutside);
 });
 </script>
 
 <style scoped>
+/* Empty state */
+.empty-state-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 20px;
+  text-align: center;
+  background-color: #fff;
+  border-radius: 8px;
+  min-height: 300px;
+}
+
+.empty-state-icon {
+  color: #94a3b8;
+  margin-bottom: 16px;
+}
+
+.empty-state-title {
+  color: #334155;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 8px;
+}
+
+.empty-state-description {
+  color: #64748b;
+  font-size: 0.95rem;
+  margin: 0 0 24px;
+  max-width: 300px;
+}
+
 .page-container {
   display: flex;
   justify-content: center;
   background-color: #f5f7fa;
   min-height: 100vh;
   padding: 40px 20px;
-  font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
+  font-family: "Inter", "Segoe UI", Roboto, sans-serif;
 }
 
 .content-container {
@@ -802,7 +1047,7 @@ onBeforeUnmount(() => {
 
 .search-input:focus {
   outline: none;
-  border-color: #0E64A5;
+  border-color: #0e64a5;
   box-shadow: 0 0 0 2px rgba(14, 100, 165, 0.1);
 }
 
@@ -810,7 +1055,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   padding: 10px 16px;
-  background-color: #0E64A5;
+  background-color: #0e64a5;
   color: white;
   border: none;
   border-radius: 6px;
@@ -882,7 +1127,7 @@ onBeforeUnmount(() => {
 }
 
 /* Ensure the table headers and data cells have proper min-width */
-.data-table th, 
+.data-table th,
 .data-table td {
   white-space: nowrap; /* Prevent text wrapping */
   min-width: 120px; /* Minimum width for each column */
@@ -897,13 +1142,17 @@ onBeforeUnmount(() => {
 /* Add a visible indicator for horizontal scroll on mobile */
 @media (max-width: 768px) {
   .table-container::after {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     right: 0;
     width: 20px;
     height: 100%;
-    background: linear-gradient(to right, rgba(255, 255, 255, 0), rgba(230, 230, 230, 0.3));
+    background: linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0),
+      rgba(230, 230, 230, 0.3)
+    );
     pointer-events: none;
     opacity: 0;
     transition: opacity 0.3s;
@@ -939,19 +1188,19 @@ onBeforeUnmount(() => {
 }
 
 .sort-none::after {
-  content: '⇵';
+  content: "⇵";
   opacity: 0.3;
   font-size: 12px;
 }
 
 .sort-asc::after {
-  content: '↑';
+  content: "↑";
   color: #2563eb;
   font-size: 12px;
 }
 
 .sort-desc::after {
-  content: '↓';
+  content: "↓";
   color: #2563eb;
   font-size: 12px;
 }
@@ -1001,8 +1250,8 @@ onBeforeUnmount(() => {
 }
 
 .edit-btn {
-  color: #0E64A5;
-  border-color: #0E64A5;
+  color: #0e64a5;
+  border-color: #0e64a5;
 }
 
 .edit-btn:hover {
@@ -1097,7 +1346,7 @@ onBeforeUnmount(() => {
 }
 
 .page-number.active {
-  background-color: #0E64A5;
+  background-color: #0e64a5;
   color: white;
 }
 
@@ -1267,7 +1516,7 @@ onBeforeUnmount(() => {
 
 .submit-btn {
   padding: 10px 16px;
-  background-color: #0E64A5;
+  background-color: #0e64a5;
   color: white;
   border: none;
   border-radius: 6px;
@@ -1444,6 +1693,8 @@ onBeforeUnmount(() => {
   background-color: #94a3b8;
 }
 
+
+
 /* Responsive styles */
 @media (max-width: 768px) {
   .header-container {
@@ -1451,32 +1702,32 @@ onBeforeUnmount(() => {
     align-items: flex-start;
     gap: 16px;
   }
-  
+
   .table-controls {
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
   }
-  
+
   .add-btn {
     width: 100%;
     justify-content: center;
   }
-  
+
   .search-container {
     width: 100%;
   }
-  
+
   .pagination-controls {
     flex-direction: column;
     gap: 16px;
   }
-  
+
   .per-page {
     width: 100%;
     justify-content: center;
   }
-  
+
   .pagination-buttons {
     width: 100%;
     justify-content: center;
@@ -1487,29 +1738,29 @@ onBeforeUnmount(() => {
   .page-container {
     padding: 20px 16px;
   }
-  
+
   .content-container {
     padding: 16px;
   }
-  
+
   .actions-column {
     display: flex;
     flex-direction: column;
     gap: 8px;
   }
-  
+
   .action-btn {
     margin-right: 0;
   }
-  
+
   .table-container {
     border-radius: 6px;
   }
-  
+
   .table-wrapper {
     padding-bottom: 4px;
   }
-  
+
   .page-numbers {
     display: none;
   }

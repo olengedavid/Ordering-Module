@@ -282,6 +282,7 @@ defineEmits(['warehouses-updated']);
 // Get user from page props
 const page = usePage();
 const user = page.props.auth.user;
+const searchQuery = ref("");
 
 // Data and state
 const warehouses = ref([]);
