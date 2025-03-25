@@ -66,11 +66,9 @@
               <td>
                 <div class="product-image-container">
                   <img
-                    :src="getPrimaryImageUrl(product)"
+                    :src="getPrimaryImagePreviewPath(product)"
                     class="product-thumbnail"
-                    @error="
-                      $event.target.src = 'https://via.placeholder.com/50'
-                    "
+                    @error="$event.target.src = 'https://via.placeholder.com/50'"
                   />
                 </div>
               </td>
@@ -630,10 +628,7 @@ export default {
     };
 
     const saveProduct = () => {
-      // Prepare form data for submission
       const formData = new FormData();
-
-      // Add basic product information
       formData.append("name", newProduct.productName);
       formData.append("sku_number", newProduct.skuNumber);
       formData.append("category", newProduct.category);
@@ -641,87 +636,72 @@ export default {
       formData.append("description", newProduct.description);
       formData.append("manufucturer", newProduct.manufacturer);
       formData.append("status", newProduct.status.toLowerCase());
+      formData.append("company_id", companyId);
+      formData.append("created_by", userId);
 
-      // Add supplier_id if available
-      if (props.supplier && props.supplier.id) {
-        formData.append("supplier_id", parseInt(props.supplier.id));
-      }
-
-      // IMPORTANT: Ensure company_id is included as an integer
-      // Use the supplier's company_id first, as it should be the most reliable source
-      const companyIdToUse = props.supplier.company_id
-        ? parseInt(props.supplier.company_id)
-        : props.supplier.id
-        ? parseInt(props.supplier.id)
-        : user?.company?.id
-        ? parseInt(user.company.id)
-        : user?.company_id
-        ? parseInt(user.company_id)
-        : null;
-
-      // Company ID is required - ensure it's always included and is an integer
-      if (companyIdToUse) {
-        formData.append("company_id", companyIdToUse);
-        console.log("Using company_id:", companyIdToUse);
-      } else {
-        console.error("No company_id available - this will cause an error");
-        // Fallback to a default if absolutely necessary (modify based on your app structure)
-        formData.append("company_id", parseInt(props.supplier.id));
-      }
-
-      // Add created_by user ID if available
-      const userIdToUse = userId || (user?.id ? parseInt(user.id) : null);
-      if (userIdToUse) {
-        formData.append("created_by", userIdToUse);
-      }
-
-      // Add primary image
+      // Add images
       const primaryImage = productImages.value.find((img) => img.isPrimary);
-      if (primaryImage && primaryImage.file) {
+      if (primaryImage) {
         formData.append("primary_image", primaryImage.file);
       }
 
       // Add secondary images
-      const secondaryImages = productImages.value.filter(
-        (img) => !img.isPrimary
-      );
-      secondaryImages.forEach((img) => {
-        if (img.file) {
-          formData.append("secondary_images[]", img.file);
+      productImages.value.forEach((image) => {
+        if (!image.isPrimary) {
+          formData.append("secondary_images[]", image.file);
         }
       });
 
-      // Determine endpoint
-      const endpoint = editingProduct.value
-        ? route("products.update", editingProductId.value)
-        : route("products.store");
+      // Log the FormData contents
+      for (let pair of formData.entries()) {
+        console.log(pair[0], pair[1]);
+      }
 
-      // Submit form
-      router.post(endpoint, formData, {
-        onSuccess: () => {
-          successMessage.value = editingProduct.value
-            ? "Product updated successfully"
-            : "Product added successfully";
-          closeProductModal();
-          fetchProducts();
-          // Call autoDismissMessage directly
-          console.log("Setting success message in Products");
-          setTimeout(() => {
-            successMessage.value = "";
-            console.log("Clearing success message in Products");
-          }, 3000);
-        },
-        onError: (errors) => {
-          errorMessage.value = "Error saving product";
-          console.error("Error saving product:", errors);
-          // Call autoDismissMessage directly
-          console.log("Setting error message in Products");
-          setTimeout(() => {
-            errorMessage.value = "";
-            console.log("Clearing error message in Products");
-          }, 3000);
-        },
-      });
+      if (editingProduct.value) {
+        axios
+          .post(route("products.update", editingProductId.value), formData, {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          })
+          .then(() => {
+            closeProductModal();
+            fetchProducts();
+            successMessage.value = "Product updated successfully";
+            setTimeout(() => {
+              successMessage.value = "";
+            }, 3000);
+          })
+          .catch((error) => {
+            errorMessage.value = "Error updating product";
+            console.error("Error updating product:", error);
+            setTimeout(() => {
+              errorMessage.value = "";
+            }, 3000);
+          });
+      } else {
+        axios
+          .post(route("products.store"), formData, {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          })
+          .then(() => {
+            closeProductModal();
+            fetchProducts();
+            successMessage.value = "Product added successfully";
+            setTimeout(() => {
+              successMessage.value = "";
+            }, 3000);
+          })
+          .catch((error) => {
+            errorMessage.value = "Error adding product";
+            console.error("Error adding product:", error);
+            setTimeout(() => {
+              errorMessage.value = "";
+            }, 3000);
+          });
+      }
     };
 
     // Auto-dismiss messages after 3 seconds
@@ -736,7 +716,7 @@ export default {
       }, 3000);
     };
 
-    const getPrimaryImageUrl = async (product) => {
+    const getPrimaryImagePreviewPath = (product) => {
       if (!product.images) return "https://via.placeholder.com/50";
 
       try {
@@ -761,9 +741,6 @@ export default {
       }
 
       return "https://via.placeholder.com/50";
-
-      // Default image if none found
-      // return "https://image.made-in-china.com/202f0j00SKpWwAoscucy/High-Quality-BOPP-Laminated-PP-Woven-Chemicals-Urea-Fertilizer-Bag-25kg-50kg-100kg.jpg";
     };
 
     const handleImageError = (event) => {
@@ -906,7 +883,7 @@ export default {
       addImageToGallery,
       removeImage,
       setPrimaryImage,
-      getPrimaryImageUrl,
+      getPrimaryImagePreviewPath,
       autoDismissMessage,
     };
   },
@@ -915,4 +892,21 @@ export default {
 
 <style scoped>
 @import "./SupplierSharedStyles.css";
+
+.product-image-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.product-thumbnail {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.product-name {
+  font-weight: 500;
+}
 </style> 
