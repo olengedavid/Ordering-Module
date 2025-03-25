@@ -1,7 +1,7 @@
 <script setup>
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head } from "@inertiajs/vue3";
-import { ref, onMounted } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import { useForm, usePage } from "@inertiajs/vue3";
 import CustomPagination from "@/Components/CustomPagination.vue";
 import SuccessMessage from "@/Components/SuccessMessage.vue";
@@ -17,7 +17,6 @@ const page = usePage();
 const user = page.props.auth.user;
 const supplier_uuid = page.props.auth.user.company.uuid;
 const products = ref([]);
-const showingModal = ref(false);
 const successMessage = ref("");
 const errorMessage = ref("");
 const searchQuery = ref("");
@@ -27,6 +26,36 @@ const perPage = ref(10);
 const lastPage = ref(1);
 
 const units = ref([]);
+
+// Add default units array
+const defaultUnits = [
+  "kg",
+  "g",
+  "liter",
+  "ml",
+  "unit",
+  "pack",
+  "box",
+  "carton",
+  "dozen",
+  "case"
+];
+
+// Add product categories array
+const productCategories = [
+  "Beverages",
+  "Dairy",
+  "Meat & Poultry",
+  "Seafood",
+  "Fruits & Vegetables",
+  "Bakery",
+  "Grains & Pasta",
+  "Canned Goods",
+  "Snacks",
+  "Condiments & Sauces",
+  "Baking Supplies",
+  "Oils & Vinegars",
+];
 
 const form = useForm({
   name: "",
@@ -41,6 +70,120 @@ const form = useForm({
   status: "active",
   created_by: user.id,
 });
+
+// Add dropdown states
+const isCategoryOpen = ref(false);
+const isUnitOpen = ref(false);
+const isStatusOpen = ref(false);
+const categorySearchQuery = ref('');
+const unitSearchQuery = ref('');
+const statusSearchQuery = ref('');
+const filteredCategories = ref([...productCategories]);
+const filteredUnits = ref([...defaultUnits]); // Initialize with default units
+const filteredStatuses = ref(['Active', 'Inactive']);
+
+// Add dropdown methods
+const toggleCategoryDropdown = () => {
+  isCategoryOpen.value = !isCategoryOpen.value;
+  if (isCategoryOpen.value) {
+    categorySearchQuery.value = '';
+    filteredCategories.value = [...productCategories];
+  }
+  // Close other dropdowns
+  isUnitOpen.value = false;
+  isStatusOpen.value = false;
+};
+
+const toggleUnitDropdown = () => {
+  isUnitOpen.value = !isUnitOpen.value;
+  if (isUnitOpen.value) {
+    unitSearchQuery.value = '';
+    filteredUnits.value = [...units.value];
+  }
+  // Close other dropdowns
+  isCategoryOpen.value = false;
+  isStatusOpen.value = false;
+};
+
+const toggleStatusDropdown = () => {
+  isStatusOpen.value = !isStatusOpen.value;
+  if (isStatusOpen.value) {
+    statusSearchQuery.value = '';
+    filteredStatuses.value = ['Active', 'Inactive'];
+  }
+  // Close other dropdowns
+  isCategoryOpen.value = false;
+  isUnitOpen.value = false;
+};
+
+const filterCategories = () => {
+  if (!categorySearchQuery.value.trim()) {
+    filteredCategories.value = [...productCategories];
+  } else {
+    const query = categorySearchQuery.value.toLowerCase();
+    filteredCategories.value = productCategories.filter(
+      category => category.toLowerCase().includes(query)
+    );
+  }
+};
+
+const filterUnits = () => {
+  if (!unitSearchQuery.value.trim()) {
+    filteredUnits.value = [...units.value];
+  } else {
+    const query = unitSearchQuery.value.toLowerCase();
+    filteredUnits.value = units.value.filter(
+      unit => unit.label.toLowerCase().includes(query)
+    );
+  }
+};
+
+const filterStatuses = () => {
+  if (!statusSearchQuery.value.trim()) {
+    filteredStatuses.value = ['Active', 'Inactive'];
+  } else {
+    const query = statusSearchQuery.value.toLowerCase();
+    filteredStatuses.value = ['Active', 'Inactive'].filter(
+      status => status.toLowerCase().includes(query)
+    );
+  }
+};
+
+const selectCategory = (category) => {
+  form.category = category;
+  isCategoryOpen.value = false;
+  categorySearchQuery.value = '';
+};
+
+const selectUnit = (unit) => {
+  form.unit_of_measure = unit.value;
+  isUnitOpen.value = false;
+  unitSearchQuery.value = '';
+};
+
+const selectStatus = (status) => {
+  form.status = status.toLowerCase();
+  isStatusOpen.value = false;
+  statusSearchQuery.value = '';
+};
+
+// Close dropdowns when clicking outside
+const closeDropdownsOutside = (event) => {
+  const dropdowns = document.querySelectorAll('.custom-select-container');
+  let clickedInside = false;
+  
+  dropdowns.forEach(dropdown => {
+    if (dropdown.contains(event.target)) {
+      clickedInside = true;
+    }
+  });
+
+  if (!clickedInside) {
+    isCategoryOpen.value = false;
+    isUnitOpen.value = false;
+    isStatusOpen.value = false;
+  }
+};
 
 const fetchSupplierProducts = async () => {
   // loading.value = true;
@@ -293,14 +436,27 @@ const fetchUnits = async () => {
   try {
     const response = await axios.get(route("static.units"));
     units.value = response.data;
+    // Update filtered units after fetching
+    filteredUnits.value = response.data;
   } catch (error) {
     console.error("Error fetching units:", error);
+    // Fallback to default units if fetch fails
+    units.value = defaultUnits;
+    filteredUnits.value = defaultUnits;
   }
 };
 
 onMounted(() => {
   fetchSupplierProducts();
   fetchUnits();
+  document.addEventListener('click', closeDropdownsOutside);
+  // Initialize filtered arrays
+  filteredCategories.value = [...productCategories];
+  filteredStatuses.value = ['Active', 'Inactive'];
+});
+
+onUnmounted(() => {
+  document.removeEventListener('click', closeDropdownsOutside);
 });
 </script>
 
@@ -477,9 +633,7 @@ onMounted(() => {
           <div class="modal-container">
             <div class="modal-header">
               <h2>{{ editingProduct ? "Edit Product" : "Add New Product" }}</h2>
-              <button class="close-btn" @click="closeProductModal">
-                &times;
-              </button>
+              <button class="close-btn" @click="closeProductModal">&times;</button>
             </div>
             <div class="modal-body">
               <form @submit.prevent="saveProduct">
@@ -505,14 +659,7 @@ onMounted(() => {
                         stroke-linecap="round"
                         stroke-linejoin="round"
                       >
-                        <rect
-                          x="3"
-                          y="3"
-                          width="18"
-                          height="18"
-                          rx="2"
-                          ry="2"
-                        />
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
                         <circle cx="8.5" cy="8.5" r="1.5" />
                         <polyline points="21 15 16 10 5 21" />
                       </svg>
@@ -550,50 +697,15 @@ onMounted(() => {
                         :key="image.id"
                         class="thumbnail-container"
                         :class="{ 'primary-thumbnail': image.isPrimary }"
+                        @click="setPrimaryImage(image.id)"
                       >
                         <img
                           :src="image.url"
                           alt="Product image"
                           class="thumbnail-img"
                         />
-                        <div class="thumbnail-actions">
-                          <button
-                            type="button"
-                            class="set-primary-btn"
-                            @click="setPrimaryImage(image.id)"
-                            :disabled="image.isPrimary"
-                            :title="
-                              image.isPrimary
-                                ? 'Primary Image'
-                                : 'Set as Primary'
-                            "
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="16"
-                              height="16"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              stroke-width="2"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                            >
-                              <path
-                                d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-                              />
-                            </svg>
-                          </button>
-                          <button
-                            type="button"
-                            class="remove-thumbnail-btn"
-                            @click="removeImage(image.id)"
-                          >
-                            &times;
-                          </button>
-                        </div>
                       </div>
-                      <div class="">
+                      <div class="add-more-container">
                         <label for="additionalImages" class="add-more-btn">
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -650,38 +762,113 @@ onMounted(() => {
                 </div>
 
                 <div class="form-group">
-                  <label for="category"
-                    >Category <span class="required">*</span></label
-                  >
-                  <input
-                    type="text"
-                    id="category"
-                    v-model="form.category"
-                    required
-                    placeholder="Enter product category"
-                  />
+                  <label for="category">Category <span class="required">*</span></label>
+                  <div class="custom-select-container">
+                    <div 
+                      class="custom-select-trigger" 
+                      @click="toggleCategoryDropdown"
+                      :class="{ 'active': isCategoryOpen }"
+                    >
+                      <span :data-has-value="!!form.category">{{ form.category || 'Select category' }}</span>
+                      <svg 
+                        class="dropdown-arrow" 
+                        :class="{ 'open': isCategoryOpen }"
+                        xmlns="http://www.w3.org/2000/svg" 
+                        width="16" 
+                        height="16" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        stroke-width="2" 
+                        stroke-linecap="round" 
+                        stroke-linejoin="round"
+                      >
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                      </svg>
+                    </div>
+                    
+                    <div class="custom-select-dropdown" v-show="isCategoryOpen">
+                      <div class="search-box">
+                        <input
+                          type="text"
+                          v-model="categorySearchQuery"
+                          @input="filterCategories"
+                          placeholder="Search categories..."
+                          class="dropdown-search"
+                          @click.stop
+                        >
+                      </div>
+                      
+                      <div class="dropdown-options">
+                        <div
+                          v-for="category in filteredCategories"
+                          :key="category"
+                          class="dropdown-option"
+                          @click="selectCategory(category)"
+                        >
+                          {{ category }}
+                        </div>
+                        <div v-if="filteredCategories.length === 0" class="no-results">
+                          No categories match your search
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div class="form-group">
-                  <label for="unit"
-                    >Unit of Measure <span class="required">*</span></label
-                  >
-                  <select
-                    id="unit"
-                    v-model="form.unit_of_measure"
-                    class="form-select"
-                    required
-                  >
-                    <option value="">Select unit</option>
-                    <option
-                      v-for="unit in units"
-                      :key="unit.value"
-                      :value="unit.value"
+                  <label for="unitOfMeasure">Unit of Measure <span class="required">*</span></label>
+                  <div class="custom-select-container">
+                    <div 
+                      class="custom-select-trigger" 
+                      @click="toggleUnitDropdown"
+                      :class="{ 'active': isUnitOpen }"
                     >
-                      {{ unit.label }}
-                    </option>
-                  </select>
-                  <InputError :message="form.errors.unit" />
+                      <span :data-has-value="!!form.unit_of_measure">{{ form.unit_of_measure || 'Select unit' }}</span>
+                      <svg 
+                        class="dropdown-arrow" 
+                        :class="{ 'open': isUnitOpen }"
+                        xmlns="http://www.w3.org/2000/svg" 
+                        width="16" 
+                        height="16" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        stroke-width="2" 
+                        stroke-linecap="round" 
+                        stroke-linejoin="round"
+                      >
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                      </svg>
+                    </div>
+                    
+                    <div class="custom-select-dropdown" v-show="isUnitOpen">
+                      <div class="search-box">
+                        <input
+                          type="text"
+                          v-model="unitSearchQuery"
+                          @input="filterUnits"
+                          placeholder="Search units..."
+                          class="dropdown-search"
+                          @click.stop
+                        >
+                      </div>
+                      
+                      <div class="dropdown-options">
+                        <div
+                          v-for="unit in filteredUnits"
+                          :key="unit.value"
+                          class="dropdown-option"
+                          @click="selectUnit(unit)"
+                        >
+                          {{ unit.label }}
+                        </div>
+                        <div v-if="filteredUnits.length === 0" class="no-results">
+                          No units match your search
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div class="form-group">
@@ -711,13 +898,58 @@ onMounted(() => {
                 </div>
 
                 <div class="form-group">
-                  <label for="productStatus"
-                    >Status <span class="required">*</span></label
-                  >
-                  <select id="productStatus" v-model="form.status" required>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                  </select>
+                  <label for="status">Status</label>
+                  <div class="custom-select-container">
+                    <div 
+                      class="custom-select-trigger" 
+                      @click="toggleStatusDropdown"
+                      :class="{ 'active': isStatusOpen }"
+                    >
+                      <span :data-has-value="!!form.status">{{ form.status || 'Select status' }}</span>
+                      <svg 
+                        class="dropdown-arrow" 
+                        :class="{ 'open': isStatusOpen }"
+                        xmlns="http://www.w3.org/2000/svg" 
+                        width="16" 
+                        height="16" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        stroke-width="2" 
+                        stroke-linecap="round" 
+                        stroke-linejoin="round"
+                      >
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                      </svg>
+                    </div>
+                    
+                    <div class="custom-select-dropdown" v-show="isStatusOpen">
+                      <div class="search-box">
+                        <input
+                          type="text"
+                          v-model="statusSearchQuery"
+                          @input="filterStatuses"
+                          placeholder="Search statuses..."
+                          class="dropdown-search"
+                          @click.stop
+                        >
+                      </div>
+                      
+                      <div class="dropdown-options">
+                        <div
+                          v-for="status in filteredStatuses"
+                          :key="status"
+                          class="dropdown-option"
+                          @click="selectStatus(status)"
+                        >
+                          {{ status }}
+                        </div>
+                        <div v-if="filteredStatuses.length === 0" class="no-results">
+                          No statuses match your search
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div class="form-actions">
@@ -757,5 +989,194 @@ onMounted(() => {
 
 .product-name {
   font-weight: 500;
+}
+
+.image-upload-container {
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  margin-bottom: 15px;
+  transition: all 0.3s ease;
+  position: relative;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+}
+
+.upload-placeholder svg {
+  margin-bottom: 10px;
+}
+
+.upload-placeholder p {
+  margin: 0;
+}
+
+.add-more-container {
+  width: 70px;
+  height: 70px;
+  border: 2px dashed #cbd5e1;
+  border-radius: 6px;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.add-more-btn {
+  width: 24px;
+  height: 24px;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.add-more-btn svg {
+  width: 100%;
+  height: 100%;
+}
+
+.file-input {
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  cursor: pointer;
+}
+
+.thumbnail-container {
+  position: relative;
+  width: 70px;
+  height: 70px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 2px solid #e5e7eb;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.thumbnail-container:hover {
+  border-color: #0E64A5;
+  transform: scale(1.05);
+}
+
+.primary-thumbnail {
+  border-color: #0E64A5;
+  transform: scale(1.05);
+}
+
+.thumbnail-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.custom-select-container {
+  position: relative;
+  width: 100%;
+}
+
+.custom-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  cursor: pointer;
+  background-color: white;
+  transition: all 0.2s ease;
+}
+
+.custom-select-trigger:hover {
+  border-color: #0E64A5;
+}
+
+.custom-select-trigger.active {
+  border-color: #0E64A5;
+  box-shadow: 0 0 0 2px rgba(14, 100, 165, 0.1);
+}
+
+.custom-select-trigger span {
+  color: #374151;
+}
+
+.custom-select-trigger span[data-has-value="false"] {
+  color: #9ca3af;
+}
+
+.dropdown-arrow {
+  transition: transform 0.2s ease;
+}
+
+.dropdown-arrow.open {
+  transform: rotate(180deg);
+}
+
+.custom-select-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  margin-top: 4px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  z-index: 50;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.search-box {
+  padding: 8px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.dropdown-search {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  outline: none;
+}
+
+.dropdown-search:focus {
+  border-color: #0E64A5;
+  box-shadow: 0 0 0 2px rgba(14, 100, 165, 0.1);
+}
+
+.dropdown-options {
+  padding: 4px 0;
+}
+
+.dropdown-option {
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.dropdown-option:hover {
+  background-color: #f3f4f6;
+}
+
+.no-results {
+  padding: 8px 12px;
+  color: #6b7280;
+  text-align: center;
 }
 </style>
