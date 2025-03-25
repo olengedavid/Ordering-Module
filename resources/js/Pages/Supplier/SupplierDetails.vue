@@ -5,8 +5,8 @@
         <Head :title="`Supplier #${supplier.id}`" />
         <div>
           <div class="message-container">
-            <SuccessMessage v-if="successMessage" @close="successMessage = ''" v-slot>{{ successMessage }}</SuccessMessage>
-            <ErrorMessage v-if="errorMessage" @close="errorMessage = ''" v-slot>{{ errorMessage }}</ErrorMessage>
+            <SuccessMessage v-if="successMessage" @close="successMessage = ''" v-slot="{}">{{ successMessage }}</SuccessMessage>
+            <ErrorMessage v-if="errorMessage" @close="errorMessage = ''" v-slot="{}">{{ errorMessage }}</ErrorMessage>
           </div>
           <div class="header-container">
             <h1 class="page-title">Supplier Details</h1>
@@ -61,7 +61,12 @@
     
               <div class="detail-row">
                 <span class="detail-label">KRA PIN:</span>
-                <span class="detail-value">{{ supplier.krapin || supplier.kra_pin }}</span>
+                <span class="detail-value">{{ supplier.krapin }}</span>
+              </div>
+
+              <div class="detail-row">
+                <span class="detail-label">Country:</span>
+                <span class="detail-value capitalize">{{ supplier.country }}</span>
               </div>
     
               <div class="detail-row">
@@ -134,15 +139,70 @@
             <h2>Edit Supplier Details</h2>
             <button class="close-btn" @click="closeSupplierModal">&times;</button>
           </div>
-          <div class="modal-body">
-            <form @submit.prevent="saveSupplierDetails">
-              <div class="form-group">
-                <label for="companyName">Company Name <span class="required">*</span></label>
-                <input type="text" id="companyName" v-model="editedSupplier.companyName" required placeholder="Enter company name">
-              </div>
-              <div class="form-group">
-                <label for="officeAddress">Office Address <span class="required">*</span></label>
-                <input type="text" id="officeAddress" v-model="editedSupplier.officeAddress" required placeholder="Enter office address">
+            <div class="modal-body">
+              <form @submit.prevent="saveSupplierDetails">
+                <div class="form-group">
+                  <label for="companyName">Company Name <span class="required">*</span></label>
+                  <input type="text" id="companyName" v-model="editedSupplier.companyName" required placeholder="Enter company name">
+                </div>
+                <div class="form-group">
+                  <label for="officeAddress">Office Address <span class="required">*</span></label>
+                  <input type="text" id="officeAddress" v-model="editedSupplier.officeAddress" required placeholder="Enter office address">
+                </div>
+                <div class="form-group">
+              <label for="country">Country <span class="required">*</span></label>
+               <div class="custom-select-container">
+                  <div 
+                    class="custom-select-trigger" 
+                    @click="toggleCountryDropdown"
+                    :class="{ 'active': isCountryDropdownOpen }"
+                  >
+                    <span>{{ editedSupplier.country || 'Select a country' }}</span>
+                    <svg 
+                      class="dropdown-arrow" 
+                      :class="{ 'open': isCountryDropdownOpen }"
+                      xmlns="http://www.w3.org/2000/svg" 
+                      width="16" 
+                      height="16" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      stroke-width="2" 
+                      stroke-linecap="round" 
+                      stroke-linejoin="round"
+                    >
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </div>
+              
+                  <div class="custom-select-dropdown" v-show="isCountryDropdownOpen">
+                    <div class="search-box">
+                      <input
+                        type="text"
+                        v-model="countrySearch"
+                        @input="filterCountries"
+                        placeholder="Search country..."
+                        class="dropdown-search"
+                        @click.stop
+                      >
+                    </div>
+                    
+                    <div class="dropdown-options">
+                      <div
+                        v-for="country in filteredCountries"
+                        :key="country"
+                        class="dropdown-option"
+                        @click="selectCountry(country)"
+                      >
+                        {{ country }}
+                      </div>
+                      <div v-if="filteredCountries.length === 0" class="no-results">
+                        No countries match your search
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              <!-- <InputError :message="editedSupplier.errors.country" /> -->
               </div>
               <div class="form-group">
                 <label for="contactPerson">Contact Person <span class="required">*</span></label>
@@ -549,65 +609,11 @@
           );
         }
       },
-      selectCountry(country) {
-        this.newWarehouse.country = country;
-        this.isCountryDropdownOpen = false;
-      },
       
-      // Warehouse methods
-      openAddWarehouseModal() {
-        this.editingWarehouse = false;
-        this.editingWarehouseId = null;
-        this.newWarehouse = {
-          name: '',
-          contactPerson: '',
-          email: '',
-          phone: '',
-          address: '',
-          kraPin: '',
-          country: 'Kenya',
-          region: '',
-          gps: '',
-          status: 'Active'
-        };
-        this.showWarehouseModal = true;
-        this.isCountryDropdownOpen = false;
-        this.isRegionDropdownOpen = false;
-      },
       closeWarehouseModal() {
         this.showWarehouseModal = false;
       },
-      editWarehouse(warehouse) {
-        this.editingWarehouse = true;
-        this.editingWarehouseId = warehouse.id;
-        this.newWarehouse = { ...warehouse };
-        this.showWarehouseModal = true;
-      },
-      deleteWarehouse(warehouseId) {
-        // Remove the warehouse
-        this.warehouses = this.warehouses.filter(warehouse => warehouse.id !== warehouseId);
-      },
-      saveWarehouse() {
-        if (this.editingWarehouse) {
-          // Update existing warehouse
-          const index = this.warehouses.findIndex(warehouse => warehouse.id === this.editingWarehouseId);
-          if (index !== -1) {
-            this.warehouses.splice(index, 1, { ...this.newWarehouse, id: this.editingWarehouseId });
-          }
-        } else {
-          // Create a new warehouse with unique ID
-          const maxId = this.warehouses.length > 0 ? Math.max(...this.warehouses.map(w => w.id)) : 0;
-          
-          const warehouse = {
-            id: maxId + 1,
-            ...this.newWarehouse
-          };
-          
-          this.warehouses.push(warehouse);
-        }
-        this.closeWarehouseModal();
-      },
-      
+    
       // Supplier edit methods
       openEditSupplierModal() {
         try {
@@ -621,8 +627,9 @@
             contactPerson: this.supplier.contact_person,
             email: this.supplier.email,
             phoneNumber: this.supplier.phone_number,
-            kraPin: this.supplier.krapin || this.supplier.kra_pin,
-            industry: this.supplier.industry
+            kraPin: this.supplier.krapin,
+            industry: this.supplier.industry,
+            country: this.supplier.country,
           };
           
           this.showSupplierModal = true;
@@ -649,6 +656,7 @@
             !this.editedSupplier.email ||
             !this.editedSupplier.phoneNumber ||
             !this.editedSupplier.kraPin ||
+            !this.editedSupplier.country ||
             !this.editedSupplier.industry) {
           this.errorMessage = 'Please fill in all required fields';
           setTimeout(() => {
@@ -677,11 +685,11 @@
             email: this.editedSupplier.email,
             phone_number: this.editedSupplier.phoneNumber,
             krapin: this.editedSupplier.kraPin,
-            industry: this.editedSupplier.industry
+            industry: this.editedSupplier.industry,
+            country: this.editedSupplier.country
           };
           
-          console.log('Updating supplier with data:', supplierData);
-          
+        
           // Use Inertia router to update the supplier
           router.post('/admin/suppliers/update', supplierData, {
             preserveScroll: true,
@@ -765,6 +773,19 @@
       updateWarehouses(updatedWarehouses) {
         this.warehouses = updatedWarehouses;
       },
+
+      toggleCountryDropdown(){
+        this.isCountryDropdownOpen = !this.isCountryDropdownOpen;
+        if (this.isCountryDropdownOpen) {
+          this.countrySearch = ''; 
+          this.filteredCountries = [...this.countries];
+        }
+      },
+      selectCountry(country) {
+        this.editedSupplier.country = country;
+        this.isCountryDropdownOpen = false;
+      }
+      
     }
   }
   </script>

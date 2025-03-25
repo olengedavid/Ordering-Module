@@ -84,7 +84,8 @@ class CompanyController extends Controller
                 'krapin' => $request->krapin,
                 'contact_person' => $request->contact_person,
                 'industry' => $request->industry,
-                'created_by' => $request->created_by
+                'created_by' => $request->created_by,
+                'country' => $request->country,
             ]);
 
             $password = 'password123'; // You might want to generate a random password
@@ -174,6 +175,7 @@ class CompanyController extends Controller
             'krapin' => $request->krapin,
             'contact_person' => $request->contact_person,
             'industry' => $request->industry,
+            'country' => $request->country,
         ]);
 
         return redirect()->back()->with('success', 'Company information updated successfully');
