@@ -348,11 +348,11 @@
                   <div class="dropdown-options">
                     <div
                       v-for="unit in filteredUnits"
-                      :key="unit"
+                      :key="unit.value"
                       class="dropdown-option"
                       @click="selectUnit(unit)"
                     >
-                      {{ unit }}
+                      {{ unit.label }}
                     </div>
                     <div v-if="filteredUnits.length === 0" class="no-results">
                       No units match your search
@@ -562,17 +562,22 @@ export default {
       "Baking Supplies",
       "Oils & Vinegars",
     ];
-    const unitsOfMeasure = [
-      "kg",
-      "g",
-      "liter",
-      "ml",
-      "unit",
-      "pack",
-      "box",
-      "carton",
-      "dozen",
-      "case",
+
+    // Replace static units with dynamic ref
+    const units = ref([]);
+
+    // Add default units for fallback
+    const defaultUnits = [
+      { label: "Kilogram", value: "kg" },
+      { label: "Gram", value: "g" },
+      { label: "Liter", value: "liter" },
+      { label: "Milliliter", value: "ml" },
+      { label: "Unit", value: "unit" },
+      { label: "Pack", value: "pack" },
+      { label: "Box", value: "box" },
+      { label: "Carton", value: "carton" },
+      { label: "Dozen", value: "dozen" },
+      { label: "Case", value: "case" }
     ];
 
     // Message state
@@ -587,7 +592,7 @@ export default {
     const unitSearchQuery = ref('');
     const statusSearchQuery = ref('');
     const filteredCategories = ref([...productCategories]);
-    const filteredUnits = ref([...unitsOfMeasure]);
+    const filteredUnits = ref([...units.value]);
     const filteredStatuses = ref(['Active', 'Inactive']);
 
     // Computed properties
@@ -967,7 +972,7 @@ export default {
       isUnitOpen.value = !isUnitOpen.value;
       if (isUnitOpen.value) {
         unitSearchQuery.value = '';
-        filteredUnits.value = [...unitsOfMeasure];
+        filteredUnits.value = [...units.value];
       }
       // Close other dropdowns
       isCategoryOpen.value = false;
@@ -998,11 +1003,11 @@ export default {
 
     const filterUnits = () => {
       if (!unitSearchQuery.value.trim()) {
-        filteredUnits.value = [...unitsOfMeasure];
+        filteredUnits.value = [...units.value];
       } else {
         const query = unitSearchQuery.value.toLowerCase();
-        filteredUnits.value = unitsOfMeasure.filter(
-          unit => unit.toLowerCase().includes(query)
+        filteredUnits.value = units.value.filter(
+          unit => unit.label.toLowerCase().includes(query)
         );
       }
     };
@@ -1025,7 +1030,7 @@ export default {
     };
 
     const selectUnit = (unit) => {
-      newProduct.unitOfMeasure = unit;
+      newProduct.unitOfMeasure = unit.value;
       isUnitOpen.value = false;
       unitSearchQuery.value = '';
     };
@@ -1054,13 +1059,28 @@ export default {
       }
     };
 
+    // Add fetchUnits method
+    const fetchUnits = async () => {
+      try {
+        const response = await axios.get(route("static.units"));
+        units.value = response.data;
+        // Update filtered units after fetching
+        filteredUnits.value = response.data;
+      } catch (error) {
+        console.error("Error fetching units:", error);
+        // Fallback to default units if fetch fails
+        units.value = defaultUnits;
+        filteredUnits.value = defaultUnits;
+      }
+    };
+
     // Initialize dropdowns
     onMounted(() => {
       fetchProducts();
+      fetchUnits();
       document.addEventListener('click', closeDropdownsOutside);
       // Initialize filtered arrays
       filteredCategories.value = [...productCategories];
-      filteredUnits.value = [...unitsOfMeasure];
       filteredStatuses.value = ['Active', 'Inactive'];
     });
 
@@ -1082,7 +1102,7 @@ export default {
       newProduct,
       products,
       productCategories,
-      unitsOfMeasure,
+      units,
       sortedProducts,
       currentPage,
       perPage,
