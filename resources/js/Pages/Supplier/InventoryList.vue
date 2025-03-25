@@ -210,9 +210,7 @@ const deleteInventory = async (inventoryUuid) => {
   if (!confirm("Are you sure you want to delete this inventory item?")) return;
 
   try {
-    await axios.delete(
-      route("supplier.inventories.destroy", inventoryUuid)
-    );
+    await axios.delete(route("supplier.inventories.destroy", inventoryUuid));
 
     successMessage.value = "Inventory deleted successfully";
     setTimeout(() => {
@@ -367,7 +365,12 @@ onMounted(() => {
                     >
                       Edit
                     </button>
-                    <button  @click="deleteInventory(inventory.uuid)" class="action-btn delete-btn">Delete</button>
+                    <button
+                      @click="deleteInventory(inventory.uuid)"
+                      class="action-btn delete-btn"
+                    >
+                      Delete
+                    </button>
                   </td>
                 </tr>
                 <tr v-if="inventories.length === 0">

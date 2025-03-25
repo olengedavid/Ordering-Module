@@ -43,8 +43,20 @@ class ProductController extends Controller
     public function getProductsBySupplier(Request $request)
     {
         $company = Company::where('uuid', $request->uuid)->firstOrFail();
+        $search = $request->input('search');
+
+        \Illuminate\Support\Facades\Log::info('Product search parameter:', [
+            'search_term' => $search,
+            'company_uuid' => $request->uuid
+        ]);
 
         $products = Product::where('company_id', $company->id)
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($search) . '%'])
+                        ->orWhereRaw('LOWER(sku_number) LIKE ?', ['%' . strtolower($search) . '%']);
+                });
+            })
             ->with(['creator'])
             ->latest()
             ->get();
@@ -55,8 +67,15 @@ class ProductController extends Controller
     public function getPaginatedProductsBySupplier(Request $request)
     {
         $company = Company::where('uuid', $request->uuid)->firstOrFail();
+        $search = $request->input('search');
 
         $products = Product::where('company_id', $company->id)
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($search) . '%'])
+                        ->orWhereRaw('LOWER(sku_number) LIKE ?', ['%' . strtolower($search) . '%']);
+                });
+            })
             ->with(['creator'])
             ->latest()
             ->paginate($request->pageSize);

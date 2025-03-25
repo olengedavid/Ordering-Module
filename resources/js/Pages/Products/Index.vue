@@ -27,6 +27,7 @@ const currentPage = ref(1);
 const perPage = ref(10);
 const lastPage = ref(1);
 
+
 const form = useForm({
   name: "",
   description: "",
@@ -49,6 +50,7 @@ const fetchSupplierProducts = async () => {
         uuid: supplier_uuid,
         page: currentPage.value,
         pageSize: perPage.value,
+        search: searchQuery.value,
       })
     );
     products.value = response.data.data;
@@ -58,41 +60,6 @@ const fetchSupplierProducts = async () => {
   } catch (error) {
     console.error("Error fetching products:", error);
   }
-};
-
-const getPrimaryImagePath = (product) => {
-  const images =
-    typeof product.images === "string"
-      ? JSON.parse(product.images)
-      : product.images;
-
-  return images?.find((img) => img.type === "primary")?.path || "";
-};
-
-const submit = () => {
-  form.post(route("products.store"), {
-    preserveScroll: true,
-    onSuccess: () => {
-      closeModal();
-      form.reset();
-      fetchSupplierProducts();
-      successMessage.value = "Product added successfully";
-      setTimeout(() => {
-        successMessage.value = "";
-      }, 3000);
-    },
-    onError: () => {
-      errorMessage.value = "Error adding product";
-      setTimeout(() => {
-        errorMessage.value = "";
-      }, 3000);
-    },
-  });
-};
-
-const closeModal = () => {
-  showingModal.value = false;
-  form.reset();
 };
 
 const handlePageChange = (page) => {
@@ -378,8 +345,9 @@ onMounted(() => {
             <input
               type="text"
               class="search-input"
-              placeholder="Search inventory..."
+              placeholder="Search by name or sku..."
               v-model="searchQuery"
+              @keypress.enter="fetchSupplierProducts"
             />
           </div>
           <button @click="showProductModal = true" class="add-btn">
