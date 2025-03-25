@@ -1,7 +1,6 @@
 <script setup>
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
-import { Head, Link, useForm, usePage } from "@inertiajs/vue3";
-import Modal from "@/Components/Modal.vue";
+import { Head, useForm, usePage } from "@inertiajs/vue3";
 import InputError from "@/Components/InputError.vue";
 import InputLabel from "@/Components/InputLabel.vue";
 import TextInput from "@/Components/TextInput.vue";
@@ -10,7 +9,7 @@ import axios from "axios";
 import CustomPagination from "@/Components/CustomPagination.vue";
 import SuccessMessage from "@/Components/SuccessMessage.vue";
 import ErrorMessage from "@/Components/ErrorMessage.vue";
-import { formatCurrency, formatNumber } from "@/utils/formatters";
+import { formatNumber } from "@/utils/formatters";
 
 const currentPage = ref(1);
 const perPage = ref(10);
