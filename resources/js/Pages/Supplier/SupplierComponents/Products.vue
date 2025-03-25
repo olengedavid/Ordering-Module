@@ -699,25 +699,32 @@ export default {
       newProduct.status = product.status.charAt(0).toUpperCase() + product.status.slice(1);
 
       // Handle images
-      if (product.imageUrl) {
-        imagePreview.value = product.imageUrl;
-      } else if (product.images) {
-        const images =
-          typeof product.images === "string"
-            ? JSON.parse(product.images)
-            : product.images;
+      if (product.images) {
+        try {
+          let images;
+          const parsedImages =
+            typeof product.images === "string"
+              ? JSON.parse(product.images)
+              : product.images;
 
-        if (images && images.length > 0) {
+          // Handle both array and object formats
+          images = Array.isArray(parsedImages)
+            ? parsedImages
+            : Object.values(parsedImages);
+
           productImages.value = images.map((img, index) => ({
             id: index + 1,
-            url: img.path || img.url,
-            isPrimary: img.type === "primary" || img.isPrimary,
+            url: `/storage/${img.path}`,
+            isPrimary: img.type === "primary",
+            path: img.path
           }));
 
           const primaryImage = productImages.value.find((img) => img.isPrimary);
           if (primaryImage) {
             imagePreview.value = primaryImage.url;
           }
+        } catch (error) {
+          console.error("Error processing product images:", error);
         }
       }
 
@@ -739,13 +746,21 @@ export default {
       // Add images
       const primaryImage = productImages.value.find((img) => img.isPrimary);
       if (primaryImage) {
-        formData.append("primary_image", primaryImage.file);
+        if (primaryImage.file) {
+          formData.append("primary_image", primaryImage.file);
+        } else if (primaryImage.path) {
+          formData.append("primary_image_path", primaryImage.path);
+        }
       }
 
       // Add secondary images
       productImages.value.forEach((image) => {
         if (!image.isPrimary) {
-          formData.append("secondary_images[]", image.file);
+          if (image.file) {
+            formData.append("secondary_images[]", image.file);
+          } else if (image.path) {
+            formData.append("secondary_image_paths[]", image.path);
+          }
         }
       });
 
