@@ -704,27 +704,25 @@ export default {
 
       // Handle images
       if (product.images) {
-        try {
-          let images;
-          const parsedImages = typeof product.images === "string" ? JSON.parse(product.images) : product.images;
+        const images = typeof product.images === "string" ? JSON.parse(product.images) : product.images;
+        images.forEach(async (image) => {
+          const response = await fetch(`/storage/${image.path}`);
+          const blob = await response.blob();
+          const file = new File([blob], image.path.split("/").pop(), {
+            type: blob.type,
+          });
 
-          // Handle both array and object formats
-          images = Array.isArray(parsedImages) ? parsedImages : Object.values(parsedImages);
+          productImages.value.push({
+            id: Date.now(),
+            url: URL.createObjectURL(blob),
+            file: file,
+            isPrimary: image.type === "primary",
+          });
 
-          productImages.value = images.map((img, index) => ({
-            id: index + 1,
-            url: `/storage/${img.path}`,
-            isPrimary: img.type === "primary",
-            path: img.path
-          }));
-
-          const primaryImage = productImages.value.find((img) => img.isPrimary);
-          if (primaryImage) {
-            imagePreview.value = primaryImage.url;
+          if (image.type === "primary") {
+            imagePreview.value = URL.createObjectURL(blob);
           }
-        } catch (error) {
-          console.error("Error processing product images:", error);
-        }
+        });
       }
 
       showProductModal.value = true;
@@ -745,21 +743,13 @@ export default {
       // Add images
       const primaryImage = productImages.value.find((img) => img.isPrimary);
       if (primaryImage) {
-        if (primaryImage.file) {
-          formData.append("primary_image", primaryImage.file);
-        } else if (primaryImage.path) {
-          formData.append("primary_image_path", primaryImage.path);
-        }
+        formData.append("primary_image", primaryImage.file);
       }
 
       // Add secondary images
       productImages.value.forEach((image) => {
         if (!image.isPrimary) {
-          if (image.file) {
-            formData.append("secondary_images[]", image.file);
-          } else if (image.path) {
-            formData.append("secondary_image_paths[]", image.path);
-          }
+          formData.append("secondary_images[]", image.file);
         }
       });
 
@@ -827,15 +817,10 @@ export default {
 
       try {
         let images;
-        const parsedImages =
-          typeof product.images === "string"
-            ? JSON.parse(product.images)
-            : product.images;
+        const parsedImages = typeof product.images === "string" ? JSON.parse(product.images) : product.images;
 
         // Handle both array and object formats
-        images = Array.isArray(parsedImages)
-          ? parsedImages
-          : Object.values(parsedImages);
+        images = Array.isArray(parsedImages) ? parsedImages : Object.values(parsedImages);
 
         const primaryImage = images.find((img) => img.type === "primary");
 
