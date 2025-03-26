@@ -43,7 +43,7 @@
                 display: inline-block;
                 padding: 10px 20px;
                 background-color: #2263AB;
-                color: white;
+                color: #ffffff;
                 text-decoration: none;
                 border-radius: 5px;
                 margin: 20px 0;
