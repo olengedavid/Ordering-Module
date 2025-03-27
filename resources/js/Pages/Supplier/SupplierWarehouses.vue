@@ -1228,16 +1228,23 @@ const deliveryRegionForm = useForm({
 
 // Computed properties for delivery regions
 const filteredDeliveryRegions = computed(() => {
-  if (deliveryRegionSearch.value.trim() === "") {
+  if (!deliveryRegionSearch.value.trim()) {
     return deliveryRegions.value;
   }
 
   const query = deliveryRegionSearch.value.toLowerCase();
   return deliveryRegions.value.filter((region) => {
-    return Object.values(region).some((value) => {
-      if (value === null || value === undefined) return false;
-      return String(value).toLowerCase().includes(query);
-    });
+    const warehouseName = getWarehouseName(region.warehouse_id).toLowerCase();
+    const regionName = region.region.toLowerCase();
+    const deliveryFee = String(region.delivery_fee).toLowerCase();
+    const status = region.status.toLowerCase();
+
+    return (
+      warehouseName.includes(query) ||
+      regionName.includes(query) ||
+      deliveryFee.includes(query) ||
+      status.includes(query)
+    );
   });
 });
 
