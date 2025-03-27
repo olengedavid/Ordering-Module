@@ -16,7 +16,10 @@
           }}</ErrorMessage>
         </div>
 
-        <!-- Add tabs here -->
+        <div class="header-container">
+          <h1 class="page-title">Warehouses & Delivery Regions</h1>
+        </div>
+
         <div class="tabs-container">
           <ul class="tabs">
             <li v-for="tab in tabs" 
@@ -31,10 +34,6 @@
 
         <!-- Conditional rendering based on active tab -->
         <div v-if="activeTab === 'warehouses'">
-          <div class="header-container">
-            <h1 class="page-title">Warehouses</h1>
-          </div>
-          <!-- Table Controls with Search Bar -->
           <div class="table-controls">
             <div class="search-container">
               <div class="search-icon">
@@ -179,11 +178,6 @@
 
         <div v-else-if="activeTab === 'regions'">
           <!-- Delivery regions content -->
-          <div class="header-container">
-            <h1 class="page-title">Delivery Regions</h1>
-          </div>
-          
-          <!-- Table Controls with Search Bar -->
           <div class="table-controls">
             <div class="search-container">
               <div class="search-icon">
