@@ -408,8 +408,8 @@ const showingNavigationDropdown = ref(false);
                 </template>
 
                 <template #content>
-                  <DropdownLink :href="route('profile.edit')">
-                    Profile
+                  <DropdownLink :href="route('supplier.details')">
+                    Company Details
                   </DropdownLink>
                   <DropdownLink
                     :href="route('logout')"
@@ -490,8 +490,8 @@ const showingNavigationDropdown = ref(false);
           </div>
 
           <div class="mt-3 space-y-1">
-            <ResponsiveNavLink :href="route('profile.edit')">
-              Profile
+            <ResponsiveNavLink :href="route('supplier.details')">
+              Company Details
             </ResponsiveNavLink>
             <ResponsiveNavLink
               :href="route('logout')"
