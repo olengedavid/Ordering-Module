@@ -227,7 +227,7 @@
           <!-- Delivery Regions Table -->
           <div class="table-container">
             <div class="table-wrapper">
-              <table v-if="filteredDeliveryRegions.length" class="data-table">
+              <table v-if="paginatedDeliveryRegions.length" class="data-table">
                 <thead>
                   <tr>
                     <th @click="sortDeliveryRegionsBy('warehouseName')" class="sortable">
@@ -247,7 +247,7 @@
                 </thead>
                 <tbody>
                   <tr
-                    v-for="region in sortedDeliveryRegions"
+                    v-for="region in paginatedDeliveryRegions"
                     :key="region.id"
                     class="data-row"
                   >
@@ -283,11 +283,20 @@
                   </tr>
                 </tbody>
               </table>
-              <tr v-if="filteredDeliveryRegions.length === 0">
+              <tr v-if="paginatedDeliveryRegions.length === 0">
                 <td colspan="5" class="empty-state">No delivery regions found</td>
               </tr>
             </div>
           </div>
+
+          <!-- Update Pagination Controls for Delivery Regions -->
+          <CustomPagination
+            :current-page="deliveryRegionCurrentPage"
+            :last-page="deliveryRegionTotalPages"
+            :per-page="deliveryRegionPerPage"
+            @page-changed="handleDeliveryRegionPageChange"
+            @update:per-page="handleDeliveryRegionPerPageChange"
+          />
 
           <!-- Delivery Region Modal -->
           <div
@@ -1297,6 +1306,18 @@ const sortedDeliveryRegions = computed(() => {
   return regions;
 });
 
+// Add computed property for paginated delivery regions
+const paginatedDeliveryRegions = computed(() => {
+  const startIndex = (deliveryRegionCurrentPage.value - 1) * deliveryRegionPerPage.value;
+  const endIndex = startIndex + deliveryRegionPerPage.value;
+  return sortedDeliveryRegions.value.slice(startIndex, endIndex);
+});
+
+// Update the total pages computed property for delivery regions
+const deliveryRegionTotalPages = computed(() => {
+  return Math.ceil(sortedDeliveryRegions.value.length / deliveryRegionPerPage.value);
+});
+
 // Delivery Region methods
 const fetchDeliveryRegions = async () => {
   try {
@@ -1545,6 +1566,21 @@ const updateTabCounts = () => {
 const formatCurrency = (amount) => {
   if (!amount) return 'KES 0.00';
   return `KES ${Number(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+};
+
+// Pagination state for delivery regions
+const deliveryRegionCurrentPage = ref(1);
+const deliveryRegionPerPage = ref(10);
+
+// Event handlers for delivery regions pagination
+const handleDeliveryRegionPageChange = (page) => {
+  deliveryRegionCurrentPage.value = page;
+  fetchDeliveryRegions();
+};
+
+const handleDeliveryRegionPerPageChange = (newPerPage) => {
+  deliveryRegionPerPage.value = newPerPage;
+  fetchDeliveryRegions();
 };
 </script>
 
