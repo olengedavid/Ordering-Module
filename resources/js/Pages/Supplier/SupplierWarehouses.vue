@@ -15,177 +15,174 @@
             errorMessage
           }}</ErrorMessage>
         </div>
-        <div class="header-container">
-          <h1 class="page-title">Warehouses</h1>
+
+        <!-- Add tabs here -->
+        <div class="tabs-container">
+          <ul class="tabs">
+            <li v-for="tab in tabs" 
+                :key="tab.id" 
+                :class="['tab', { active: activeTab === tab.id }]"
+                @click="setActiveTab(tab.id)">
+              {{ tab.name }}
+              <span class="tab-count" v-if="tab.count">{{ tab.count }}</span>
+            </li>
+          </ul>
         </div>
 
-        <!-- Table Controls with Search Bar -->
-        <div class="table-controls">
-          <div class="search-container">
-            <div class="search-icon">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                width="20"
-                height="20"
-                color="#000000"
-                fill="none"
-              >
-                <path
-                  opacity="0.4"
-                  fill-rule="evenodd"
-                  clip-rule="evenodd"
-                  d="M16.7929 16.7929C17.1834 16.4024 17.8166 16.4024 18.2071 16.7929L22.7071 21.2929C23.0976 21.6834 23.0976 22.3166 22.7071 22.7071C22.3166 23.0976 21.6834 23.0976 21.2929 22.7071L16.7929 18.2071C16.4024 17.8166 16.4024 17.1834 16.7929 16.7929Z"
-                  fill="currentColor"
-                />
-                <path
-                  fill-rule="evenodd"
-                  clip-rule="evenodd"
-                  d="M1 11C1 5.47715 5.47715 1 11 1C16.5228 1 21 5.47715 21 11C21 16.5228 16.5228 21 11 21C5.47715 21 1 16.5228 1 11ZM11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3Z"
-                  fill="currentColor"
-                />
-              </svg>
-            </div>
-            <input
-              type="text"
-              class="search-input"
-              placeholder="Search by name..."
-              v-model="searchQuery"
-              @keypress.enter="fetchSupplierWarehouses"
-            />
+        <!-- Conditional rendering based on active tab -->
+        <div v-if="activeTab === 'warehouses'">
+          <div class="header-container">
+            <h1 class="page-title">Warehouses</h1>
           </div>
-          <button @click="openAddWarehouseModal" class="add-btn">
-            <span class="plus-icon">+</span>
-            Add Warehouse
-          </button>
-        </div>
-
-        <!-- Warehouses Table -->
-        <div class="table-container">
-          <div class="table-wrapper">
-            <table v-if="filteredWarehouses.length" class="data-table">
-              <thead>
-                <tr>
-                  <th @click="sortBy('name')" class="sortable">
-                    Warehouse Name <i :class="getSortIcon('name')"></i>
-                  </th>
-                  <th @click="sortBy('contactPerson')" class="sortable">
-                    Contact Person <i :class="getSortIcon('contactPerson')"></i>
-                  </th>
-                  <th @click="sortBy('email')" class="sortable">
-                    Email <i :class="getSortIcon('email')"></i>
-                  </th>
-                  <th @click="sortBy('phone')" class="sortable">
-                    Phone <i :class="getSortIcon('phone')"></i>
-                  </th>
-                  <th @click="sortBy('address')" class="sortable">
-                    Address <i :class="getSortIcon('address')"></i>
-                  </th>
-                  <th @click="sortBy('kraPin')" class="sortable">
-                    KRA PIN <i :class="getSortIcon('kraPin')"></i>
-                  </th>
-                  <th @click="sortBy('country')" class="sortable">
-                    Country <i :class="getSortIcon('country')"></i>
-                  </th>
-                  <th @click="sortBy('region')" class="sortable">
-                    Region <i :class="getSortIcon('region')"></i>
-                  </th>
-                  <th @click="sortBy('gps')" class="sortable">
-                    GPS <i :class="getSortIcon('gps')"></i>
-                  </th>
-                  <th @click="sortBy('status')" class="sortable">
-                    Status <i :class="getSortIcon('status')"></i>
-                  </th>
-                  <th class="actions-column">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="warehouse in warehouses"
-                  :key="warehouse.id"
-                  class="data-row"
+          <!-- Table Controls with Search Bar -->
+          <div class="table-controls">
+            <div class="search-container">
+              <div class="search-icon">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  width="20"
+                  height="20"
+                  color="#000000"
+                  fill="none"
                 >
-                  <td>{{ warehouse.name }}</td>
-                  <td>{{ warehouse.contact_person }}</td>
-                  <td>{{ warehouse.email }}</td>
-                  <td>{{ warehouse.phone_number }}</td>
-                  <td>{{ warehouse.address }}</td>
-                  <td>{{ warehouse.krapin }}</td>
-                  <td>{{ warehouse.country || "Kenya" }}</td>
-                  <td>{{ warehouse.region || warehouse.location }}</td>
-                  <td>{{ warehouse.gps || "--" }}</td>
-                  <td>
-                    <span
-                      :class="[
-                        'status-pill',
-                        warehouse.status === 'active'
-                          ? 'status-active'
-                          : 'status-inactive',
-                      ]"
-                    >
-                      {{
-                        warehouse.status.charAt(0).toUpperCase() +
-                        warehouse.status.slice(1)
-                      }}
-                    </span>
-                  </td>
-                  <td class="actions-column">
-                    <button
-                      @click="editWarehouse(warehouse)"
-                      class="action-btn edit-btn"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      @click="deleteWarehouse(warehouse.uuid)"
-                      class="action-btn delete-btn"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-            <tr v-if="filteredWarehouses.length === 0">
-              <td colspan="11" class="empty-state">No warehouses found</td>
-            </tr>
+                  <path
+                    opacity="0.4"
+                    fill-rule="evenodd"
+                    clip-rule="evenodd"
+                    d="M16.7929 16.7929C17.1834 16.4024 17.8166 16.4024 18.2071 16.7929L22.7071 21.2929C23.0976 21.6834 23.0976 22.3166 22.7071 22.7071C22.3166 23.0976 21.6834 23.0976 21.2929 22.7071L16.7929 18.2071C16.4024 17.8166 16.4024 17.1834 16.7929 16.7929Z"
+                    fill="currentColor"
+                  />
+                  <path
+                    fill-rule="evenodd"
+                    clip-rule="evenodd"
+                    d="M1 11C1 5.47715 5.47715 1 11 1C16.5228 1 21 5.47715 21 11C21 16.5228 16.5228 21 11 21C5.47715 21 1 16.5228 1 11ZM11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3Z"
+                    fill="currentColor"
+                  />
+                </svg>
+              </div>
+              <input
+                type="text"
+                class="search-input"
+                placeholder="Search by name..."
+                v-model="searchQuery"
+                @keypress.enter="fetchSupplierWarehouses"
+              />
+            </div>
+            <button @click="openAddWarehouseModal" class="add-btn">
+              <span class="plus-icon">+</span>
+              Add Warehouse
+            </button>
           </div>
+
+          <!-- Warehouses Table -->
+          <div class="table-container">
+            <div class="table-wrapper">
+              <table v-if="filteredWarehouses.length" class="data-table">
+                <thead>
+                  <tr>
+                    <th @click="sortBy('name')" class="sortable">
+                      Warehouse Name <i :class="getSortIcon('name')"></i>
+                    </th>
+                    <th @click="sortBy('contactPerson')" class="sortable">
+                      Contact Person <i :class="getSortIcon('contactPerson')"></i>
+                    </th>
+                    <th @click="sortBy('email')" class="sortable">
+                      Email <i :class="getSortIcon('email')"></i>
+                    </th>
+                    <th @click="sortBy('phone')" class="sortable">
+                      Phone <i :class="getSortIcon('phone')"></i>
+                    </th>
+                    <th @click="sortBy('address')" class="sortable">
+                      Address <i :class="getSortIcon('address')"></i>
+                    </th>
+                    <th @click="sortBy('kraPin')" class="sortable">
+                      KRA PIN <i :class="getSortIcon('kraPin')"></i>
+                    </th>
+                    <th @click="sortBy('country')" class="sortable">
+                      Country <i :class="getSortIcon('country')"></i>
+                    </th>
+                    <th @click="sortBy('region')" class="sortable">
+                      Region <i :class="getSortIcon('region')"></i>
+                    </th>
+                    <th @click="sortBy('gps')" class="sortable">
+                      GPS <i :class="getSortIcon('gps')"></i>
+                    </th>
+                    <th @click="sortBy('status')" class="sortable">
+                      Status <i :class="getSortIcon('status')"></i>
+                    </th>
+                    <th class="actions-column">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="warehouse in warehouses"
+                    :key="warehouse.id"
+                    class="data-row"
+                  >
+                    <td>{{ warehouse.name }}</td>
+                    <td>{{ warehouse.contact_person }}</td>
+                    <td>{{ warehouse.email }}</td>
+                    <td>{{ warehouse.phone_number }}</td>
+                    <td>{{ warehouse.address }}</td>
+                    <td>{{ warehouse.krapin }}</td>
+                    <td>{{ warehouse.country || "Kenya" }}</td>
+                    <td>{{ warehouse.region || warehouse.location }}</td>
+                    <td>{{ warehouse.gps || "--" }}</td>
+                    <td>
+                      <span
+                        :class="[
+                          'status-pill',
+                          warehouse.status === 'active'
+                            ? 'status-active'
+                            : 'status-inactive',
+                        ]"
+                      >
+                        {{
+                          warehouse.status.charAt(0).toUpperCase() +
+                          warehouse.status.slice(1)
+                        }}
+                      </span>
+                    </td>
+                    <td class="actions-column">
+                      <button
+                        @click="editWarehouse(warehouse)"
+                        class="action-btn edit-btn"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        @click="deleteWarehouse(warehouse.uuid)"
+                        class="action-btn delete-btn"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <tr v-if="filteredWarehouses.length === 0">
+                <td colspan="11" class="empty-state">No warehouses found</td>
+              </tr>
+            </div>
+          </div>
+
+          <!-- Pagination Controls -->
+          <CustomPagination
+            :current-page="currentPage"
+            :last-page="lastPage"
+            :per-page="perPage"
+            @page-changed="handlePageChange"
+            @update:per-page="handlePerPageChange"
+          />
         </div>
 
-        <!-- Pagination Controls -->
-        <CustomPagination
-          :current-page="currentPage"
-          :last-page="lastPage"
-          :per-page="perPage"
-          @page-changed="handlePageChange"
-          @update:per-page="handlePerPageChange"
-        />
-        <!-- <div class="pagination-controls">
-          <div class="per-page">
-            <span>Show</span>
-            <select v-model="perPage" @change="resetPagination" class="per-page-select">
-              <option v-for="option in perPageOptions" :key="option" :value="option">
-                {{ option }}
-              </option>
-            </select>
-            <span>per page</span>
+        <div v-else-if="activeTab === 'regions'">
+          <!-- Delivery regions content will go here -->
+          <div class="header-container">
+            <h1 class="page-title">Delivery Regions</h1>
           </div>
-          <div class="pagination-buttons">
-            <button class="pagination-btn" :disabled="currentPage === 1" @click="prevPage">
-              Previous
-            </button>
-            <div class="page-numbers">
-              <span v-for="page in totalPages" :key="page"
-                   :class="['page-number', { active: currentPage === page }]"
-                   @click="goToPage(page)">
-                {{ page }}
-              </span>
-            </div>
-            <button class="pagination-btn" :disabled="currentPage === totalPages" @click="nextPage">
-              Next
-            </button>
-          </div>
-        </div> -->
+        </div>
       </div>
 
       <!-- Add/Edit Warehouse Modal -->
@@ -906,6 +903,34 @@ onBeforeUnmount(() => {
   document.removeEventListener("click", closeCountryDropdownOutside);
   document.removeEventListener("click", closeRegionDropdownOutside);
 });
+
+// Add this with your other refs
+const activeTab = ref('warehouses');
+const tabs = ref([
+  { id: 'warehouses', name: 'Warehouses', count: 0 },
+  { id: 'regions', name: 'Delivery Regions', count: 0 }
+]);
+
+// Add this with your other methods
+const setActiveTab = (tabId) => {
+  activeTab.value = tabId;
+};
+
+// Add this to update warehouse count
+const updateTabCounts = () => {
+  const warehouseCount = warehouses.value.length;
+  tabs.value.find(t => t.id === 'warehouses').count = warehouseCount;
+  // You can update regions count when you have that data
+  tabs.value.find(t => t.id === 'regions').count = 0; // Update this when you have regions data
+};
+
+// Update your onMounted to include the tab count update
+onMounted(() => {
+  updateTabCounts();
+  // ... your existing onMounted code ...
+});
+
+// ... rest of your existing script ...
 </script>
 
 <style scoped>
@@ -1733,6 +1758,79 @@ onBeforeUnmount(() => {
 
   .page-numbers {
     display: none;
+  }
+}
+
+/* Add these new styles */
+.tabs-container {
+  margin-bottom: 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.tabs {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  gap: 8px;
+}
+
+.tab {
+  padding: 12px 16px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #64748b;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.tab.active {
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: #2563eb;
+}
+
+.tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
+  margin-left: 8px;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* Update tab count colors */
+.tabs li:nth-child(1) .tab-count {
+  background-color: #d1f0e0;
+  color: #2a9d74;
+}
+
+.tabs li:nth-child(2) .tab-count {
+  background-color: #fadadd;
+  color: #e55c5c;
+}
+
+/* Add responsive styles for tabs */
+@media (max-width: 640px) {
+  .tabs {
+    overflow-x: auto;
+    padding-bottom: 8px;
   }
 }
 </style>
