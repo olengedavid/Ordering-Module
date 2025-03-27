@@ -178,9 +178,275 @@
         </div>
 
         <div v-else-if="activeTab === 'regions'">
-          <!-- Delivery regions content will go here -->
+          <!-- Delivery regions content -->
           <div class="header-container">
             <h1 class="page-title">Delivery Regions</h1>
+          </div>
+          
+          <!-- Table Controls with Search Bar -->
+          <div class="table-controls">
+            <div class="search-container">
+              <div class="search-icon">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  width="20"
+                  height="20"
+                  color="#000000"
+                  fill="none"
+                >
+                  <path
+                    opacity="0.4"
+                    fill-rule="evenodd"
+                    clip-rule="evenodd"
+                    d="M16.7929 16.7929C17.1834 16.4024 17.8166 16.4024 18.2071 16.7929L22.7071 21.2929C23.0976 21.6834 23.0976 22.3166 22.7071 22.7071C22.3166 23.0976 21.6834 23.0976 21.2929 22.7071L16.7929 18.2071C16.4024 17.8166 16.4024 17.1834 16.7929 16.7929Z"
+                    fill="currentColor"
+                  />
+                  <path
+                    fill-rule="evenodd"
+                    clip-rule="evenodd"
+                    d="M1 11C1 5.47715 5.47715 1 11 1C16.5228 1 21 5.47715 21 11C21 16.5228 16.5228 21 11 21C5.47715 21 1 16.5228 1 11ZM11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3Z"
+                    fill="currentColor"
+                  />
+                </svg>
+              </div>
+              <input
+                type="text"
+                class="search-input"
+                placeholder="Search by region..."
+                v-model="deliveryRegionSearch"
+                @keypress.enter="fetchDeliveryRegions"
+              />
+            </div>
+            <button @click="openAddDeliveryRegionModal" class="add-btn">
+              <span class="plus-icon">+</span>
+              Add Delivery Region
+            </button>
+          </div>
+
+          <!-- Delivery Regions Table -->
+          <div class="table-container">
+            <div class="table-wrapper">
+              <table v-if="filteredDeliveryRegions.length" class="data-table">
+                <thead>
+                  <tr>
+                    <th @click="sortDeliveryRegionsBy('warehouseName')" class="sortable">
+                      Warehouse Name <i :class="getDeliveryRegionSortIcon('warehouseName')"></i>
+                    </th>
+                    <th @click="sortDeliveryRegionsBy('deliverTo')" class="sortable">
+                      Deliver To <i :class="getDeliveryRegionSortIcon('deliverTo')"></i>
+                    </th>
+                    <th @click="sortDeliveryRegionsBy('deliveryFee')" class="sortable">
+                      Delivery Fee <i :class="getDeliveryRegionSortIcon('deliveryFee')"></i>
+                    </th>
+                    <th @click="sortDeliveryRegionsBy('status')" class="sortable">
+                      Status <i :class="getDeliveryRegionSortIcon('status')"></i>
+                    </th>
+                    <th class="actions-column">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="region in sortedDeliveryRegions"
+                    :key="region.id"
+                    class="data-row"
+                  >
+                    <td>{{ getWarehouseName(region.warehouse_id) }}</td>
+                    <td>{{ region.region }}</td>
+                    <td>{{ formatCurrency(region.delivery_fee) }}</td>
+                    <td>
+                      <span
+                        :class="[
+                          'status-pill',
+                          region.status === 'active'
+                            ? 'status-active'
+                            : 'status-inactive',
+                        ]"
+                      >
+                        {{ capitalizeFirstLetter(region.status) }}
+                      </span>
+                    </td>
+                    <td class="actions-column">
+                      <button
+                        @click="editDeliveryRegion(region)"
+                        class="action-btn edit-btn"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        @click="deleteDeliveryRegion(region.uuid)"
+                        class="action-btn delete-btn"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <tr v-if="filteredDeliveryRegions.length === 0">
+                <td colspan="5" class="empty-state">No delivery regions found</td>
+              </tr>
+            </div>
+          </div>
+
+          <!-- Delivery Region Modal -->
+          <div
+            v-if="showDeliveryRegionModal"
+            class="modal-overlay"
+            @click.self="closeDeliveryRegionModal"
+          >
+            <div class="modal-container">
+              <div class="modal-header">
+                <h2>
+                  {{ editingDeliveryRegion ? "Edit Delivery Region" : "Add New Delivery Region" }}
+                </h2>
+                <button class="close-btn" @click="closeDeliveryRegionModal">
+                  &times;
+                </button>
+              </div>
+              <div class="modal-body">
+                <form @submit.prevent="saveDeliveryRegion">
+                  <!-- Warehouse Name Dropdown -->
+                  <div class="form-group">
+                    <label for="warehouseName">Warehouse Name <span class="required">*</span></label>
+                    <div class="custom-select-container">
+                      <div 
+                        class="custom-select-trigger" 
+                        @click="toggleWarehouseDropdown"
+                        :class="{ 'active': isWarehouseDropdownOpen }"
+                      >
+                        <span :data-has-value="!!deliveryRegionForm.warehouse_id">{{ getWarehouseName(deliveryRegionForm.warehouse_id) || 'Select warehouse' }}</span>
+                        <svg 
+                          class="dropdown-arrow" 
+                          :class="{ 'open': isWarehouseDropdownOpen }"
+                          xmlns="http://www.w3.org/2000/svg" 
+                          width="16" 
+                          height="16" 
+                          viewBox="0 0 24 24" 
+                          fill="none" 
+                          stroke="currentColor" 
+                          stroke-width="2" 
+                          stroke-linecap="round" 
+                          stroke-linejoin="round"
+                        >
+                          <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                      </div>
+                      
+                      <div class="custom-select-dropdown" v-show="isWarehouseDropdownOpen">
+                        <div class="search-box">
+                          <input
+                            type="text"
+                            v-model="warehouseSearch"
+                            @input="filterWarehouses"
+                            placeholder="Search warehouse..."
+                            class="dropdown-search"
+                            @click.stop
+                          >
+                        </div>
+                        
+                        <div class="dropdown-options">
+                          <div
+                            v-for="warehouse in filteredWarehouses"
+                            :key="warehouse.id"
+                            class="dropdown-option"
+                            @click="selectWarehouse(warehouse)"
+                          >
+                            {{ warehouse.name }}
+                          </div>
+                          <div v-if="filteredWarehouses.length === 0" class="no-results">
+                            No warehouses match your search
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Region Input for Deliver To -->
+                  <div class="form-group">
+                    <label for="deliverTo">Deliver To <span class="required">*</span></label>
+                    <input type="text" id="deliverTo" v-model="deliveryRegionForm.region" required placeholder="Enter region name">
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="deliveryFee">Delivery Fee <span class="required">*</span></label>
+                    <input type="text" id="deliveryFee" v-model="deliveryRegionForm.delivery_fee" @input="formatDeliveryFee" required placeholder="Enter delivery fee">
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="status">Status <span class="required">*</span></label>
+                    <div class="custom-select-container">
+                      <div 
+                        class="custom-select-trigger" 
+                        @click="toggleStatusDropdown"
+                        :class="{ 'active': isStatusDropdownOpen }"
+                      >
+                        <span :data-has-value="!!deliveryRegionForm.status">{{ capitalizeFirstLetter(deliveryRegionForm.status) || 'Select status' }}</span>
+                        <svg 
+                          class="dropdown-arrow" 
+                          :class="{ 'open': isStatusDropdownOpen }"
+                          xmlns="http://www.w3.org/2000/svg" 
+                          width="16" 
+                          height="16" 
+                          viewBox="0 0 24 24" 
+                          fill="none" 
+                          stroke="currentColor" 
+                          stroke-width="2" 
+                          stroke-linecap="round" 
+                          stroke-linejoin="round"
+                        >
+                          <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                      </div>
+                      
+                      <div class="custom-select-dropdown" v-show="isStatusDropdownOpen">
+                        <div class="search-box">
+                          <input
+                            type="text"
+                            v-model="statusSearch"
+                            @input="filterStatuses"
+                            placeholder="Search status..."
+                            class="dropdown-search"
+                            @click.stop
+                          >
+                        </div>
+                        
+                        <div class="dropdown-options">
+                          <div
+                            v-for="status in filteredStatuses"
+                            :key="status"
+                            class="dropdown-option"
+                            @click="selectStatus(status)"
+                          >
+                            {{ capitalizeFirstLetter(status) }}
+                          </div>
+                          <div v-if="filteredStatuses.length === 0" class="no-results">
+                            No statuses match your search
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="form-actions">
+                    <button
+                      type="button"
+                      class="cancel-btn"
+                      @click="closeDeliveryRegionModal"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      class="submit-btn"
+                      :disabled="deliveryRegionForm.processing"
+                    >
+                      {{ editingDeliveryRegion ? "Update Delivery Region" : "Save Delivery Region" }}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -534,6 +800,12 @@ const form = useForm({
   created_by: user.id,
   uuid: "",
 });
+
+// Helper function to get warehouse name by id
+const getWarehouseName = (warehouseId) => {
+  const warehouse = warehouses.value.find(w => w.id === warehouseId);
+  return warehouse ? warehouse.name : '';
+};
 
 // Computed properties for filtering and sorting
 const filteredWarehouses = computed(() => {
@@ -916,21 +1188,357 @@ const setActiveTab = (tabId) => {
   activeTab.value = tabId;
 };
 
-// Add this to update warehouse count
-const updateTabCounts = () => {
-  const warehouseCount = warehouses.value.length;
-  tabs.value.find(t => t.id === 'warehouses').count = warehouseCount;
-  // You can update regions count when you have that data
-  tabs.value.find(t => t.id === 'regions').count = 0; // Update this when you have regions data
-};
-
 // Update your onMounted to include the tab count update
 onMounted(() => {
   updateTabCounts();
   // ... your existing onMounted code ...
 });
 
+// Delivery Regions state
+const deliveryRegions = ref([]);
+const deliveryRegionSearch = ref("");
+const deliveryRegionSortKey = ref("warehouseName");
+const deliveryRegionSortDir = ref("asc");
+const showDeliveryRegionModal = ref(false);
+const editingDeliveryRegion = ref(false);
+const editingDeliveryRegionId = ref(null);
+const regionUuid = ref("");
+const isWarehouseDropdownOpen = ref(false);
+const isStatusDropdownOpen = ref(false);
+const warehouseSearch = ref("");
+const statusSearch = ref("");
+const filteredStatuses = ref(["active", "inactive"]);
+
+// Helper function to capitalize first letter
+const capitalizeFirstLetter = (string) => {
+  if (!string) return '';
+  return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+};
+
+// Form for delivery region
+const deliveryRegionForm = useForm({
+  warehouse_id: "",
+  region: "",
+  delivery_fee: "",
+  status: "active",
+  company_id: user.company_id,
+  created_by: user.id,
+  uuid: "",
+});
+
+// Computed properties for delivery regions
+const filteredDeliveryRegions = computed(() => {
+  if (deliveryRegionSearch.value.trim() === "") {
+    return deliveryRegions.value;
+  }
+
+  const query = deliveryRegionSearch.value.toLowerCase();
+  return deliveryRegions.value.filter((region) => {
+    return Object.values(region).some((value) => {
+      if (value === null || value === undefined) return false;
+      return String(value).toLowerCase().includes(query);
+    });
+  });
+});
+
+const sortedDeliveryRegions = computed(() => {
+  if (!filteredDeliveryRegions.value || !Array.isArray(filteredDeliveryRegions.value)) {
+    return [];
+  }
+  
+  const regions = [...filteredDeliveryRegions.value];
+  regions.sort((a, b) => {
+    let modifier = deliveryRegionSortDir.value === "asc" ? 1 : -1;
+    
+    // Map the sortKey to the actual property names in the data
+    let aKey, bKey;
+    
+    if (deliveryRegionSortKey.value === "warehouseName") {
+      aKey = getWarehouseName(a?.warehouse_id);
+      bKey = getWarehouseName(b?.warehouse_id);
+    } else if (deliveryRegionSortKey.value === "deliverTo") {
+      aKey = a?.region || "";
+      bKey = b?.region || "";
+    } else if (deliveryRegionSortKey.value === "deliveryFee") {
+      aKey = a?.delivery_fee || 0;
+      bKey = b?.delivery_fee || 0;
+    } else if (deliveryRegionSortKey.value === "status") {
+      aKey = a?.status || "";
+      bKey = b?.status || "";
+    } else {
+      aKey = a?.[deliveryRegionSortKey.value];
+      bKey = b?.[deliveryRegionSortKey.value];
+    }
+    
+    // Handle undefined or null values
+    if (aKey === undefined || aKey === null) {
+      aKey = "";
+    }
+    if (bKey === undefined || bKey === null) {
+      bKey = "";
+    }
+    
+    if (typeof aKey === "number" && typeof bKey === "number") {
+      return aKey < bKey ? -1 * modifier : 1 * modifier;
+    } else {
+      // Convert to strings for comparison
+      aKey = String(aKey).toLowerCase();
+      bKey = String(bKey).toLowerCase();
+      return aKey < bKey ? -1 * modifier : 1 * modifier;
+    }
+  });
+  return regions;
+});
+
+// Delivery Region methods
+const fetchDeliveryRegions = async () => {
+  try {
+    const response = await axios.get(
+      route("supplier.delivery-regions.index", {
+        company_id: user.company_id,
+      })
+    );
+    deliveryRegions.value = response.data || [];
+  } catch (error) {
+    console.error("Error fetching delivery regions:", error);
+    deliveryRegions.value = [];
+  }
+};
+
+const sortDeliveryRegionsBy = (key) => {
+  if (deliveryRegionSortKey.value === key) {
+    deliveryRegionSortDir.value = deliveryRegionSortDir.value === "asc" ? "desc" : "asc";
+  } else {
+    deliveryRegionSortKey.value = key;
+    deliveryRegionSortDir.value = "asc";
+  }
+};
+
+const getDeliveryRegionSortIcon = (key) => {
+  if (deliveryRegionSortKey.value !== key) return "sort-icon sort-none";
+  return deliveryRegionSortDir.value === "asc" ? "sort-icon sort-asc" : "sort-icon sort-desc";
+};
+
+const openAddDeliveryRegionModal = () => {
+  editingDeliveryRegion.value = false;
+  editingDeliveryRegionId.value = null;
+  deliveryRegionForm.reset();
+  deliveryRegionForm.warehouse_id = "";
+  deliveryRegionForm.company_id = user.company_id;
+  deliveryRegionForm.created_by = user.id;
+  showDeliveryRegionModal.value = true;
+  isWarehouseDropdownOpen.value = false;
+};
+
+const closeDeliveryRegionModal = () => {
+  showDeliveryRegionModal.value = false;
+  deliveryRegionForm.reset();
+};
+
+const editDeliveryRegion = (region) => {
+  editingDeliveryRegion.value = true;
+  editingDeliveryRegionId.value = region.id;
+  regionUuid.value = region.uuid;
+  
+  deliveryRegionForm.reset();
+  deliveryRegionForm.warehouse_id = region.warehouse_id;
+  deliveryRegionForm.region = region.region;
+  deliveryRegionForm.delivery_fee = region.delivery_fee;
+  deliveryRegionForm.status = region.status;
+  deliveryRegionForm.company_id = user.company_id;
+  
+  showDeliveryRegionModal.value = true;
+};
+
+const deleteDeliveryRegion = async (regionUuid) => {
+  if (!confirm("Are you sure you want to delete this delivery region?")) {
+    return;
+  }
+  
+  try {
+    await axios.delete(route("supplier.delivery-regions.destroy", regionUuid));
+    successMessage.value = "Delivery region deleted successfully";
+    fetchDeliveryRegions();
+    setTimeout(() => {
+      successMessage.value = "";
+    }, 3000);
+  } catch (error) {
+    errorMessage.value = "Error deleting delivery region";
+    console.error("Error deleting delivery region:", error);
+    setTimeout(() => {
+      errorMessage.value = "";
+    }, 3000);
+  }
+};
+
+const saveDeliveryRegion = () => {
+  if (editingDeliveryRegion.value) {
+    deliveryRegionForm.put(route("supplier.delivery-regions.update", regionUuid.value), {
+      preserveScroll: true,
+      onSuccess: () => {
+        successMessage.value = "Delivery region updated successfully";
+        closeDeliveryRegionModal();
+        fetchDeliveryRegions();
+        setTimeout(() => {
+          successMessage.value = "";
+        }, 3000);
+      },
+      onError: () => {
+        errorMessage.value = "Error updating delivery region";
+        setTimeout(() => {
+          errorMessage.value = "";
+        }, 3000);
+      },
+    });
+  } else {
+    deliveryRegionForm.post(route("supplier.delivery-regions.store"), {
+      preserveScroll: true,
+      onSuccess: () => {
+        successMessage.value = "Delivery region added successfully";
+        closeDeliveryRegionModal();
+        fetchDeliveryRegions();
+        setTimeout(() => {
+          successMessage.value = "";
+        }, 3000);
+      },
+      onError: () => {
+        errorMessage.value = "Error creating delivery region";
+        setTimeout(() => {
+          errorMessage.value = "";
+        }, 3000);
+      },
+    });
+  }
+};
+
+// Warehouse dropdown methods for delivery regions
+const toggleWarehouseDropdown = () => {
+  isWarehouseDropdownOpen.value = !isWarehouseDropdownOpen.value;
+  if (isWarehouseDropdownOpen.value) {
+    warehouseSearch.value = "";
+    filteredWarehouses.value = [...warehouses.value];
+  }
+};
+
+const filterWarehouses = () => {
+  if (!warehouseSearch.value.trim()) {
+    filteredWarehouses.value = [...warehouses.value];
+  } else {
+    const query = warehouseSearch.value.toLowerCase();
+    filteredWarehouses.value = warehouses.value.filter((warehouse) =>
+      warehouse.name.toLowerCase().includes(query)
+    );
+  }
+};
+
+const selectWarehouse = (warehouse) => {
+  if (warehouse && warehouse.id) {
+    deliveryRegionForm.warehouse_id = warehouse.id;
+    isWarehouseDropdownOpen.value = false;
+    warehouseSearch.value = "";
+  }
+};
+
+// Status dropdown methods for delivery regions
+const toggleStatusDropdown = () => {
+  isStatusDropdownOpen.value = !isStatusDropdownOpen.value;
+  if (isStatusDropdownOpen.value) {
+    statusSearch.value = "";
+    filteredStatuses.value = ["active", "inactive"];
+  }
+};
+
+const filterStatuses = () => {
+  if (!statusSearch.value.trim()) {
+    filteredStatuses.value = ["active", "inactive"];
+  } else {
+    const query = statusSearch.value.toLowerCase();
+    filteredStatuses.value = ["active", "inactive"].filter((status) =>
+      status.toLowerCase().includes(query)
+    );
+  }
+};
+
+const selectStatus = (status) => {
+  if (status) {
+    deliveryRegionForm.status = status;
+    isStatusDropdownOpen.value = false;
+    statusSearch.value = "";
+  }
+};
+
+// Format delivery fee with comma separators for thousands
+const formatDeliveryFee = () => {
+  // If the input is empty, do nothing
+  if (!deliveryRegionForm.delivery_fee) return;
+  
+  // Remove any non-numeric characters except for the decimal point
+  let value = deliveryRegionForm.delivery_fee.toString().replace(/[^0-9.]/g, "");
+  
+  // Parse the value as a number
+  const numValue = parseFloat(value);
+  
+  // If it's a valid number, format it
+  if (!isNaN(numValue)) {
+    deliveryRegionForm.delivery_fee = numValue;
+  }
+};
+
+// Update onMounted to include delivery regions
+onMounted(() => {
+  // Initialize filtered countries and regions
+  searchRegions("Kenya");
+  fetchSupplierWarehouses();
+  fetchDeliveryRegions();
+  filteredCountries.value = [...countries.value];
+  filteredRegions.value = [...regions.value];
+
+  // Add click outside listener for dropdowns
+  document.addEventListener("click", closeCountryDropdownOutside);
+  document.addEventListener("click", closeRegionDropdownOutside);
+  document.addEventListener("click", closeDropdownsOutside);
+});
+
+// Update onBeforeUnmount to include new event listener
+onBeforeUnmount(() => {
+  // Clean up the event listeners
+  document.removeEventListener("click", closeCountryDropdownOutside);
+  document.removeEventListener("click", closeRegionDropdownOutside);
+  document.removeEventListener("click", closeDropdownsOutside);
+});
+
+// Add closeDropdownsOutside method
+const closeDropdownsOutside = (event) => {
+  const dropdowns = document.querySelectorAll(".custom-select-container");
+  let clickedInside = false;
+  
+  dropdowns.forEach((dropdown) => {
+    if (dropdown.contains(event.target)) {
+      clickedInside = true;
+    }
+  });
+
+  if (!clickedInside) {
+    isWarehouseDropdownOpen.value = false;
+    isStatusDropdownOpen.value = false;
+  }
+};
+
+// Update updateTabCounts to include delivery regions count
+const updateTabCounts = () => {
+  const warehouseCount = warehouses.value.length;
+  const deliveryRegionCount = deliveryRegions.value.length;
+  tabs.value.find((t) => t.id === "warehouses").count = warehouseCount;
+  tabs.value.find((t) => t.id === "regions").count = deliveryRegionCount;
+};
+
 // ... rest of your existing script ...
+
+// Helper function to format currency
+const formatCurrency = (amount) => {
+  if (!amount) return 'KES 0.00';
+  return `KES ${Number(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+};
 </script>
 
 <style scoped>
