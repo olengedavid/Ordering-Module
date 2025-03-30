@@ -1,5 +1,5 @@
 <script setup>
-import { Head, Link, useForm, router, usePage } from "@inertiajs/vue3";
+import { Head, useForm, router, usePage } from "@inertiajs/vue3";
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import InputError from '@/Components/InputError.vue';
 import AdminNavbar from '@/Components/AdminNavbar.vue';
