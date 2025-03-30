@@ -1,6 +1,7 @@
 <template>
     <div>
-      <AdminNavbar />
+      <AdminNavbar v-if="$page.props.auth.user.user_type === 'admin'" />
+      <SupplierNavbar v-else />
       <div class="page-container">
         <Head :title="`Supplier #${supplier.id}`" />
         <div>
@@ -291,6 +292,7 @@
   <script>
   import { Head, router } from '@inertiajs/vue3';
   import AdminNavbar from '@/Components/AdminNavbar.vue';
+  import SupplierNavbar from '@/Components/SupplierNavbar.vue';
   import Modal from '@/Components/Modal.vue';
   import BankAccounts from './SupplierComponents/BankAccounts.vue';
   import DeliveryRegions from './SupplierComponents/DeliveryRegions.vue';
@@ -304,6 +306,7 @@
     components: {
       Head,
       AdminNavbar,
+      SupplierNavbar,
       Modal,
       BankAccounts,
       DeliveryRegions,
