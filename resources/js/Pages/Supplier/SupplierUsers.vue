@@ -1,309 +1,311 @@
 <template>
-  <AuthenticatedLayout>
-    <div class="page-container">
-      <div class="content-container">
-        <div class="message-container">
-          <SuccessMessage v-if="successMessage" @close="successMessage = ''" v-slot="{}">{{ successMessage }}</SuccessMessage>
-          <ErrorMessage v-if="errorMessage" @close="errorMessage = ''" v-slot="{}">{{ errorMessage }}</ErrorMessage>
-        </div>
-        <div class="header-container">
-          <h1 class="page-title">Supplier Users</h1>
-        </div>
+  <SupplierNavbar />
+  <Head title="Supplier Users" />
 
-        <div class="table-controls">
-          <div class="search-container">
-            <div class="search-icon">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                width="20"
-                height="20"
-                color="#000000"
-                fill="none"
-              >
-                <path
-                  opacity="0.4"
-                  fill-rule="evenodd"
-                  clip-rule="evenodd"
-                  d="M16.7929 16.7929C17.1834 16.4024 17.8166 16.4024 18.2071 16.7929L22.7071 21.2929C23.0976 21.6834 23.0976 22.3166 22.7071 22.7071C22.3166 23.0976 21.6834 23.0976 21.2929 22.7071L16.7929 18.2071C16.4024 17.8166 16.4024 17.1834 16.7929 16.7929Z"
-                  fill="currentColor"
-                />
-                <path
-                  fill-rule="evenodd"
-                  clip-rule="evenodd"
-                  d="M1 11C1 5.47715 5.47715 1 11 1C16.5228 1 21 5.47715 21 11C21 16.5228 16.5228 21 11 21C5.47715 21 1 16.5228 1 11ZM11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3Z"
-                  fill="currentColor"
-                />
-              </svg>
-            </div>
-            <input
-              type="text"
-              class="search-input"
-              placeholder="Search users..."
-              v-model="searchQuery"
-              @keypress.enter="fetchSupplierUsers"
-            />
-          </div>
-          <button @click="openAddUserModal" class="add-btn">
-            <span class="plus-icon">+</span>
-            Add User
-          </button>
-        </div>
-
-        <div class="table-container">
-          <div class="table-wrapper">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th @click="sortBy('username')" class="sortable">
-                    Username <i :class="getSortIcon('username')"></i>
-                  </th>
-                  <th @click="sortBy('email')" class="sortable">
-                    Email Address <i :class="getSortIcon('email')"></i>
-                  </th>
-                  <th @click="sortBy('password')" class="sortable">
-                    Password <i :class="getSortIcon('password')"></i>
-                  </th>
-                  <th @click="sortBy('warehouse')" class="sortable">
-                    Warehouse <i :class="getSortIcon('warehouse')"></i>
-                  </th>
-                  <th @click="sortBy('permissions')" class="sortable">
-                    Permissions <i :class="getSortIcon('permissions')"></i>
-                  </th>
-                  <th @click="sortBy('status')" class="sortable">
-                    Status <i :class="getSortIcon('status')"></i>
-                  </th>
-                  <th class="actions-column">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="user in users" :key="user.id" class="data-row">
-                  <td>{{ user.username }}</td>
-                  <td>{{ user.email }}</td>
-                  <td>{{ user.displayPassword }}</td>
-                  <td>{{ user.warehouse }}</td>
-                  <td>{{ getPermissionsDisplayText(user.permissions) }}</td>
-                  <td>
-                    <span
-                      :class="[
-                        'status-pill capitalize',
-                        user.status === 'active'
-                          ? 'status-active'
-                          : 'status-inactive',
-                      ]"
-                    >
-                      {{ user.status }}
-                    </span>
-                  </td>
-                  <td class="actions-column">
-                    <button @click="editUser(user)" class="action-btn edit-btn">
-                      Edit
-                    </button>
-                  </td>
-                </tr>
-                <tr v-if="filteredUsers.length === 0">
-                  <td colspan="7" class="empty-state">No users found</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Pagination -->
-        <CustomPagination
-          :current-page="currentPage"
-          :last-page="lastPage"
-          :per-page="perPage"
-          @page-changed="handlePageChange"
-          @update:per-page="handlePerPageChange"
-        />
+  <div class="page-container">
+    <div class="content-container">
+      <div class="message-container">
+        <SuccessMessage v-if="successMessage" @close="successMessage = ''" v-slot="{}">{{ successMessage }}</SuccessMessage>
+        <ErrorMessage v-if="errorMessage" @close="errorMessage = ''" v-slot="{}">{{ errorMessage }}</ErrorMessage>
+      </div>
+      <div class="header-container">
+        <h1 class="page-title">Supplier Users</h1>
       </div>
 
-      <!-- Add/Edit User Modal -->
-      <div
-        v-if="showUserModal"
-        class="modal-overlay"
-        @click.self="closeUserModal"
-      >
-        <div class="modal-container">
-          <div class="modal-header">
-            <h2>{{ editingUser ? "Edit User" : "Add New User" }}</h2>
-            <button class="close-btn" @click="closeUserModal">&times;</button>
+      <div class="table-controls">
+        <div class="search-container">
+          <div class="search-icon">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              width="20"
+              height="20"
+              color="#000000"
+              fill="none"
+            >
+              <path
+                opacity="0.4"
+                fill-rule="evenodd"
+                clip-rule="evenodd"
+                d="M16.7929 16.7929C17.1834 16.4024 17.8166 16.4024 18.2071 16.7929L22.7071 21.2929C23.0976 21.6834 23.0976 22.3166 22.7071 22.7071C22.3166 23.0976 21.6834 23.0976 21.2929 22.7071L16.7929 18.2071C16.4024 17.8166 16.4024 17.1834 16.7929 16.7929Z"
+                fill="currentColor"
+              />
+              <path
+                fill-rule="evenodd"
+                clip-rule="evenodd"
+                d="M1 11C1 5.47715 5.47715 1 11 1C16.5228 1 21 5.47715 21 11C21 16.5228 16.5228 21 11 21C5.47715 21 1 16.5228 1 11ZM11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3Z"
+                fill="currentColor"
+              />
+            </svg>
           </div>
-          <div class="modal-body">
-            <form @submit.prevent="saveUser">
-              <!-- Username Field -->
-              <div class="form-group">
-                <label for="username"
-                  >Username <span class="required">*</span></label
-                >
-                <input
-                  type="text"
-                  id="username"
-                  v-model="form.username"
-                  required
-                />
-              </div>
+          <input
+            type="text"
+            class="search-input"
+            placeholder="Search users..."
+            v-model="searchQuery"
+            @keypress.enter="fetchSupplierUsers"
+          />
+        </div>
+        <button @click="openAddUserModal" class="add-btn">
+          <span class="plus-icon">+</span>
+          Add User
+        </button>
+      </div>
 
-              <!-- Email Field -->
-              <div class="form-group">
-                <label for="email"
-                  >Email Address <span class="required">*</span></label
-                >
-                <input
-                  type="email"
-                  id="email"
-                  v-model="form.email"
-                  required
-                />
-              </div>
-
-              <!-- Password Field with show/hide toggle -->
-              <div class="form-group">
-                <label for="password"
-                  >Password <span class="required">*</span></label
-                >
-                <div class="password-input-container">
-                  <input
-                    :type="showPassword ? 'text' : 'password'"
-                    id="password"
-                    v-model="form.password"
-                    required
-                  />
-                  <button
-                    type="button"
-                    class="password-toggle-btn"
-                    @click="togglePasswordVisibility"
+      <div class="table-container">
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th @click="sortBy('username')" class="sortable">
+                  Username <i :class="getSortIcon('username')"></i>
+                </th>
+                <th @click="sortBy('email')" class="sortable">
+                  Email Address <i :class="getSortIcon('email')"></i>
+                </th>
+                <th @click="sortBy('password')" class="sortable">
+                  Password <i :class="getSortIcon('password')"></i>
+                </th>
+                <th @click="sortBy('warehouse')" class="sortable">
+                  Warehouse <i :class="getSortIcon('warehouse')"></i>
+                </th>
+                <th @click="sortBy('permissions')" class="sortable">
+                  Permissions <i :class="getSortIcon('permissions')"></i>
+                </th>
+                <th @click="sortBy('status')" class="sortable">
+                  Status <i :class="getSortIcon('status')"></i>
+                </th>
+                <th class="actions-column">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="user in users" :key="user.id" class="data-row">
+                <td>{{ user.username }}</td>
+                <td>{{ user.email }}</td>
+                <td>{{ user.displayPassword }}</td>
+                <td>{{ user.warehouse }}</td>
+                <td>{{ getPermissionsDisplayText(user.permissions) }}</td>
+                <td>
+                  <span
+                    :class="[
+                      'status-pill capitalize',
+                      user.status === 'active'
+                        ? 'status-active'
+                        : 'status-inactive',
+                    ]"
                   >
-                    <!-- Eye Close Icon (shown when password is hidden) -->
-                    <svg
-                      v-if="!showPassword"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      width="24"
-                      height="24"
-                      color="#000000"
-                      fill="none"
-                    >
-                      <path
-                        d="M19.439 15.439C21 14 22 12 22 12C20.5 9 16.6892 5 12 5C11.0922 5 10.2294 5.15476 9.41827 5.41827M17 17.4186C15.5657 18.3368 13.8793 19 12 19C7.31078 19 3.5 15 2 12C2 12 3.5 9 6.5 6.91847"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
-                      <path
-                        d="M9.85786 10C9.32783 10.53 9 11.2623 9 12.0711C9 13.6887 10.3113 15 11.9289 15C12.7377 15 13.47 14.6722 14 14.1421"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
-                      <path
-                        d="M3 3L21 21"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
-                    </svg>
-                    <!-- Eye Open Icon (shown when password is visible) -->
-                    <svg
-                      v-else
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      width="24"
-                      height="24"
-                      color="#000000"
-                      fill="none"
-                    >
-                      <path
-                        d="M15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15C13.6569 15 15 13.6569 15 12Z"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                      />
-                      <path
-                        d="M12 5C17.5228 5 22 12 22 12C22 12 17.5228 19 12 19C6.47715 19 2 12 2 12C2 12 6.47715 5 12 5Z"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                      />
-                    </svg>
+                    {{ user.status }}
+                  </span>
+                </td>
+                <td class="actions-column">
+                  <button @click="editUser(user)" class="action-btn edit-btn">
+                    Edit
                   </button>
-                </div>
-              </div>
+                </td>
+              </tr>
+              <tr v-if="filteredUsers.length === 0">
+                <td colspan="7" class="empty-state">No users found</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-              <!-- Warehouse Dropdown -->
-              <div class="form-group">
-                <label for="warehouse"
-                  >Warehouse <span class="required">*</span></label
-                >
-                <select id="warehouse" v-model="form.warehouse_id" required>
-                  <option value="">Select a Warehouse</option>
-                  <option
-                    v-for="warehouse in warehouses"
-                    :key="warehouse.id"
-                    :value="warehouse.id"
-                  >
-                    {{ warehouse.name }}
-                  </option>
-                </select>
-              </div>
+      <!-- Pagination -->
+      <CustomPagination
+        :current-page="currentPage"
+        :last-page="lastPage"
+        :per-page="perPage"
+        @page-changed="handlePageChange"
+        @update:per-page="handlePerPageChange"
+      />
+    </div>
 
-              <!-- Permissions Checkboxes -->
-              <div class="form-group">
-                <label>Permissions <span class="required">*</span></label>
-                <div class="permissions-container">
-                  <div
-                    v-for="permission in availablePermissions"
-                    :key="permission.id"
-                    class="permission-checkbox"
-                  >
-                    <input
-                      type="checkbox"
-                      :id="permission.id"
-                      v-model="form.permissions"
-                      :value="permission.id"
-                    />
-                    <label :for="permission.id">{{ permission.label }}</label>
-                  </div>
-                </div>
-              </div>
+    <!-- Add/Edit User Modal -->
+    <div
+      v-if="showUserModal"
+      class="modal-overlay"
+      @click.self="closeUserModal"
+    >
+      <div class="modal-container">
+        <div class="modal-header">
+          <h2>{{ editingUser ? "Edit User" : "Add New User" }}</h2>
+          <button class="close-btn" @click="closeUserModal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <form @submit.prevent="saveUser">
+            <!-- Username Field -->
+            <div class="form-group">
+              <label for="username"
+                >Username <span class="required">*</span></label
+              >
+              <input
+                type="text"
+                id="username"
+                v-model="form.username"
+                required
+              />
+            </div>
 
-              <!-- Status Dropdown -->
-              <div class="form-group">
-                <label for="status"
-                  >Status <span class="required">*</span></label
-                >
-                <select id="status" v-model="form.status" required>
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </select>
-              </div>
+            <!-- Email Field -->
+            <div class="form-group">
+              <label for="email"
+                >Email Address <span class="required">*</span></label
+              >
+              <input
+                type="email"
+                id="email"
+                v-model="form.email"
+                required
+              />
+            </div>
 
-              <div class="form-actions">
+            <!-- Password Field with show/hide toggle -->
+            <div class="form-group">
+              <label for="password"
+                >Password <span class="required">*</span></label
+              >
+              <div class="password-input-container">
+                <input
+                  :type="showPassword ? 'text' : 'password'"
+                  id="password"
+                  v-model="form.password"
+                  required
+                />
                 <button
                   type="button"
-                  class="cancel-btn"
-                  @click="closeUserModal"
+                  class="password-toggle-btn"
+                  @click="togglePasswordVisibility"
                 >
-                  Cancel
+                  <!-- Eye Close Icon (shown when password is hidden) -->
+                  <svg
+                    v-if="!showPassword"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    width="24"
+                    height="24"
+                    color="#000000"
+                    fill="none"
+                  >
+                    <path
+                      d="M19.439 15.439C21 14 22 12 22 12C20.5 9 16.6892 5 12 5C11.0922 5 10.2294 5.15476 9.41827 5.41827M17 17.4186C15.5657 18.3368 13.8793 19 12 19C7.31078 19 3.5 15 2 12C2 12 3.5 9 6.5 6.91847"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      d="M9.85786 10C9.32783 10.53 9 11.2623 9 12.0711C9 13.6887 10.3113 15 11.9289 15C12.7377 15 13.47 14.6722 14 14.1421"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      d="M3 3L21 21"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                  <!-- Eye Open Icon (shown when password is visible) -->
+                  <svg
+                    v-else
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    width="24"
+                    height="24"
+                    color="#000000"
+                    fill="none"
+                  >
+                    <path
+                      d="M15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15C13.6569 15 15 13.6569 15 12Z"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                    />
+                    <path
+                      d="M12 5C17.5228 5 22 12 22 12C22 12 17.5228 19 12 19C6.47715 19 2 12 2 12C2 12 6.47715 5 12 5Z"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                    />
+                  </svg>
                 </button>
-                <button type="submit" class="submit-btn">Save User</button>
               </div>
-            </form>
-          </div>
+            </div>
+
+            <!-- Warehouse Dropdown -->
+            <div class="form-group">
+              <label for="warehouse"
+                >Warehouse <span class="required">*</span></label
+              >
+              <select id="warehouse" v-model="form.warehouse_id" required>
+                <option value="">Select a Warehouse</option>
+                <option
+                  v-for="warehouse in warehouses"
+                  :key="warehouse.id"
+                  :value="warehouse.id"
+                >
+                  {{ warehouse.name }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Permissions Checkboxes -->
+            <div class="form-group">
+              <label>Permissions <span class="required">*</span></label>
+              <div class="permissions-container">
+                <div
+                  v-for="permission in availablePermissions"
+                  :key="permission.id"
+                  class="permission-checkbox"
+                >
+                  <input
+                    type="checkbox"
+                    :id="permission.id"
+                    v-model="form.permissions"
+                    :value="permission.id"
+                  />
+                  <label :for="permission.id">{{ permission.label }}</label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Status Dropdown -->
+            <div class="form-group">
+              <label for="status"
+                >Status <span class="required">*</span></label
+              >
+              <select id="status" v-model="form.status" required>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+
+            <div class="form-actions">
+              <button
+                type="button"
+                class="cancel-btn"
+                @click="closeUserModal"
+              >
+                Cancel
+              </button>
+              <button type="submit" class="submit-btn">Save User</button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
-  </AuthenticatedLayout>
+  </div>
 </template>
   
 <script setup >
 import { ref, onMounted, computed } from "vue";
-import { usePage, useForm } from "@inertiajs/vue3";
-import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
+import { Head, usePage, useForm } from "@inertiajs/vue3";
+import SupplierNavbar from "@/Components/SupplierNavbar.vue";
 import CustomPagination from "@/Components/CustomPagination.vue";
 import SuccessMessage from "@/Components/SuccessMessage.vue";
+import ErrorMessage from "@/Components/ErrorMessage.vue";
 
 const page = usePage();
 const user = page.props.auth.user;
@@ -351,7 +353,6 @@ const availablePermissions = [
   { id: "cancel_orders", label: "Can Cancel Order Requests" },
   { id: "confirm_deliveries", label: "Can Confirm Deliveries" },
 ];
-nConfirmDeliveries: "confirm_deliveries",
 
 // Load initial warehouse and user data
 onMounted(() => {
