@@ -1,5 +1,5 @@
 <script setup>
-import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
+import SupplierNavbar from "@/Components/SupplierNavbar.vue";
 import { Head, useForm, usePage } from "@inertiajs/vue3";
 import InputError from "@/Components/InputError.vue";
 import InputLabel from "@/Components/InputLabel.vue";
@@ -339,63 +339,10 @@ onUnmounted(() => {
 });
 </script>
 
-<style scoped>
-@import "../Supplier/SupplierComponents/SupplierSharedStyles.css";
-
-.product-image-container {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.product-thumbnail {
-  width: 50px;
-  height: 50px;
-  object-fit: cover;
-  border-radius: 4px;
-}
-
-.product-name {
-  font-weight: 500;
-}
-
-.table-header-sortable {
-  cursor: pointer;
-  user-select: none;
-}
-
-.sort-icon {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  background-repeat: no-repeat;
-  background-position: center;
-  margin-left: 4px;
-  vertical-align: text-bottom;
-}
-
-.sort-none::after {
-  content: "⇵";
-  opacity: 0.3;
-  font-size: 12px;
-}
-
-.sort-asc::after {
-  content: "↑";
-  color: #2563eb;
-  font-size: 12px;
-}
-
-.sort-desc::after {
-  content: "↓";
-  color: #2563eb;
-  font-size: 12px;
-}
-</style> 
-
 <template>
-  <AuthenticatedLayout>
+  <div>
     <Head title="Inventory Management" />
+    <SupplierNavbar />
 
     <div class="page-container">
       <div class="content-container">
@@ -869,7 +816,7 @@ onUnmounted(() => {
         </div>
       </div>
     </div>
-  </AuthenticatedLayout>
+  </div>
 </template>
 
 <style scoped>
