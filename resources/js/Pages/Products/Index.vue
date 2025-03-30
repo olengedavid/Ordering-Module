@@ -1,5 +1,5 @@
 <script setup>
-import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
+import SupplierNavbar from "@/Components/SupplierNavbar.vue";
 import { Head } from "@inertiajs/vue3";
 import { ref, onMounted, onUnmounted, computed } from "vue";
 import { useForm, usePage } from "@inertiajs/vue3";
@@ -529,7 +529,8 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <AuthenticatedLayout>
+  <div>
+    <SupplierNavbar />
     <Head title="Products" />
 
     <div class="page-container">
@@ -1043,7 +1044,7 @@ onUnmounted(() => {
         </div>
       </div>
     </div>
-  </AuthenticatedLayout>
+  </div>
 </template>
 
 <style scoped>
