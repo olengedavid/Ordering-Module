@@ -41,7 +41,7 @@
 
       <!-- Navigation Links - Hidden on mobile -->
       <div class="all-nav-links">
-        <Link :href="route('dashboard')" class="nav-link" :class="{ active: route().current('orders.*') }">
+        <Link :href="route('dashboard')" class="nav-link disabled" :class="{ active: route().current('orders.*') }" @click.prevent>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" color="#000000" fill="none"
           class="nav-icon">
           <path opacity="0.4"
@@ -206,8 +206,7 @@
       </div>
 
       <div class="mobile-menu-content">
-        <Link :href="route('dashboard')" class="mobile-nav-link" :class="{ active: route().current('orders.*') }"
-          @click="closeMobileMenu">
+        <Link :href="route('dashboard')" class="mobile-nav-link disabled" :class="{ active: route().current('orders.*') }" @click.prevent>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" color="#000000" fill="none"
           class="nav-icon">
           <!-- Orders icon SVG -->
@@ -388,6 +387,12 @@ export default {
   font-weight: 600;
 }
 
+.nav-link.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 .nav-actions {
   display: flex;
   align-items: center;
@@ -539,6 +544,12 @@ export default {
 .mobile-nav-link.active {
   color: #2263AB;
   font-weight: 600;
+}
+
+.mobile-nav-link.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .mobile-menu-overlay {
