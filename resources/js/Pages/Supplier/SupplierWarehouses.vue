@@ -1,740 +1,739 @@
 <template>
-  <AuthenticatedLayout>
-    <Head title="Supplier Warehouses" />
+  <SupplierNavbar />
+  <Head title="Supplier Warehouses" />
 
-    <div class="page-container">
-      <div class="content-container">
-        <div class="message-container">
-          <SuccessMessage
-            v-if="successMessage"
-            @close="successMessage = ''"
-            v-slot="{}"
-            >{{ successMessage }}</SuccessMessage
-          >
-          <ErrorMessage v-if="errorMessage" @close="errorMessage = ''" v-slot>{{
-            errorMessage
-          }}</ErrorMessage>
-        </div>
-
-        <div class="header-container">
-          <h1 class="page-title">Warehouses & Delivery Regions</h1>
-        </div>
-
-        <div class="tabs-container">
-          <ul class="tabs">
-            <li v-for="tab in tabs" 
-                :key="tab.id" 
-                :class="['tab', { active: activeTab === tab.id }]"
-                @click="setActiveTab(tab.id)">
-              {{ tab.name }}
-              <span class="tab-count" v-if="tab.count">{{ tab.count }}</span>
-            </li>
-          </ul>
-        </div>
-
-        <!-- Conditional rendering based on active tab -->
-        <div v-if="activeTab === 'warehouses'">
-          <div class="table-controls">
-            <div class="search-container">
-              <div class="search-icon">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  width="20"
-                  height="20"
-                  color="#000000"
-                  fill="none"
-                >
-                  <path
-                    opacity="0.4"
-                    fill-rule="evenodd"
-                    clip-rule="evenodd"
-                    d="M16.7929 16.7929C17.1834 16.4024 17.8166 16.4024 18.2071 16.7929L22.7071 21.2929C23.0976 21.6834 23.0976 22.3166 22.7071 22.7071C22.3166 23.0976 21.6834 23.0976 21.2929 22.7071L16.7929 18.2071C16.4024 17.8166 16.4024 17.1834 16.7929 16.7929Z"
-                    fill="currentColor"
-                  />
-                  <path
-                    fill-rule="evenodd"
-                    clip-rule="evenodd"
-                    d="M1 11C1 5.47715 5.47715 1 11 1C16.5228 1 21 5.47715 21 11C21 16.5228 16.5228 21 11 21C5.47715 21 1 16.5228 1 11ZM11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3Z"
-                    fill="currentColor"
-                  />
-                </svg>
-              </div>
-              <input
-                type="text"
-                class="search-input"
-                placeholder="Search by name..."
-                v-model="searchQuery"
-                @keypress.enter="fetchSupplierWarehouses"
-              />
-            </div>
-            <button @click="openAddWarehouseModal" class="add-btn">
-              <span class="plus-icon">+</span>
-              Add Warehouse
-            </button>
-          </div>
-
-          <!-- Warehouses Table -->
-          <div class="table-container">
-            <div class="table-wrapper">
-              <table v-if="filteredWarehouses.length" class="data-table">
-                <thead>
-                  <tr>
-                    <th @click="sortBy('name')" class="sortable">
-                      Warehouse Name <i :class="getSortIcon('name')"></i>
-                    </th>
-                    <th @click="sortBy('contactPerson')" class="sortable">
-                      Contact Person <i :class="getSortIcon('contactPerson')"></i>
-                    </th>
-                    <th @click="sortBy('email')" class="sortable">
-                      Email <i :class="getSortIcon('email')"></i>
-                    </th>
-                    <th @click="sortBy('phone')" class="sortable">
-                      Phone <i :class="getSortIcon('phone')"></i>
-                    </th>
-                    <th @click="sortBy('address')" class="sortable">
-                      Address <i :class="getSortIcon('address')"></i>
-                    </th>
-                    <th @click="sortBy('kraPin')" class="sortable">
-                      KRA PIN <i :class="getSortIcon('kraPin')"></i>
-                    </th>
-                    <th @click="sortBy('country')" class="sortable">
-                      Country <i :class="getSortIcon('country')"></i>
-                    </th>
-                    <th @click="sortBy('region')" class="sortable">
-                      Region <i :class="getSortIcon('region')"></i>
-                    </th>
-                    <th @click="sortBy('gps')" class="sortable">
-                      GPS <i :class="getSortIcon('gps')"></i>
-                    </th>
-                    <th @click="sortBy('status')" class="sortable">
-                      Status <i :class="getSortIcon('status')"></i>
-                    </th>
-                    <th class="actions-column">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="warehouse in warehouses"
-                    :key="warehouse.id"
-                    class="data-row"
-                  >
-                    <td>{{ warehouse.name }}</td>
-                    <td>{{ warehouse.contact_person }}</td>
-                    <td>{{ warehouse.email }}</td>
-                    <td>{{ warehouse.phone_number }}</td>
-                    <td>{{ warehouse.address }}</td>
-                    <td>{{ warehouse.krapin }}</td>
-                    <td>{{ warehouse.country || "Kenya" }}</td>
-                    <td>{{ warehouse.region || warehouse.location }}</td>
-                    <td>{{ warehouse.gps || "--" }}</td>
-                    <td>
-                      <span
-                        :class="[
-                          'status-pill',
-                          warehouse.status === 'active'
-                            ? 'status-active'
-                            : 'status-inactive',
-                        ]"
-                      >
-                        {{
-                          warehouse.status.charAt(0).toUpperCase() +
-                          warehouse.status.slice(1)
-                        }}
-                      </span>
-                    </td>
-                    <td class="actions-column">
-                      <button
-                        @click="editWarehouse(warehouse)"
-                        class="action-btn edit-btn"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        @click="deleteWarehouse(warehouse.uuid)"
-                        class="action-btn delete-btn"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-              <tr v-if="filteredWarehouses.length === 0">
-                <td colspan="11" class="empty-state">No warehouses found</td>
-              </tr>
-            </div>
-          </div>
-
-          <!-- Pagination Controls -->
-          <CustomPagination
-            :current-page="currentPage"
-            :last-page="lastPage"
-            :per-page="perPage"
-            @page-changed="handlePageChange"
-            @update:per-page="handlePerPageChange"
-          />
-        </div>
-
-        <div v-else-if="activeTab === 'regions'">
-          <!-- Delivery regions content -->
-          <div class="table-controls">
-            <div class="search-container">
-              <div class="search-icon">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  width="20"
-                  height="20"
-                  color="#000000"
-                  fill="none"
-                >
-                  <path
-                    opacity="0.4"
-                    fill-rule="evenodd"
-                    clip-rule="evenodd"
-                    d="M16.7929 16.7929C17.1834 16.4024 17.8166 16.4024 18.2071 16.7929L22.7071 21.2929C23.0976 21.6834 23.0976 22.3166 22.7071 22.7071C22.3166 23.0976 21.6834 23.0976 21.2929 22.7071L16.7929 18.2071C16.4024 17.8166 16.4024 17.1834 16.7929 16.7929Z"
-                    fill="currentColor"
-                  />
-                  <path
-                    fill-rule="evenodd"
-                    clip-rule="evenodd"
-                    d="M1 11C1 5.47715 5.47715 1 11 1C16.5228 1 21 5.47715 21 11C21 16.5228 16.5228 21 11 21C5.47715 21 1 16.5228 1 11ZM11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3Z"
-                    fill="currentColor"
-                  />
-                </svg>
-              </div>
-              <input
-                type="text"
-                class="search-input"
-                placeholder="Search by region..."
-                v-model="deliveryRegionSearch"
-                @keypress.enter="fetchDeliveryRegions"
-              />
-            </div>
-            <button @click="openAddDeliveryRegionModal" class="add-btn">
-              <span class="plus-icon">+</span>
-              Add Delivery Region
-            </button>
-          </div>
-
-          <!-- Delivery Regions Table -->
-          <div class="table-container">
-            <div class="table-wrapper">
-              <table v-if="paginatedDeliveryRegions.length" class="data-table">
-                <thead>
-                  <tr>
-                    <th @click="sortDeliveryRegionsBy('warehouseName')" class="sortable">
-                      Warehouse Name <i :class="getDeliveryRegionSortIcon('warehouseName')"></i>
-                    </th>
-                    <th @click="sortDeliveryRegionsBy('deliverTo')" class="sortable">
-                      Deliver To <i :class="getDeliveryRegionSortIcon('deliverTo')"></i>
-                    </th>
-                    <th @click="sortDeliveryRegionsBy('deliveryFee')" class="sortable">
-                      Delivery Fee <i :class="getDeliveryRegionSortIcon('deliveryFee')"></i>
-                    </th>
-                    <th @click="sortDeliveryRegionsBy('status')" class="sortable">
-                      Status <i :class="getDeliveryRegionSortIcon('status')"></i>
-                    </th>
-                    <th class="actions-column">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="region in paginatedDeliveryRegions"
-                    :key="region.id"
-                    class="data-row"
-                  >
-                    <td>{{ getWarehouseName(region.warehouse_id) }}</td>
-                    <td>{{ region.region }}</td>
-                    <td>{{ formatCurrency(region.delivery_fee) }}</td>
-                    <td>
-                      <span
-                        :class="[
-                          'status-pill',
-                          region.status === 'active'
-                            ? 'status-active'
-                            : 'status-inactive',
-                        ]"
-                      >
-                        {{ capitalizeFirstLetter(region.status) }}
-                      </span>
-                    </td>
-                    <td class="actions-column">
-                      <button
-                        @click="editDeliveryRegion(region)"
-                        class="action-btn edit-btn"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        @click="deleteDeliveryRegion(region.uuid)"
-                        class="action-btn delete-btn"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-              <tr v-if="paginatedDeliveryRegions.length === 0">
-                <td colspan="5" class="empty-state">No delivery regions found</td>
-              </tr>
-            </div>
-          </div>
-
-          <!-- Update Pagination Controls for Delivery Regions -->
-          <CustomPagination
-            :current-page="deliveryRegionCurrentPage"
-            :last-page="deliveryRegionTotalPages"
-            :per-page="deliveryRegionPerPage"
-            @page-changed="handleDeliveryRegionPageChange"
-            @update:per-page="handleDeliveryRegionPerPageChange"
-          />
-
-          <!-- Delivery Region Modal -->
-          <div
-            v-if="showDeliveryRegionModal"
-            class="modal-overlay"
-            @click.self="closeDeliveryRegionModal"
-          >
-            <div class="modal-container">
-              <div class="modal-header">
-                <h2>
-                  {{ editingDeliveryRegion ? "Edit Delivery Region" : "Add New Delivery Region" }}
-                </h2>
-                <button class="close-btn" @click="closeDeliveryRegionModal">
-                  &times;
-                </button>
-              </div>
-              <div class="modal-body">
-                <form @submit.prevent="saveDeliveryRegion">
-                  <!-- Warehouse Name Dropdown -->
-                  <div class="form-group">
-                    <label for="warehouseName">Warehouse Name <span class="required">*</span></label>
-                    <div class="custom-select-container">
-                      <div 
-                        class="custom-select-trigger" 
-                        @click="toggleWarehouseDropdown"
-                        :class="{ 'active': isWarehouseDropdownOpen }"
-                      >
-                        <span :data-has-value="!!deliveryRegionForm.warehouse_id">{{ getWarehouseName(deliveryRegionForm.warehouse_id) || 'Select warehouse' }}</span>
-                        <svg 
-                          class="dropdown-arrow" 
-                          :class="{ 'open': isWarehouseDropdownOpen }"
-                          xmlns="http://www.w3.org/2000/svg" 
-                          width="16" 
-                          height="16" 
-                          viewBox="0 0 24 24" 
-                          fill="none" 
-                          stroke="currentColor" 
-                          stroke-width="2" 
-                          stroke-linecap="round" 
-                          stroke-linejoin="round"
-                        >
-                          <polyline points="6 9 12 15 18 9"></polyline>
-                        </svg>
-                      </div>
-                      
-                      <div class="custom-select-dropdown" v-show="isWarehouseDropdownOpen">
-                        <div class="search-box">
-                          <input
-                            type="text"
-                            v-model="warehouseSearch"
-                            @input="filterWarehouses"
-                            placeholder="Search warehouse..."
-                            class="dropdown-search"
-                            @click.stop
-                          >
-                        </div>
-                        
-                        <div class="dropdown-options">
-                          <div
-                            v-for="warehouse in filteredWarehouses"
-                            :key="warehouse.id"
-                            class="dropdown-option"
-                            @click="selectWarehouse(warehouse)"
-                          >
-                            {{ warehouse.name }}
-                          </div>
-                          <div v-if="filteredWarehouses.length === 0" class="no-results">
-                            No warehouses match your search
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <!-- Region Input for Deliver To -->
-                  <div class="form-group">
-                    <label for="deliverTo">Deliver To <span class="required">*</span></label>
-                    <input type="text" id="deliverTo" v-model="deliveryRegionForm.region" required placeholder="Enter region name">
-                  </div>
-                  
-                  <div class="form-group">
-                    <label for="deliveryFee">Delivery Fee <span class="required">*</span></label>
-                    <input type="text" id="deliveryFee" v-model="deliveryRegionForm.delivery_fee" @input="formatDeliveryFee" required placeholder="Enter delivery fee">
-                  </div>
-                  
-                  <div class="form-group">
-                    <label for="status">Status <span class="required">*</span></label>
-                    <div class="custom-select-container">
-                      <div 
-                        class="custom-select-trigger" 
-                        @click="toggleStatusDropdown"
-                        :class="{ 'active': isStatusDropdownOpen }"
-                      >
-                        <span :data-has-value="!!deliveryRegionForm.status">{{ capitalizeFirstLetter(deliveryRegionForm.status) || 'Select status' }}</span>
-                        <svg 
-                          class="dropdown-arrow" 
-                          :class="{ 'open': isStatusDropdownOpen }"
-                          xmlns="http://www.w3.org/2000/svg" 
-                          width="16" 
-                          height="16" 
-                          viewBox="0 0 24 24" 
-                          fill="none" 
-                          stroke="currentColor" 
-                          stroke-width="2" 
-                          stroke-linecap="round" 
-                          stroke-linejoin="round"
-                        >
-                          <polyline points="6 9 12 15 18 9"></polyline>
-                        </svg>
-                      </div>
-                      
-                      <div class="custom-select-dropdown" v-show="isStatusDropdownOpen">
-                        <div class="search-box">
-                          <input
-                            type="text"
-                            v-model="statusSearch"
-                            @input="filterStatuses"
-                            placeholder="Search status..."
-                            class="dropdown-search"
-                            @click.stop
-                          >
-                        </div>
-                        
-                        <div class="dropdown-options">
-                          <div
-                            v-for="status in filteredStatuses"
-                            :key="status"
-                            class="dropdown-option"
-                            @click="selectStatus(status)"
-                          >
-                            {{ capitalizeFirstLetter(status) }}
-                          </div>
-                          <div v-if="filteredStatuses.length === 0" class="no-results">
-                            No statuses match your search
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div class="form-actions">
-                    <button
-                      type="button"
-                      class="cancel-btn"
-                      @click="closeDeliveryRegionModal"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      class="submit-btn"
-                      :disabled="deliveryRegionForm.processing"
-                    >
-                      {{ editingDeliveryRegion ? "Update Delivery Region" : "Save Delivery Region" }}
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-        </div>
+  <div class="page-container">
+    <div class="content-container">
+      <div class="message-container">
+        <SuccessMessage
+          v-if="successMessage"
+          @close="successMessage = ''"
+          v-slot="{}"
+          >{{ successMessage }}</SuccessMessage
+        >
+        <ErrorMessage v-if="errorMessage" @close="errorMessage = ''" v-slot>{{
+          errorMessage
+        }}</ErrorMessage>
       </div>
 
-      <!-- Add/Edit Warehouse Modal -->
-      <div
-        v-if="showWarehouseModal"
-        class="modal-overlay"
-        @click.self="closeWarehouseModal"
-      >
-        <div class="modal-container">
-          <div class="modal-header">
-            <h2>
-              {{ editingWarehouse ? "Edit Warehouse" : "Add New Warehouse" }}
-            </h2>
-            <button class="close-btn" @click="closeWarehouseModal">
-              &times;
-            </button>
+      <div class="header-container">
+        <h1 class="page-title">Warehouses & Delivery Regions</h1>
+      </div>
+
+      <div class="tabs-container">
+        <ul class="tabs">
+          <li v-for="tab in tabs" 
+              :key="tab.id" 
+              :class="['tab', { active: activeTab === tab.id }]"
+              @click="setActiveTab(tab.id)">
+            {{ tab.name }}
+            <span class="tab-count" v-if="tab.count">{{ tab.count }}</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Conditional rendering based on active tab -->
+      <div v-if="activeTab === 'warehouses'">
+        <div class="table-controls">
+          <div class="search-container">
+            <div class="search-icon">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="20"
+                height="20"
+                color="#000000"
+                fill="none"
+              >
+                <path
+                  opacity="0.4"
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M16.7929 16.7929C17.1834 16.4024 17.8166 16.4024 18.2071 16.7929L22.7071 21.2929C23.0976 21.6834 23.0976 22.3166 22.7071 22.7071C22.3166 23.0976 21.6834 23.0976 21.2929 22.7071L16.7929 18.2071C16.4024 17.8166 16.4024 17.1834 16.7929 16.7929Z"
+                  fill="currentColor"
+                />
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M1 11C1 5.47715 5.47715 1 11 1C16.5228 1 21 5.47715 21 11C21 16.5228 16.5228 21 11 21C5.47715 21 1 16.5228 1 11ZM11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3Z"
+                  fill="currentColor"
+                />
+              </svg>
+            </div>
+            <input
+              type="text"
+              class="search-input"
+              placeholder="Search by name..."
+              v-model="searchQuery"
+              @keypress.enter="fetchSupplierWarehouses"
+            />
           </div>
-          <div class="modal-body">
-            <form @submit.prevent="saveWarehouse">
-              <div class="form-group">
-                <label for="warehouseName"
-                  >Warehouse Name <span class="required">*</span></label
-                >
-                <input
-                  type="text"
-                  id="warehouseName"
-                  v-model="form.name"
-                  required
-                  placeholder="Enter warehouse name"
-                />
-                <div v-if="form.errors.name" class="text-red-500 text-sm mt-1">
-                  {{ form.errors.name }}
-                </div>
-              </div>
-              <div class="form-group">
-                <label for="contactPerson"
-                  >Contact Person <span class="required">*</span></label
-                >
-                <input
-                  type="text"
-                  id="contactPerson"
-                  v-model="form.contact_person"
-                  required
-                  placeholder="Enter contact person"
-                />
-                <div
-                  v-if="form.errors.contact_person"
-                  class="text-red-500 text-sm mt-1"
-                >
-                  {{ form.errors.contact_person }}
-                </div>
-              </div>
-              <div class="form-group">
-                <label for="email">Email <span class="required">*</span></label>
-                <input
-                  type="email"
-                  id="email"
-                  v-model="form.email"
-                  required
-                  placeholder="Enter email address"
-                />
-                <div v-if="form.errors.email" class="text-red-500 text-sm mt-1">
-                  {{ form.errors.email }}
-                </div>
-              </div>
-              <div class="form-group">
-                <label for="phone">Phone <span class="required">*</span></label>
-                <input
-                  type="text"
-                  id="phone"
-                  v-model="form.phone_number"
-                  required
-                  placeholder="Enter phone number"
-                />
-                <div
-                  v-if="form.errors.phone_number"
-                  class="text-red-500 text-sm mt-1"
-                >
-                  {{ form.errors.phone_number }}
-                </div>
-              </div>
-              <div class="form-group">
-                <label for="address"
-                  >Address <span class="required">*</span></label
-                >
-                <input
-                  type="text"
-                  id="address"
-                  v-model="form.address"
-                  required
-                  placeholder="Enter physical address"
-                />
-                <div
-                  v-if="form.errors.address"
-                  class="text-red-500 text-sm mt-1"
-                >
-                  {{ form.errors.address }}
-                </div>
-              </div>
-              <div class="form-group">
-                <label for="kraPin"
-                  >KRA PIN <span class="required">*</span></label
-                >
-                <input
-                  type="text"
-                  id="kraPin"
-                  v-model="form.krapin"
-                  required
-                  placeholder="Enter KRA PIN"
-                />
-                <div
-                  v-if="form.errors.krapin"
-                  class="text-red-500 text-sm mt-1"
-                >
-                  {{ form.errors.krapin }}
-                </div>
-              </div>
+          <button @click="openAddWarehouseModal" class="add-btn">
+            <span class="plus-icon">+</span>
+            Add Warehouse
+          </button>
+        </div>
 
-              <!-- Country Dropdown -->
-              <div class="form-group">
-                <label for="country">Country <span class="required">*</span></label>
-                <div class="custom-select-container country-select-container">
-                  <div 
-                    class="custom-select-trigger country-select-trigger" 
-                    @click="toggleCountryDropdown"
-                    :class="{ active: isCountryDropdownOpen }"
-                  >
-                    <span>{{ form.country || "Select country" }}</span>
-                    <svg 
-                      class="dropdown-arrow" 
-                      :class="{ open: isCountryDropdownOpen }"
-                      xmlns="http://www.w3.org/2000/svg" 
-                      width="16" 
-                      height="16" 
-                      viewBox="0 0 24 24" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      stroke-width="2" 
-                      stroke-linecap="round" 
-                      stroke-linejoin="round"
+        <!-- Warehouses Table -->
+        <div class="table-container">
+          <div class="table-wrapper">
+            <table v-if="filteredWarehouses.length" class="data-table">
+              <thead>
+                <tr>
+                  <th @click="sortBy('name')" class="sortable">
+                    Warehouse Name <i :class="getSortIcon('name')"></i>
+                  </th>
+                  <th @click="sortBy('contactPerson')" class="sortable">
+                    Contact Person <i :class="getSortIcon('contactPerson')"></i>
+                  </th>
+                  <th @click="sortBy('email')" class="sortable">
+                    Email <i :class="getSortIcon('email')"></i>
+                  </th>
+                  <th @click="sortBy('phone')" class="sortable">
+                    Phone <i :class="getSortIcon('phone')"></i>
+                  </th>
+                  <th @click="sortBy('address')" class="sortable">
+                    Address <i :class="getSortIcon('address')"></i>
+                  </th>
+                  <th @click="sortBy('kraPin')" class="sortable">
+                    KRA PIN <i :class="getSortIcon('kraPin')"></i>
+                  </th>
+                  <th @click="sortBy('country')" class="sortable">
+                    Country <i :class="getSortIcon('country')"></i>
+                  </th>
+                  <th @click="sortBy('region')" class="sortable">
+                    Region <i :class="getSortIcon('region')"></i>
+                  </th>
+                  <th @click="sortBy('gps')" class="sortable">
+                    GPS <i :class="getSortIcon('gps')"></i>
+                  </th>
+                  <th @click="sortBy('status')" class="sortable">
+                    Status <i :class="getSortIcon('status')"></i>
+                  </th>
+                  <th class="actions-column">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="warehouse in warehouses"
+                  :key="warehouse.id"
+                  class="data-row"
+                >
+                  <td>{{ warehouse.name }}</td>
+                  <td>{{ warehouse.contact_person }}</td>
+                  <td>{{ warehouse.email }}</td>
+                  <td>{{ warehouse.phone_number }}</td>
+                  <td>{{ warehouse.address }}</td>
+                  <td>{{ warehouse.krapin }}</td>
+                  <td>{{ warehouse.country || "Kenya" }}</td>
+                  <td>{{ warehouse.region || warehouse.location }}</td>
+                  <td>{{ warehouse.gps || "--" }}</td>
+                  <td>
+                    <span
+                      :class="[
+                        'status-pill',
+                        warehouse.status === 'active'
+                          ? 'status-active'
+                          : 'status-inactive',
+                      ]"
                     >
-                      <polyline points="6 9 12 15 18 9"></polyline>
-                    </svg>
-                  </div>
-                  
-                  <div class="custom-select-dropdown country-select-dropdown" v-show="isCountryDropdownOpen">
-                    <div class="search-box">
-                      <input
-                        type="text"
-                        v-model="countrySearch"
-                        @input="filterCountries"
-                        placeholder="Search country..."
-                        class="dropdown-search"
-                        @click.stop
+                      {{
+                        warehouse.status.charAt(0).toUpperCase() +
+                        warehouse.status.slice(1)
+                      }}
+                    </span>
+                  </td>
+                  <td class="actions-column">
+                    <button
+                      @click="editWarehouse(warehouse)"
+                      class="action-btn edit-btn"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      @click="deleteWarehouse(warehouse.uuid)"
+                      class="action-btn delete-btn"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <tr v-if="filteredWarehouses.length === 0">
+              <td colspan="11" class="empty-state">No warehouses found</td>
+            </tr>
+          </div>
+        </div>
+
+        <!-- Pagination Controls -->
+        <CustomPagination
+          :current-page="currentPage"
+          :last-page="lastPage"
+          :per-page="perPage"
+          @page-changed="handlePageChange"
+          @update:per-page="handlePerPageChange"
+        />
+      </div>
+
+      <div v-else-if="activeTab === 'regions'">
+        <!-- Delivery regions content -->
+        <div class="table-controls">
+          <div class="search-container">
+            <div class="search-icon">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="20"
+                height="20"
+                color="#000000"
+                fill="none"
+              >
+                <path
+                  opacity="0.4"
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M16.7929 16.7929C17.1834 16.4024 17.8166 16.4024 18.2071 16.7929L22.7071 21.2929C23.0976 21.6834 23.0976 22.3166 22.7071 22.7071C22.3166 23.0976 21.6834 23.0976 21.2929 22.7071L16.7929 18.2071C16.4024 17.8166 16.4024 17.1834 16.7929 16.7929Z"
+                  fill="currentColor"
+                />
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M1 11C1 5.47715 5.47715 1 11 1C16.5228 1 21 5.47715 21 11C21 16.5228 16.5228 21 11 21C5.47715 21 1 16.5228 1 11ZM11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3Z"
+                  fill="currentColor"
+                />
+              </svg>
+            </div>
+            <input
+              type="text"
+              class="search-input"
+              placeholder="Search by region..."
+              v-model="deliveryRegionSearch"
+              @keypress.enter="fetchDeliveryRegions"
+            />
+          </div>
+          <button @click="openAddDeliveryRegionModal" class="add-btn">
+            <span class="plus-icon">+</span>
+            Add Delivery Region
+          </button>
+        </div>
+
+        <!-- Delivery Regions Table -->
+        <div class="table-container">
+          <div class="table-wrapper">
+            <table v-if="paginatedDeliveryRegions.length" class="data-table">
+              <thead>
+                <tr>
+                  <th @click="sortDeliveryRegionsBy('warehouseName')" class="sortable">
+                    Warehouse Name <i :class="getDeliveryRegionSortIcon('warehouseName')"></i>
+                  </th>
+                  <th @click="sortDeliveryRegionsBy('deliverTo')" class="sortable">
+                    Deliver To <i :class="getDeliveryRegionSortIcon('deliverTo')"></i>
+                  </th>
+                  <th @click="sortDeliveryRegionsBy('deliveryFee')" class="sortable">
+                    Delivery Fee <i :class="getDeliveryRegionSortIcon('deliveryFee')"></i>
+                  </th>
+                  <th @click="sortDeliveryRegionsBy('status')" class="sortable">
+                    Status <i :class="getDeliveryRegionSortIcon('status')"></i>
+                  </th>
+                  <th class="actions-column">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="region in paginatedDeliveryRegions"
+                  :key="region.id"
+                  class="data-row"
+                >
+                  <td>{{ getWarehouseName(region.warehouse_id) }}</td>
+                  <td>{{ region.region }}</td>
+                  <td>{{ formatCurrency(region.delivery_fee) }}</td>
+                  <td>
+                    <span
+                      :class="[
+                        'status-pill',
+                        region.status === 'active'
+                          ? 'status-active'
+                          : 'status-inactive',
+                      ]"
+                    >
+                      {{ capitalizeFirstLetter(region.status) }}
+                    </span>
+                  </td>
+                  <td class="actions-column">
+                    <button
+                      @click="editDeliveryRegion(region)"
+                      class="action-btn edit-btn"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      @click="deleteDeliveryRegion(region.uuid)"
+                      class="action-btn delete-btn"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <tr v-if="paginatedDeliveryRegions.length === 0">
+              <td colspan="5" class="empty-state">No delivery regions found</td>
+            </tr>
+          </div>
+        </div>
+
+        <!-- Update Pagination Controls for Delivery Regions -->
+        <CustomPagination
+          :current-page="deliveryRegionCurrentPage"
+          :last-page="deliveryRegionTotalPages"
+          :per-page="deliveryRegionPerPage"
+          @page-changed="handleDeliveryRegionPageChange"
+          @update:per-page="handleDeliveryRegionPerPageChange"
+        />
+
+        <!-- Delivery Region Modal -->
+        <div
+          v-if="showDeliveryRegionModal"
+          class="modal-overlay"
+          @click.self="closeDeliveryRegionModal"
+        >
+          <div class="modal-container">
+            <div class="modal-header">
+              <h2>
+                {{ editingDeliveryRegion ? "Edit Delivery Region" : "Add New Delivery Region" }}
+              </h2>
+              <button class="close-btn" @click="closeDeliveryRegionModal">
+                &times;
+              </button>
+            </div>
+            <div class="modal-body">
+              <form @submit.prevent="saveDeliveryRegion">
+                <!-- Warehouse Name Dropdown -->
+                <div class="form-group">
+                  <label for="warehouseName">Warehouse Name <span class="required">*</span></label>
+                  <div class="custom-select-container">
+                    <div 
+                      class="custom-select-trigger" 
+                      @click="toggleWarehouseDropdown"
+                      :class="{ 'active': isWarehouseDropdownOpen }"
+                    >
+                      <span :data-has-value="!!deliveryRegionForm.warehouse_id">{{ getWarehouseName(deliveryRegionForm.warehouse_id) || 'Select warehouse' }}</span>
+                      <svg 
+                        class="dropdown-arrow" 
+                        :class="{ 'open': isWarehouseDropdownOpen }"
+                        xmlns="http://www.w3.org/2000/svg" 
+                        width="16" 
+                        height="16" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        stroke-width="2" 
+                        stroke-linecap="round" 
+                        stroke-linejoin="round"
                       >
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                      </svg>
                     </div>
                     
-                    <div class="dropdown-options">
-                      <div
-                        v-for="country in filteredCountries"
-                        :key="country"
-                        class="dropdown-option"
-                        @click="selectCountry(country)"
-                      >
-                        {{ country }}
-                      </div>
-                      <div v-if="filteredCountries.length === 0" class="no-results">
-                        No countries match your search
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Region Dropdown -->
-              <div class="form-group">
-                <label for="region">Region <span class="required">*</span></label>
-                <div class="custom-select-container region-select-container">
-                  <div 
-                    class="custom-select-trigger region-select-trigger" 
-                    @click="toggleRegionDropdown"
-                    :class="{ active: isRegionDropdownOpen }"
-                  >
-                    <span>{{ form.region || "Select region" }}</span>
-                    <svg 
-                      class="dropdown-arrow" 
-                      :class="{ open: isRegionDropdownOpen }"
-                      xmlns="http://www.w3.org/2000/svg" 
-                      width="16" 
-                      height="16" 
-                      viewBox="0 0 24 24" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      stroke-width="2" 
-                      stroke-linecap="round" 
-                      stroke-linejoin="round"
-                    >
-                      <polyline points="6 9 12 15 18 9"></polyline>
-                    </svg>
-                  </div>
-                  
-                  <div class="custom-select-dropdown region-select-dropdown" v-show="isRegionDropdownOpen">
-                    <div class="search-box">
-                      <input
-                        type="text"
-                        v-model="regionSearch"
-                        @input="filterRegions"
-                        placeholder="Search region..."
-                        class="dropdown-search"
-                        @click.stop
-                      >
-                    </div>
-                    
-                    <div class="dropdown-options">
-                      <div v-if="loadingRegions" class="loading-state">
-                        Loading regions...
-                      </div>
-                      <template v-else>
-                        <div
-                          v-for="region in filteredRegions"
-                          :key="region"
-                          class="dropdown-option"
-                          @click="selectRegion(region)"
+                    <div class="custom-select-dropdown" v-show="isWarehouseDropdownOpen">
+                      <div class="search-box">
+                        <input
+                          type="text"
+                          v-model="warehouseSearch"
+                          @input="filterWarehouses"
+                          placeholder="Search warehouse..."
+                          class="dropdown-search"
+                          @click.stop
                         >
-                          {{ region }}
+                      </div>
+                      
+                      <div class="dropdown-options">
+                        <div
+                          v-for="warehouse in filteredWarehouses"
+                          :key="warehouse.id"
+                          class="dropdown-option"
+                          @click="selectWarehouse(warehouse)"
+                        >
+                          {{ warehouse.name }}
                         </div>
-                        <div v-if="filteredRegions.length === 0" class="no-results">
-                          No regions match your search
+                        <div v-if="filteredWarehouses.length === 0" class="no-results">
+                          No warehouses match your search
                         </div>
-                      </template>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-
-              <div class="form-group">
-                <label for="gps">GPS Coordinates</label>
-                <input
-                  type="text"
-                  id="gps"
-                  v-model="form.gps"
-                  placeholder="Enter GPS coordinates (latitude,longitude)"
-                />
-              </div>
-
-              <div class="form-group">
-                <label for="status"
-                  >Status <span class="required">*</span></label
-                >
-                <select id="status" v-model="form.status" required>
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </select>
-              </div>
-
-              <div class="form-actions">
-                <button
-                  type="button"
-                  class="cancel-btn"
-                  @click="closeWarehouseModal"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  class="submit-btn"
-                  :disabled="form.processing"
-                >
-                  {{ editingWarehouse ? "Update Warehouse" : "Save Warehouse" }}
-                </button>
-              </div>
-            </form>
+                
+                <!-- Region Input for Deliver To -->
+                <div class="form-group">
+                  <label for="deliverTo">Deliver To <span class="required">*</span></label>
+                  <input type="text" id="deliverTo" v-model="deliveryRegionForm.region" required placeholder="Enter region name">
+                </div>
+                
+                <div class="form-group">
+                  <label for="deliveryFee">Delivery Fee <span class="required">*</span></label>
+                  <input type="text" id="deliveryFee" v-model="deliveryRegionForm.delivery_fee" @input="formatDeliveryFee" required placeholder="Enter delivery fee">
+                </div>
+                
+                <div class="form-group">
+                  <label for="status">Status <span class="required">*</span></label>
+                  <div class="custom-select-container">
+                    <div 
+                      class="custom-select-trigger" 
+                      @click="toggleStatusDropdown"
+                      :class="{ 'active': isStatusDropdownOpen }"
+                    >
+                      <span :data-has-value="!!deliveryRegionForm.status">{{ capitalizeFirstLetter(deliveryRegionForm.status) || 'Select status' }}</span>
+                      <svg 
+                        class="dropdown-arrow" 
+                        :class="{ 'open': isStatusDropdownOpen }"
+                        xmlns="http://www.w3.org/2000/svg" 
+                        width="16" 
+                        height="16" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        stroke-width="2" 
+                        stroke-linecap="round" 
+                        stroke-linejoin="round"
+                      >
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                      </svg>
+                    </div>
+                    
+                    <div class="custom-select-dropdown" v-show="isStatusDropdownOpen">
+                      <div class="search-box">
+                        <input
+                          type="text"
+                          v-model="statusSearch"
+                          @input="filterStatuses"
+                          placeholder="Search status..."
+                          class="dropdown-search"
+                          @click.stop
+                        >
+                      </div>
+                      
+                      <div class="dropdown-options">
+                        <div
+                          v-for="status in filteredStatuses"
+                          :key="status"
+                          class="dropdown-option"
+                          @click="selectStatus(status)"
+                        >
+                          {{ capitalizeFirstLetter(status) }}
+                        </div>
+                        <div v-if="filteredStatuses.length === 0" class="no-results">
+                          No statuses match your search
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="form-actions">
+                  <button
+                    type="button"
+                    class="cancel-btn"
+                    @click="closeDeliveryRegionModal"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    class="submit-btn"
+                    :disabled="deliveryRegionForm.processing"
+                  >
+                    {{ editingDeliveryRegion ? "Update Delivery Region" : "Save Delivery Region" }}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </AuthenticatedLayout>
+
+    <!-- Add/Edit Warehouse Modal -->
+    <div
+      v-if="showWarehouseModal"
+      class="modal-overlay"
+      @click.self="closeWarehouseModal"
+    >
+      <div class="modal-container">
+        <div class="modal-header">
+          <h2>
+            {{ editingWarehouse ? "Edit Warehouse" : "Add New Warehouse" }}
+          </h2>
+          <button class="close-btn" @click="closeWarehouseModal">
+            &times;
+          </button>
+        </div>
+        <div class="modal-body">
+          <form @submit.prevent="saveWarehouse">
+            <div class="form-group">
+              <label for="warehouseName"
+                >Warehouse Name <span class="required">*</span></label
+              >
+              <input
+                type="text"
+                id="warehouseName"
+                v-model="form.name"
+                required
+                placeholder="Enter warehouse name"
+              />
+              <div v-if="form.errors.name" class="text-red-500 text-sm mt-1">
+                {{ form.errors.name }}
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="contactPerson"
+                >Contact Person <span class="required">*</span></label
+              >
+              <input
+                type="text"
+                id="contactPerson"
+                v-model="form.contact_person"
+                required
+                placeholder="Enter contact person"
+              />
+              <div
+                v-if="form.errors.contact_person"
+                class="text-red-500 text-sm mt-1"
+              >
+                {{ form.errors.contact_person }}
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="email">Email <span class="required">*</span></label>
+              <input
+                type="email"
+                id="email"
+                v-model="form.email"
+                required
+                placeholder="Enter email address"
+              />
+              <div v-if="form.errors.email" class="text-red-500 text-sm mt-1">
+                {{ form.errors.email }}
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="phone">Phone <span class="required">*</span></label>
+              <input
+                type="text"
+                id="phone"
+                v-model="form.phone_number"
+                required
+                placeholder="Enter phone number"
+              />
+              <div
+                v-if="form.errors.phone_number"
+                class="text-red-500 text-sm mt-1"
+              >
+                {{ form.errors.phone_number }}
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="address"
+                >Address <span class="required">*</span></label
+              >
+              <input
+                type="text"
+                id="address"
+                v-model="form.address"
+                required
+                placeholder="Enter physical address"
+              />
+              <div
+                v-if="form.errors.address"
+                class="text-red-500 text-sm mt-1"
+              >
+                {{ form.errors.address }}
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="kraPin"
+                >KRA PIN <span class="required">*</span></label
+              >
+              <input
+                type="text"
+                id="kraPin"
+                v-model="form.krapin"
+                required
+                placeholder="Enter KRA PIN"
+              />
+              <div
+                v-if="form.errors.krapin"
+                class="text-red-500 text-sm mt-1"
+              >
+                {{ form.errors.krapin }}
+              </div>
+            </div>
+
+            <!-- Country Dropdown -->
+            <div class="form-group">
+              <label for="country">Country <span class="required">*</span></label>
+              <div class="custom-select-container country-select-container">
+                <div 
+                  class="custom-select-trigger country-select-trigger" 
+                  @click="toggleCountryDropdown"
+                  :class="{ active: isCountryDropdownOpen }"
+                >
+                  <span>{{ form.country || "Select country" }}</span>
+                  <svg 
+                    class="dropdown-arrow" 
+                    :class="{ open: isCountryDropdownOpen }"
+                    xmlns="http://www.w3.org/2000/svg" 
+                    width="16" 
+                    height="16" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    stroke-width="2" 
+                    stroke-linecap="round" 
+                    stroke-linejoin="round"
+                  >
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </div>
+                
+                <div class="custom-select-dropdown country-select-dropdown" v-show="isCountryDropdownOpen">
+                  <div class="search-box">
+                    <input
+                      type="text"
+                      v-model="countrySearch"
+                      @input="filterCountries"
+                      placeholder="Search country..."
+                      class="dropdown-search"
+                      @click.stop
+                    >
+                  </div>
+                  
+                  <div class="dropdown-options">
+                    <div
+                      v-for="country in filteredCountries"
+                      :key="country"
+                      class="dropdown-option"
+                      @click="selectCountry(country)"
+                    >
+                      {{ country }}
+                    </div>
+                    <div v-if="filteredCountries.length === 0" class="no-results">
+                      No countries match your search
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Region Dropdown -->
+            <div class="form-group">
+              <label for="region">Region <span class="required">*</span></label>
+              <div class="custom-select-container region-select-container">
+                <div 
+                  class="custom-select-trigger region-select-trigger" 
+                  @click="toggleRegionDropdown"
+                  :class="{ active: isRegionDropdownOpen }"
+                >
+                  <span>{{ form.region || "Select region" }}</span>
+                  <svg 
+                    class="dropdown-arrow" 
+                    :class="{ open: isRegionDropdownOpen }"
+                    xmlns="http://www.w3.org/2000/svg" 
+                    width="16" 
+                    height="16" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    stroke-width="2" 
+                    stroke-linecap="round" 
+                    stroke-linejoin="round"
+                  >
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </div>
+                
+                <div class="custom-select-dropdown region-select-dropdown" v-show="isRegionDropdownOpen">
+                  <div class="search-box">
+                    <input
+                      type="text"
+                      v-model="regionSearch"
+                      @input="filterRegions"
+                      placeholder="Search region..."
+                      class="dropdown-search"
+                      @click.stop
+                    >
+                  </div>
+                  
+                  <div class="dropdown-options">
+                    <div v-if="loadingRegions" class="loading-state">
+                      Loading regions...
+                    </div>
+                    <template v-else>
+                      <div
+                        v-for="region in filteredRegions"
+                        :key="region"
+                        class="dropdown-option"
+                        @click="selectRegion(region)"
+                      >
+                        {{ region }}
+                      </div>
+                      <div v-if="filteredRegions.length === 0" class="no-results">
+                        No regions match your search
+                      </div>
+                    </template>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="gps">GPS Coordinates</label>
+              <input
+                type="text"
+                id="gps"
+                v-model="form.gps"
+                placeholder="Enter GPS coordinates (latitude,longitude)"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="status"
+                >Status <span class="required">*</span></label
+              >
+              <select id="status" v-model="form.status" required>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+
+            <div class="form-actions">
+              <button
+                type="button"
+                class="cancel-btn"
+                @click="closeWarehouseModal"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                class="submit-btn"
+                :disabled="form.processing"
+              >
+                {{ editingWarehouse ? "Update Warehouse" : "Save Warehouse" }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from "vue";
 import { Head, Link, useForm, usePage } from "@inertiajs/vue3";
-import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
+import SupplierNavbar from "@/Components/SupplierNavbar.vue";
 import SuccessMessage from "@/Components/SuccessMessage.vue";
 import ErrorMessage from "@/Components/ErrorMessage.vue";
 import CustomPagination from "@/Components/CustomPagination.vue";
