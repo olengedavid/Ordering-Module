@@ -405,18 +405,18 @@ export default {
         this.isLoading = false;
       }
     },
-    handleScroll() {
-      if ((window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 100) {
-        this.fetchProducts(true);
-      }
-    }
+    // handleScroll() {
+    //   if ((window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 100) {
+    //     this.fetchProducts(true);
+    //   }
+    // }
   },
   mounted() {
     this.fetchProducts();
-    window.addEventListener('scroll', this.handleScroll);
+    // window.addEventListener('scroll', this.handleScroll);
   },
   beforeUnmount() {
-    window.removeEventListener('scroll', this.handleScroll);
+    // window.removeEventListener('scroll', this.handleScroll);
   },
 };
 </script>

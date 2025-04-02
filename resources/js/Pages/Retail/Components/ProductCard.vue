@@ -14,31 +14,31 @@
         <div class="product-details">
             <div class="product-header">
                 <h2 class="product-title">{{ product.name }}</h2>
-                <div class="product-tag">{{ product.type }}</div>
+                <div class="product-tag">{{ product.category }}</div>
             </div>
-            <div class="product-weight">{{ product.weight }}</div>
+            <div class="product-weight">{{ product.quantity_per_unit }} {{ product.unit_of_measure }}</div>
             <p class="product-description">{{ truncateDescription(product.description) }}</p>
 
             <div class="order-details">
                 <div class="supplier-info">
                     <div class="supplier-name">{{ product.supplier }}</div>
-                    <div class="inventory-count">{{ product.inventoryCount }} items</div>
+                    <div class="inventory-count">{{ product.stock_quantity }} items</div>
                 </div>
                 <div class="quantity-controls">
                     <div class="quantity-label">Quantity</div>
                     <div class="quantity-selector">
-                        <button @click="decreaseQuantity" :disabled="quantity <= product.minOrder || !product.inStock"
+                        <button @click="decreaseQuantity" :disabled="quantity <= product.min_order || !product.inStock"
                             class="quantity-btn">-</button>
                         <span class="quantity">{{ quantity }}</span>
-                        <button @click="increaseQuantity" :disabled="quantity >= product.maxOrder || !product.inStock"
+                        <button @click="increaseQuantity" :disabled="quantity >= product.max_order || !product.inStock"
                             class="quantity-btn">+</button>
                     </div>
                 </div>
             </div>
 
             <div class="order-limits">
-                <div>Min: {{ product.minOrder }} item</div>
-                <div>Max: {{ product.maxOrder }} items</div>
+                <div>Min: {{ product.min_order }} item</div>
+                <div>Max: {{ product.max_order }} items</div>
             </div>
 
             <div class="pricing" v-if="product.promotion">
@@ -46,7 +46,7 @@
                 <div class="discounted-price">{{ formatPrice(calculateDiscountedTotal()) }}</div>
             </div>
             <div class="pricing" v-else>
-                <div class="current-price">{{ formatPrice(calculateOriginalTotal()) }}</div>
+                <div class="current-price"> {{ formatPrice(calculateOriginalTotal()) }}</div>
             </div>
 
             <button class="add-to-cart-btn" @click="addToCart" :disabled="!product.inStock"
@@ -97,7 +97,7 @@ export default {
             return date.toLocaleDateString('en-US', options);
         },
         calculateOriginalTotal() {
-            return this.product.basePrice * this.quantity;
+            return this.product.selling_price * this.quantity;
         },
         calculateDiscountedTotal() {
             if (!this.product.promotion) return this.calculateOriginalTotal();

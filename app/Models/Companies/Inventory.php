@@ -25,7 +25,9 @@ class Inventory extends Model
         'promo_amount',
         'promo_start_date',
         'promo_end_date',
-        'status'
+        'status',
+        'currency',
+        'quantity_per_unit'
     ];
 
     protected $casts = [

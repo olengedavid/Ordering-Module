@@ -32,7 +32,9 @@ class InventoryController extends Controller
                 'inventories.stock_quantity',
                 'inventories.selling_price',
                 'inventories.min_order',
-                'inventories.max_order'
+                'inventories.max_order',
+                'inventories.currency',
+                'inventories.quantity_per_unit',
             )
             ->join('products', 'inventories.product_id', '=', 'products.id')
             ->join('warehouses', 'inventories.warehouse_id', '=', 'warehouses.id')
