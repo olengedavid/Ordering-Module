@@ -35,7 +35,11 @@ class InventoryController extends Controller
                 'inventories.max_order',
                 'inventories.currency',
                 'inventories.quantity_per_unit',
+                'companies.company_name as supplier',
+                'inventories.company_id',
+                'inventories.warehouse_id',
             )
+            ->join('companies', 'inventories.company_id', '=', 'companies.id')
             ->join('products', 'inventories.product_id', '=', 'products.id')
             ->join('warehouses', 'inventories.warehouse_id', '=', 'warehouses.id')
             ->join('delivery_regions', 'warehouses.id', '=', 'delivery_regions.warehouse_id')
