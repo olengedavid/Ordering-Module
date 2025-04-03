@@ -18,6 +18,60 @@ class InventoryController extends Controller
         return Inertia::render('Supplier/InventoryList');
     }
 
+    public function retailersIndex()
+    {
+        return Inertia::render('Retail/ProductListing');
+    }
+
+    public function getRetailerProducts(Request $request)
+    {
+        $query = Inventory::query()
+            ->select(
+                'inventories.id as inventory_id',
+                'products.*',
+                'inventories.stock_quantity',
+                'inventories.selling_price',
+                'inventories.min_order',
+                'inventories.max_order',
+                'inventories.currency',
+                'inventories.quantity_per_unit',
+                'companies.company_name as supplier',
+                'inventories.company_id',
+                'inventories.warehouse_id',
+            )
+            ->join('companies', 'inventories.company_id', '=', 'companies.id')
+            ->join('products', 'inventories.product_id', '=', 'products.id')
+            ->join('warehouses', 'inventories.warehouse_id', '=', 'warehouses.id')
+            ->join('delivery_regions', 'warehouses.id', '=', 'delivery_regions.warehouse_id')
+            ->where('products.status', 'active')
+            ->where('inventories.stock_quantity', '>', 0);
+
+        if ($request->search) {
+            $query->where('products.name', 'like', '%' . $request->search . '%');
+        }
+
+        if ($request->region) {
+            $query->where('delivery_regions.region', $request->region);
+        }
+
+        if ($request->category) {
+            $query->where('products.category', $request->category);
+        }
+
+        if ($request->manufacturer) {
+            $query->where('products.manufucturer', $request->manufacturer);
+        }
+
+        if ($request->lastId) {
+            $query->where('inventories.id', '>', $request->lastId);
+        }
+
+        $limit = $request->limit ?? 20;
+        return $query->orderBy('inventories.id')
+                    ->limit($limit)
+                    ->get();
+    }
+
     public function getInventoriesBySupplier(Request $request)
     {
         $company = Company::where('uuid', $request->uuid)->firstOrFail();

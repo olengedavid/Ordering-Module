@@ -29,19 +29,7 @@ const lastPage = ref(1);
 
 const units = ref([]);
 
-// Add default units array
-const defaultUnits = [
-  "kg",
-  "g",
-  "liter",
-  "ml",
-  "unit",
-  "pack",
-  "box",
-  "carton",
-  "dozen",
-  "case"
-];
+
 
 // Add product categories array
 const productCategories = [
@@ -81,7 +69,7 @@ const categorySearchQuery = ref('');
 const unitSearchQuery = ref('');
 const statusSearchQuery = ref('');
 const filteredCategories = ref([...productCategories]);
-const filteredUnits = ref([...defaultUnits]); // Initialize with default units
+const filteredUnits = ref([]);
 const filteredStatuses = ref(['Active', 'Inactive']);
 
 // Add dropdown methods
@@ -442,9 +430,6 @@ const fetchUnits = async () => {
     filteredUnits.value = response.data;
   } catch (error) {
     console.error("Error fetching units:", error);
-    // Fallback to default units if fetch fails
-    units.value = defaultUnits;
-    filteredUnits.value = defaultUnits;
   }
 };
 
@@ -656,7 +641,7 @@ onUnmounted(() => {
                   <td class="table-cell">
                     {{ product.manufucturer }}
                   </td>
-                  <td class="table-cell whitespace-nowrap">
+                  <td class="table-cell whitespace-nowrap capitalize">
                     <span
                       :class="
                         product.status === 'active'

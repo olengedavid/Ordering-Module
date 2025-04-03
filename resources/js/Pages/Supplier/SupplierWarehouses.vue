@@ -11,7 +11,7 @@
           v-slot="{}"
           >{{ successMessage }}</SuccessMessage
         >
-        <ErrorMessage v-if="errorMessage" @close="errorMessage = ''" v-slot>{{
+        <ErrorMessage v-if="errorMessage" @close="errorMessage = ''" v-slot="{}">{{
           errorMessage
         }}</ErrorMessage>
       </div>
@@ -823,52 +823,6 @@ const filteredWarehouses = computed(() => {
     });
   });
 });
-
-const sortedWarehouses = computed(() => {
-  const warehouses = [...filteredWarehouses.value];
-  warehouses.sort((a, b) => {
-    let modifier = sortDir.value === "asc" ? 1 : -1;
-
-    // Map frontend keys to backend keys
-    const keyMap = {
-      contactPerson: "contact_person",
-      phone: "phone_number",
-      kraPin: "krapin",
-    };
-
-    let aKey = keyMap[sortKey.value] || sortKey.value;
-    let bKey = keyMap[sortKey.value] || sortKey.value;
-
-    let aValue = a[aKey];
-    let bValue = b[bKey];
-
-    // Handle undefined or null values
-    if (aValue === undefined || aValue === null) {
-      aValue = "";
-    }
-    if (bValue === undefined || bValue === null) {
-      bValue = "";
-    }
-
-    if (typeof aValue === "number" && typeof bValue === "number") {
-      return aValue < bValue ? -1 * modifier : 1 * modifier;
-    } else {
-      return aValue.toString().localeCompare(bValue.toString()) * modifier;
-    }
-  });
-
-  return warehouses;
-});
-
-const totalPages = computed(() => {
-  return Math.ceil(filteredWarehouses.value.length / perPage.value);
-});
-
-// const paginatedWarehouses = computed(() => {
-//   const startIndex = (currentPage.value - 1) * perPage.value;
-//   const endIndex = startIndex + perPage.value;
-//   return sortedWarehouses.value.slice(startIndex, endIndex);
-// });
 
 // Event handlers
 const sortBy = (key) => {

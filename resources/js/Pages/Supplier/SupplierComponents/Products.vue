@@ -4,7 +4,7 @@
       <SuccessMessage
         v-if="successMessage"
         @close="successMessage = ''"
-        v-slot
+        v-slot="{}"
         >{{ successMessage }}</SuccessMessage
       >
       <ErrorMessage v-if="errorMessage" @close="errorMessage = ''" v-slot>{{
