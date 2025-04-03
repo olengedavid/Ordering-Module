@@ -5,10 +5,14 @@ namespace App\Models\Companies;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
 use App\Traits\OrderEnums;
+use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Order extends Model
 {
     use OrderEnums;
+    use SoftDeletes;
+    use HasFactory;
 
     protected $fillable = [
         'retailer_id',
@@ -29,6 +33,14 @@ class Order extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+        static::creating(function ($order) {
+            $order->uuid = Str::uuid()->toString();
+        });
+    }
 
     public function retailer()
     {

@@ -13,6 +13,8 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
+            $table->softDeletes();
+            $table->uuid('uuid')->unique();
             $table->foreignId('retailer_id')->constrained('companies');
             $table->foreignId('supplier_id')->constrained('companies');
             $table->string('status')->default('PENDING');

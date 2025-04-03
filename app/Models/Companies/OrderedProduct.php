@@ -4,9 +4,14 @@ namespace App\Models\Companies;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
+use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class OrderedProduct extends Model
 {
+    use HasFactory;
+    use SoftDeletes;
+
     protected $fillable = [
         'warehouse_inventory_id',
         'quantity',
@@ -22,6 +27,14 @@ class OrderedProduct extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+        static::creating(function ($order) {
+            $order->uuid = Str::uuid()->toString();
+        });
+    }
 
     public function order()
     {

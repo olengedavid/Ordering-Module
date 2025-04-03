@@ -13,6 +13,8 @@ return new class extends Migration
     {
         Schema::create('ordered_products', function (Blueprint $table) {
             $table->id();
+            $table->softDeletes();
+            $table->uuid('uuid')->unique();
             $table->foreignId('order_id')->constrained('orders', 'id')->onDelete('cascade');
             $table->foreignId('warehouse_inventory_id')->constrained('inventories', 'id');
             $table->integer('quantity');
