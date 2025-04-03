@@ -1,4 +1,5 @@
 <template>
+     <RetailerNavbar />
     <div class="page-container">
         <div class="content-container">
             <!-- Newly added Product Search Component -->
@@ -30,12 +31,14 @@
 <script>
 import ProductCard from './Components/ProductCard.vue';
 import ProductSearchBar from './Components/ProductSearchBar.vue';
+import RetailerNavbar from './Components/RetailerNavbar.vue';
 
 export default {
     name: 'ProductListingPage',
     components: {
         ProductCard,
-        ProductSearchBar
+        ProductSearchBar,
+        RetailerNavbar
     },
     data() {
         return {
