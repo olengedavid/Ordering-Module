@@ -1,5 +1,5 @@
 <template>
-     <RetailerNavbar />
+    <RetailerNavbar />
     <div class="page-container">
         <div class="content-container">
             <!-- Newly added Product Search Component -->
