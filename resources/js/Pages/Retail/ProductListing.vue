@@ -10,7 +10,16 @@
                 All Products in: <span class="location">{{ currentRegion }}</span>
             </h1>
 
-            <div class="product-grid">
+            <div v-if="isLoading" class="loading-state">
+                Loading products...
+            </div>
+
+            <div v-else-if="!hasAnyProducts" class="no-products">
+                <i class="fas fa-info-circle"></i>
+                Currently, there are no products available to purchase from the selected region. Please try selecting a different region.
+            </div>
+
+            <div v-else class="product-grid">
                 <!-- Row 1 -->
                 <div class="product-column" v-for="(product, index) in filteredProductsRow1" :key="'row1-' + index">
                     <ProductCard :product="product" />
@@ -48,191 +57,9 @@ export default {
             currentRegion: "Meru",
             searchQuery: "",
             filterType: "new",
-            // Base product template
-
-            // First row products
-            productsRow1: [
-                {
-                    name: "All Purpose Fertilizer",
-                    weight: "14 Kilograms",
-                    type: "Fertilizer",
-                    description:
-                        "A versatile, nutrient-rich plant food designed to promote healthy growth for a wide variety of plants, including flowers, vegetables, shrubs, and lawns. With a balanced blend of essential nutrients.",
-                    npkRatio: "10-10-10",
-                    coverage: "Up to 140 sq. meters",
-                    supplier: "Aden Agri Supplies",
-                    inventoryCount: 163,
-                    inStock: true,
-                    basePrice: 3450,
-                    currency: "Ksh",
-                    minOrder: 1,
-                    maxOrder: 50,
-                    imageUrl:
-                        "https://image.made-in-china.com/202f0j00SKpWwAoscucy/High-Quality-BOPP-Laminated-PP-Woven-Chemicals-Urea-Fertilizer-Bag-25kg-50kg-100kg.jpg",
-                    promotion: {
-                        discount: "50% OFF",
-                        endDate: new Date("2025-03-23"),
-                    },
-                },
-                {
-                    name: "Garden Fertilizer Plus",
-                    weight: "10 Kilograms",
-                    type: "Fertilizer",
-                    description:
-                        "Enhanced formula with micronutrients for vibrant flowers and stronger vegetable plants. Ideal for home gardens and small landscaping projects.",
-                    npkRatio: "15-5-10",
-                    coverage: "Up to 100 sq. meters",
-                    supplier: "Aden Agri Supplies",
-                    inventoryCount: 95,
-                    inStock: true,
-                    basePrice: 2950,
-                    currency: "Ksh",
-                    minOrder: 1,
-                    maxOrder: 50,
-                    imageUrl:
-                        "https://image.made-in-china.com/202f0j00SKpWwAoscucy/High-Quality-BOPP-Laminated-PP-Woven-Chemicals-Urea-Fertilizer-Bag-25kg-50kg-100kg.jpg",
-                },
-                {
-                    name: "Premium Lawn Feed",
-                    weight: "20 Kilograms",
-                    type: "Lawn Care",
-                    description:
-                        "Specialized formula for lush, green lawns. Contains extra nitrogen and iron for deep green color and stronger roots.",
-                    npkRatio: "20-5-8",
-                    coverage: "Up to 200 sq. meters",
-                    supplier: "Aden Agri Supplies",
-                    inventoryCount: 0,
-                    inStock: false,
-                    basePrice: 4750,
-                    currency: "Ksh",
-                    minOrder: 1,
-                    maxOrder: 30,
-                    imageUrl:
-                        "https://image.made-in-china.com/202f0j00SKpWwAoscucy/High-Quality-BOPP-Laminated-PP-Woven-Chemicals-Urea-Fertilizer-Bag-25kg-50kg-100kg.jpg",
-                },
-            ],
-            // Second row products
-            productsRow2: [
-                {
-                    name: "Vegetable Booster",
-                    weight: "15 Kilograms",
-                    type: "Fertilizer",
-                    description:
-                        "Specialized formula for tomatoes, peppers, and other fruiting vegetables. Boosts yield and improves fruit quality and taste.",
-                    npkRatio: "5-10-15",
-                    coverage: "Up to 150 sq. meters",
-                    supplier: "Green Growth Ltd",
-                    inventoryCount: 78,
-                    inStock: true,
-                    basePrice: 3850,
-                    currency: "Ksh",
-                    minOrder: 1,
-                    maxOrder: 40,
-                    imageUrl:
-                        "https://image.made-in-china.com/202f0j00SKpWwAoscucy/High-Quality-BOPP-Laminated-PP-Woven-Chemicals-Urea-Fertilizer-Bag-25kg-50kg-100kg.jpg",
-                },
-                {
-                    name: "Rose & Flower Food",
-                    weight: "8 Kilograms",
-                    type: "Specialty",
-                    description:
-                        "Perfect formula for roses and flowering plants. Enhances bloom size, color, and fragrance while strengthening plant structure.",
-                    npkRatio: "6-12-6",
-                    coverage: "Up to 80 sq. meters",
-                    supplier: "Green Growth Ltd",
-                    inventoryCount: 0,
-                    inStock: false,
-                    basePrice: 3200,
-                    currency: "Ksh",
-                    minOrder: 1,
-                    maxOrder: 30,
-                    imageUrl:
-                        "https://image.made-in-china.com/202f0j00SKpWwAoscucy/High-Quality-BOPP-Laminated-PP-Woven-Chemicals-Urea-Fertilizer-Bag-25kg-50kg-100kg.jpg",
-                },
-                {
-                    name: "Citrus Tree Formula",
-                    weight: "12 Kilograms",
-                    type: "Specialty",
-                    description:
-                        "Specially formulated for citrus trees and fruit-bearing plants. Promotes healthy fruit development and increased yield.",
-                    npkRatio: "8-3-9",
-                    coverage: "Up to 120 sq. meters",
-                    supplier: "Green Growth Ltd",
-                    inventoryCount: 42,
-                    inStock: true,
-                    basePrice: 4100,
-                    currency: "Ksh",
-                    minOrder: 1,
-                    maxOrder: 25,
-                    imageUrl:
-                        "https://image.made-in-china.com/202f0j00SKpWwAoscucy/High-Quality-BOPP-Laminated-PP-Woven-Chemicals-Urea-Fertilizer-Bag-25kg-50kg-100kg.jpg",
-                    promotion: {
-                        discount: "30% OFF",
-                        endDate: new Date("2025-04-15"),
-                    },
-                },
-            ],
-            // Third row products
-            productsRow3: [
-                {
-                    name: "Organic Compost",
-                    weight: "25 Kilograms",
-                    type: "Organic",
-                    description:
-                        "All-natural compost made from plant materials. Improves soil structure, drainage, and microbial activity for healthier plants.",
-                    npkRatio: "4-4-4",
-                    coverage: "Up to 250 sq. meters",
-                    supplier: "EcoFarm Supplies",
-                    inventoryCount: 0,
-                    inStock: false,
-                    basePrice: 2800,
-                    currency: "Ksh",
-                    minOrder: 1,
-                    maxOrder: 20,
-                    imageUrl:
-                        "https://image.made-in-china.com/202f0j00SKpWwAoscucy/High-Quality-BOPP-Laminated-PP-Woven-Chemicals-Urea-Fertilizer-Bag-25kg-50kg-100kg.jpg",
-                },
-                {
-                    name: "Seed Starter Mix",
-                    weight: "10 Kilograms",
-                    type: "Specialty",
-                    description:
-                        "Premium blend for starting seeds and cuttings. Provides perfect moisture retention and aeration for optimal germination and root development.",
-                    npkRatio: "5-5-5",
-                    coverage: "Up to 100 sq. meters",
-                    supplier: "EcoFarm Supplies",
-                    inventoryCount: 115,
-                    inStock: true,
-                    basePrice: 2500,
-                    currency: "Ksh",
-                    minOrder: 1,
-                    maxOrder: 40,
-                    imageUrl:
-                        "https://image.made-in-china.com/202f0j00SKpWwAoscucy/High-Quality-BOPP-Laminated-PP-Woven-Chemicals-Urea-Fertilizer-Bag-25kg-50kg-100kg.jpg",
-                    promotion: {
-                        discount: "25% OFF",
-                        endDate: new Date("2025-05-01"),
-                    },
-                },
-                {
-                    name: "Potato & Root Crop Feed",
-                    weight: "18 Kilograms",
-                    type: "Specialty",
-                    description:
-                        "Specially formulated for potatoes, carrots, beets, and other root vegetables. Promotes larger, healthier roots and tubers.",
-                    npkRatio: "5-15-5",
-                    coverage: "Up to 180 sq. meters",
-                    supplier: "EcoFarm Supplies",
-                    inventoryCount: 67,
-                    inStock: true,
-                    basePrice: 3750,
-                    currency: "Ksh",
-                    minOrder: 1,
-                    maxOrder: 30,
-                    imageUrl:
-                        "https://image.made-in-china.com/202f0j00SKpWwAoscucy/High-Quality-BOPP-Laminated-PP-Woven-Chemicals-Urea-Fertilizer-Bag-25kg-50kg-100kg.jpg",
-                },
-            ],
+            productsRow1: [],
+            productsRow2: [],
+            productsRow3: [],
             lastId: null,
             isLoading: false,
             hasMoreProducts: true,
@@ -240,6 +67,11 @@ export default {
         };
     },
     computed: {
+        hasAnyProducts() {
+            return this.productsRow1.length > 0 || 
+                   this.productsRow2.length > 0 || 
+                   this.productsRow3.length > 0;
+        },
         allProducts() {
             return [...this.productsRow1, ...this.productsRow2, ...this.productsRow3];
         },
@@ -327,20 +159,15 @@ export default {
             try {
                 this.isLoading = true;
                 const params = new URLSearchParams({
-                    //   search: this.searchQuery || "",
-                    //   region: this.currentRegion || "",
-                    //   category: this.filterType || "",
-                    search: "",
-                    region: "",
-                    category: "",
+                    search: this.searchQuery || "",
+                    region: this.currentRegion || "",
+                    category: this.filterType || "",
                     manufacturer: "",
                     limit: 20,
                     lastId: loadMore ? this.lastId : "",
                 });
 
-                const response = await axios.get(
-                    `/retailers/product-search?${params.toString()}`
-                );
+                const response = await axios.get(`/retailers/product-search?${params.toString()}`);
 
                 if (response.data) {
                     const newProducts = response.data.map((product) => ({
@@ -349,7 +176,6 @@ export default {
                     }));
 
                     if (!loadMore) {
-                        // Reset products for new search
                         this.productsRow1 = [];
                         this.productsRow2 = [];
                         this.productsRow3 = [];
@@ -357,14 +183,9 @@ export default {
 
                     if (newProducts.length > 0) {
                         this.lastId = newProducts[newProducts.length - 1].id;
-                        this.hasMoreProducts = newProducts.length === 20; // If we got less than limit, no more products
+                        this.hasMoreProducts = newProducts.length === 20;
 
-                        // Distribute new products across rows
-                        const allCurrentProducts = [
-                            ...this.productsRow1,
-                            ...this.productsRow2,
-                            ...this.productsRow3,
-                        ];
+                        const allCurrentProducts = [...this.productsRow1, ...this.productsRow2, ...this.productsRow3];
                         const allProducts = [...allCurrentProducts, ...newProducts];
                         const chunkSize = Math.ceil(allProducts.length / 3);
 
@@ -381,19 +202,9 @@ export default {
                 this.isLoading = false;
             }
         },
-        // handleScroll() {
-        //   if ((window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 100) {
-        //     this.fetchProducts(true);
-        //   }
-        // }
-
     },
     mounted() {
         this.fetchProducts();
-        // window.addEventListener('scroll', this.handleScroll);
-    },
-    beforeUnmount() {
-        // window.removeEventListener('scroll', this.handleScroll);
     },
 };
 </script>
@@ -447,5 +258,32 @@ export default {
     .product-grid {
         grid-template-columns: 1fr;
     }
+}
+
+.loading-state {
+    text-align: center;
+    padding: 40px;
+    font-size: 1.2rem;
+    color: #666;
+}
+
+.no-products {
+    text-align: left;
+    padding: 16px;
+    font-size: 0.875rem;
+    color: #C95B00;
+    background: #fff8f5;
+    border: 1px solid #ffdcc7;
+    border-radius: 4px;
+    margin: 20px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: bold;
+}
+
+.no-products i {
+    color: #C95B00;
+    font-size: 1rem;
 }
 </style>
