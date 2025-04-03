@@ -370,7 +370,10 @@ export default {
         );
 
         if (response.data) {
-          const newProducts = response.data;
+          const newProducts = response.data.map((product) => ({
+            ...product,
+            inStock: product.stock_quantity > 0,
+          }));
 
           if (!loadMore) {
             // Reset products for new search
