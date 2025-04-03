@@ -31,7 +31,7 @@
         <!-- Right Side Actions -->
         <div class="nav-actions">
           <div class="cart-wrapper">
-            <Link to="/cart" class="cart-button">
+            <Link :href="route('retailer.cart')" class="cart-button">
               <div class="cart-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" color="#000000" fill="none">
                     <path opacity="0.4" d="M14.7632 15.5H8L5.5 6H18.8941C19.9947 6 20.545 6 20.8321 6.39507C21.1192 6.79013 20.9998 7.38311 20.761 8.56908C19.9697 12.5 21.5 15 14.7632 15.5Z" fill="currentColor" />

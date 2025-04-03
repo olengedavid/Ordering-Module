@@ -1,4 +1,5 @@
 <template>
+    <RetailerNavbar />
     <div class="page-container">
       <div class="content-container">
         <h1 class="page-title">Cart: <span class="item-count">{{ cartItems.length }} items</span></h1>
@@ -146,8 +147,12 @@
   </template>
   
   <script>
+  import RetailerNavbar from "./Components/RetailerNavbar.vue";
   export default {
     name: 'ShoppingCartPage',
+    components: {
+      RetailerNavbar
+    },
     data() {
       return {
         deliveryAddress: '',
