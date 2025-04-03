@@ -62,22 +62,7 @@ export default {
       searchQuery: "",
       filterType: "new",
       // Base product template
-      baseProduct: {
-        weight: "14 Kilograms",
-        type: "Fertilizer",
-        description:
-          "A versatile, nutrient-rich plant food designed to promote healthy growth for a wide variety of plants, including flowers, vegetables, shrubs, and lawns. With a balanced blend of essential nutrients.",
-        npkRatio: "10-10-10",
-        coverage: "Up to 140 sq. meters",
-        supplier: "Aden Agri Supplies",
-        inventoryCount: 163,
-        basePrice: 3450,
-        currency: "Ksh",
-        minOrder: 1,
-        maxOrder: 50,
-        imageUrl:
-          "https://image.made-in-china.com/202f0j00SKpWwAoscucy/High-Quality-BOPP-Laminated-PP-Woven-Chemicals-Urea-Fertilizer-Bag-25kg-50kg-100kg.jpg",
-      },
+    
       // First row products
       productsRow1: [
         {
@@ -264,6 +249,7 @@ export default {
       lastId: null,
       isLoading: false,
       hasMoreProducts: true,
+      retailerCountry: "Kenya",
     };
   },
   computed: {
@@ -354,9 +340,9 @@ export default {
       try {
         this.isLoading = true;
         const params = new URLSearchParams({
-        //   search: this.searchQuery || "",
-        //   region: this.currentRegion || "",
-        //   category: this.filterType || "",
+          //   search: this.searchQuery || "",
+          //   region: this.currentRegion || "",
+          //   category: this.filterType || "",
           search: "",
           region: "",
           category: "",
@@ -413,6 +399,7 @@ export default {
     //     this.fetchProducts(true);
     //   }
     // }
+
   },
   mounted() {
     this.fetchProducts();
