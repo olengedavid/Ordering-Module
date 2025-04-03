@@ -1,4 +1,5 @@
 <template>
+  <RetailerNavbar />
   <div class="page-container">
     <div class="content-container">
       <h1 class="page-title">Orders</h1>
@@ -129,8 +130,13 @@
 </template>
 
 <script>
+import RetailerNavbar from "./Components/RetailerNavbar.vue";
+
 export default {
   name: 'RetailerOrdersPage',
+  components: {
+    RetailerNavbar
+  },
   data() {
     return {
       activeTab: 'requests',
