@@ -10,11 +10,38 @@ class OrderController extends Controller
 {
     public function store(Request $request)
     {
-        $validated = $request->validate(Order::validationRules());
-        
-        $order = Order::create($validated);
-        
-        return response()->json($order, 201);
+        $orderValidated = $request->validate(Order::validationRules());
+        $request->validate(OrderedProduct::createRules());
+
+        try {
+            \DB::beginTransaction();
+
+            $order = Order::create($orderValidated);
+
+            foreach ($request->products as $product) {
+                $order->orderedProducts()->create([
+                    'warehouse_inventory_id' => $product['warehouse_inventory_id'],
+                    'quantity' => $product['quantity'],
+                    'unit_price' => $product['unit_price'],
+                    'total_price' => $product['quantity'] * $product['unit_price'],
+                    'created_by' => $request->created_by
+                ]);
+            }
+
+            \DB::commit();
+
+            return response()->json([
+                'message' => 'Order created successfully',
+                'order' => $order->load('orderedProducts')
+            ], 201);
+
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            return response()->json([
+                'message' => 'Error creating order',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function update(Request $request, Order $order)

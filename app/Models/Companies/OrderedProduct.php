@@ -37,4 +37,26 @@ class OrderedProduct extends Model
     {
         return $this->belongsTo(User::class, 'created_by');
     }
+
+    public static function validationRules(): array
+    {
+        return [
+            'order_id' => 'required|exists:orders,order_id',
+            'warehouse_inventory_id' => 'required|exists:inventories,id',
+            'quantity' => 'required|integer|min:1',
+            'unit_price' => 'required|numeric|min:0',
+            'total_price' => 'required|numeric|min:0',
+            'created_by' => 'required|exists:users,id',
+        ];
+    }
+
+    public static function createRules(): array
+    {
+        return [
+            'products' => 'required|array|min:1',
+            'products.*.warehouse_inventory_id' => 'required|exists:inventories,id',
+            'products.*.quantity' => 'required|integer|min:1',
+            'products.*.unit_price' => 'required|numeric|min:0',
+        ];
+    }
 }

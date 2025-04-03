@@ -45,6 +45,11 @@ class Order extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    public function orderedProducts()
+    {
+        return $this->hasMany(OrderedProduct::class, 'order_id');
+    }
+
     public static function validationRules(): array
     {
         return [
