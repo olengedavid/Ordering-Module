@@ -110,38 +110,24 @@ export default {
   },
   methods: {
     increaseQuantity() {
-      if (this.quantity < this.product.maxOrder && this.product.inStock) {
+      if (this.quantity < this.product.max_order && this.product.inStock) {
         this.quantity++;
       }
     },
     decreaseQuantity() {
-      if (this.quantity > this.product.minOrder && this.product.inStock) {
+      if (this.quantity > this.product.min_order && this.product.inStock) {
         this.quantity--;
       }
     },
-    // addToCart() {
-    //   if (!this.product.inStock) return;
-    //   // Implementation for adding to cart
-    //   const totalPrice = this.product.promotion
-    //     ? this.calculateDiscountedTotal()
-    //     : this.calculateOriginalTotal();
-
-    //   console.log(
-    //     `Added ${this.quantity} of ${
-    //       this.product.name
-    //     } to cart. Total: ${this.formatPrice(totalPrice)}`
-    //   );
-    // 
     async addToCart() {
       if (!this.product.inStock) return;
       console.log("product",this.product);
       try {
         const cartData = {
-          // retailer reference to be changed
           retailer_id: this.product.company_id,
           supplier_id: this.product.company_id,
           warehouse_inventory_id: this.product.inventory_id,
-          quantity: 1,
+          quantity: this.quantity,
           unit_price: Number(this.product.selling_price),
           min_order: Number(this.product.min_order),
           max_order: Number(this.product.max_order),
@@ -153,19 +139,10 @@ export default {
         const response = await axios.post("/retailers/cart/add", cartData);
 
         if (response.status === 201) {
-          // this.$notify({
-          //   type: "success",
-          //   message: `Added ${this.quantity} of ${this.product.name} to cart`,
-          // });
-
-          // Emit event to update cart count
           this.$emit("cart-updated");
         }
       } catch (error) {
-        // this.$notify({
-        //   type: "error",
-        //   message: error.response?.data?.message || "Error adding item to cart",
-        // });
+        console.error("Error adding to cart:", error);
       }
     },
     formatDate(date) {
