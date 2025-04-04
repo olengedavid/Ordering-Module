@@ -2,6 +2,8 @@
 import { ref, computed, onMounted } from "vue";
 import RetailerNavbar from "./Components/RetailerNavbar.vue";
 import axios from "axios";
+import SuccessMessage from "@/Components/SuccessMessage.vue";
+import ErrorMessage from "@/Components/ErrorMessage.vue";
 
 const deliveryAddress = ref("");
 const paymentMethod = ref("");
@@ -62,6 +64,8 @@ const cartItems = ref([
 ]);
 const loading = ref(false);
 const error = ref(null);
+const successMessage = ref("");
+const errorMessage = ref("");
 
 const totalAmount = computed(() => {
   return (
@@ -95,7 +99,6 @@ const decreaseQuantity = (index) => {
   }
 };
 
-
 const removeItem = async (index) => {
   try {
     const itemToRemove = cartItems.value[index];
@@ -103,13 +106,16 @@ const removeItem = async (index) => {
     
     if (response.status === 200) {
       cartItems.value.splice(index, 1);
-      
-      // Show success notification
-      toast.success('Item removed from cart successfully');
+      successMessage.value = "Item removed from cart successfully";
+      setTimeout(() => {
+        successMessage.value = "";
+      }, 3000);
     }
   } catch (error) {
-    // Show error notification
-    toast.error(error.response?.data?.message || 'Failed to remove item from cart');
+    errorMessage.value = error.response?.data?.message || 'Failed to remove item from cart';
+    setTimeout(() => {
+      errorMessage.value = "";
+    }, 3000);
   }
 };
 
@@ -241,6 +247,11 @@ onMounted(() => {
 
 <template>
   <RetailerNavbar />
+  <!-- Message container -->
+  <div class="message-container">
+    <SuccessMessage v-if="successMessage" @close="successMessage = ''" v-slot="{}">{{ successMessage }}</SuccessMessage>
+    <ErrorMessage v-if="errorMessage" @close="errorMessage = ''" v-slot="{}">{{ errorMessage }}</ErrorMessage>
+  </div>
   <div class="page-container">
     <div class="content-container">
       <h1 class="page-title">
@@ -1045,5 +1056,16 @@ onMounted(() => {
   .page-container {
     padding: 20px 12px;
   }
+}
+
+/* Message container */
+.message-container {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  min-width: 300px;
+  max-width: 400px;
 }
 </style>
