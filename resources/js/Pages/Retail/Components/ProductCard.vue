@@ -57,8 +57,8 @@
       </div>
 
       <div class="order-limits">
-        <div>Min: {{ product.min_order }} item</div>
-        <div>Max: {{ product.max_order }} items</div>
+        <div>Min: {{ Math.floor(product.min_order) }} item</div>
+        <div>Max: {{ Math.floor(product.max_order) }} items</div>
       </div>
 
       <div class="pricing" v-if="product.promotion">
