@@ -86,16 +86,20 @@ const formatNumber = (number) => {
 
 const increaseQuantity = (index) => {
   if (
-    cartItems.value[index].quantity < cartItems.value[index].maxOrder &&
+    cartItems.value[index].quantity < cartItems.value[index].max_order &&
     !cartItems.value[index].outOfStock
   ) {
     cartItems.value[index].quantity++;
+    // Update the total price
+    cartItems.value[index].price = cartItems.value[index].quantity * cartItems.value[index].unit_price;
   }
 };
 
 const decreaseQuantity = (index) => {
-  if (cartItems.value[index].quantity > cartItems.value[index].minOrder) {
+  if (cartItems.value[index].quantity > cartItems.value[index].min_order) {
     cartItems.value[index].quantity--;
+    // Update the total price
+    cartItems.value[index].price = cartItems.value[index].quantity * cartItems.value[index].unit_price;
   }
 };
 
