@@ -159,9 +159,12 @@ export default {
             try {
                 this.isLoading = true;
                 const params = new URLSearchParams({
-                    search: this.searchQuery || "",
-                    region: this.currentRegion || "",
-                    category: this.filterType || "",
+                    // search: this.searchQuery || "",
+                    // region: this.currentRegion || "",
+                    // category: this.filterType || "",
+                    search: "",
+                    region: "",
+                    category: "",
                     manufacturer: "",
                     limit: 20,
                     lastId: loadMore ? this.lastId : "",
