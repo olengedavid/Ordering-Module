@@ -1,6 +1,11 @@
 <template>
-  <div class="product-card">
+  <!-- Message container -->
+  <div class="message-container">
+      <SuccessMessage v-if="successMessage" @close="successMessage = ''" v-slot="{}">{{ successMessage }}</SuccessMessage>
+      <ErrorMessage v-if="errorMessage" @close="errorMessage = ''" v-slot="{}">{{ errorMessage }}</ErrorMessage>
+    </div>
     <!-- Image container positioned above product details -->
+  <div class="product-card">
     <div class="product-image-container">
       <img
         class="product-image"
@@ -90,9 +95,15 @@
 
 <script>
 import axios from "axios";
+import SuccessMessage from "@/Components/SuccessMessage.vue";
+import ErrorMessage from "@/Components/ErrorMessage.vue";
 
 export default {
   name: "ProductCard",
+  components: {
+    SuccessMessage,
+    ErrorMessage
+  },
   props: {
     product: {
       type: Object,
@@ -106,6 +117,8 @@ export default {
   data() {
     return {
       quantity: 1,
+      successMessage: "",
+      errorMessage: ""
     };
   },
   methods: {
@@ -140,9 +153,17 @@ export default {
 
         if (response.status === 201) {
           this.$emit("cart-updated");
+          this.successMessage = "Product added to cart successfully";
+          setTimeout(() => {
+            this.successMessage = "";
+          }, 3000);
         }
       } catch (error) {
         console.error("Error adding to cart:", error);
+        this.errorMessage = "Failed to add product to cart. Please try again.";
+        setTimeout(() => {
+          this.errorMessage = "";
+        }, 3000);
       }
     },
     formatDate(date) {
@@ -486,5 +507,16 @@ export default {
 
 .cart-icon {
   font-size: 1rem;
+}
+
+/* Message container */
+.message-container {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  min-width: 300px;
+  max-width: 400px;
 }
 </style>
