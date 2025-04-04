@@ -2,7 +2,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Company\InventoryController;
 use App\Http\Controllers\RegionController;
-use App\Http\Controllers\OrderController;
+use App\Http\Controllers\Company\OrderController;
 use Inertia\Inertia;
 use App\Http\Controllers\Company\CartController;
 

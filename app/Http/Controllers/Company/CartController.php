@@ -73,10 +73,16 @@ class CartController extends Controller
 
     public function clearCart(Request $request)
     {
-        CartItem::where('retailer_id', $request->retailer_id)->delete();
+        $query = CartItem::where('retailer_id', $request->retailer_id);
+        
+        if ($request->has('supplier_id')) {
+            $query->where('supplier_id', $request->supplier_id);
+        }
+        
+        $query->delete();
         
         return response()->json([
-            'message' => 'Cart cleared successfully'
+            'message' => 'Cart items cleared successfully'
         ]);
     }
 }

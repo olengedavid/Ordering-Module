@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Traits\OrderEnums;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Order extends Model
 {

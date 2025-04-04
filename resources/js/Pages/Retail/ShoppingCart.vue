@@ -113,12 +113,12 @@ const removeItem = async (index) => {
   }
 };
 
-const placeOrder = () => {
-  if (canPlaceOrder.value) {
-    // Implement order placement logic
-    alert("Order placed successfully!");
-  }
-};
+// const placeOrder = () => {
+//   if (canPlaceOrder.value) {
+//     // Implement order placement logic
+//     alert("Order placed successfully!");
+//   }
+// };
 
 function getPrimaryImagePreviewPath(product) {
   if (!product.images) return "https://via.placeholder.com/50";
@@ -166,11 +166,67 @@ const fetchCartItems = async () => {
         imageUrl: getPrimaryImagePreviewPath(item.inventory.product),
       };
     });
-    console.log("Cart items fetched successfully:", cartItems.value);
   } catch (err) {
     error.value = err.response?.data?.message || "Failed to fetch cart items";
   } finally {
     loading.value = false;
+  }
+};
+
+const placeOrder = async () => {
+  // look into this later
+  // if (!canPlaceOrder.value) return;
+
+  try {
+    // Group cart items by supplier
+    const ordersBySupplier = cartItems.value.reduce((acc, item) => {
+      if (!acc[item.supplier_id]) {
+        acc[item.supplier_id] = {
+          retailer_id: item.retailer_id,
+          supplier_id: item.supplier_id,
+          status: 'pending',
+          payment_terms: paymentMethod.value,
+          delivery_address: deliveryAddress.value,
+          region: 'default', // You might want to get this from user selection
+          expected_delivery_date: null, // You might want to add a date picker
+          created_by: item.created_by,
+          products: []
+        };
+      }
+      
+      acc[item.supplier_id].products.push({
+        warehouse_inventory_id: item.warehouse_inventory_id,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        total_price: item.quantity * item.unit_price
+      });
+      
+      return acc;
+    }, {});
+
+    // Create orders for each supplier
+    for (const supplierOrder of Object.values(ordersBySupplier)) {
+      console.log("Creating order for supplier:", supplierOrder);
+      const response = await axios.post('/retailers/create-order', supplierOrder);
+      
+      if (response.status === 201) {
+        // Clear cart items for this supplier
+        // This should be done on the server side as wel
+        await axios.delete('/retailers/cart/clear', {
+          params: {
+            retailer_id: supplierOrder.retailer_id,
+            supplier_id: supplierOrder.supplier_id
+          }
+        });
+      }
+    }
+
+    // Refresh cart items
+    await fetchCartItems();
+
+    toast.success('Orders placed successfully!');
+  } catch (error) {
+    toast.error(error.response?.data?.message || 'Failed to place orders');
   }
 };
 
@@ -427,10 +483,11 @@ onMounted(() => {
               </div>
             </div>
 
+            <!--  :disabled="!canPlaceOrder" -->
             <button
               @click="placeOrder"
               class="place-order-btn"
-              :disabled="!canPlaceOrder"
+             
             >
               Place Order Request
             </button>
