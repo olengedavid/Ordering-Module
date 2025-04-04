@@ -506,7 +506,7 @@ onMounted(() => {
             <button
               @click="placeOrder"
               class="place-order-btn"
-             
+              :disabled="!canPlaceOrder || cartItems.length === 0"
             >
               Place Order Request
             </button>
@@ -995,7 +995,7 @@ onMounted(() => {
 .place-order-btn {
   width: 100%;
   padding: 16px;
-  background-color: #5b9bd5;
+  background-color: #0e64a5;
   color: white;
   border: none;
   font-size: 1rem;
@@ -1006,11 +1006,12 @@ onMounted(() => {
 }
 
 .place-order-btn:hover:not(:disabled) {
-  background-color: #4a89c7;
+  background-color: #1d4ed8;
 }
 
 .place-order-btn:disabled {
-  background-color: #b0bec5;
+  background-color: #e2e8f0;
+  color: #94a3b8;
   cursor: not-allowed;
 }
 
