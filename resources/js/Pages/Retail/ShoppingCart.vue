@@ -66,7 +66,7 @@ const error = ref(null);
 const totalAmount = computed(() => {
   return (
     cartItems.value.reduce(
-      (total, item) => total + item.price * item.quantity,
+      (total, item) => total + item.unit_price * item.quantity,
       0
     ) + deliveryFee.value
   );
@@ -184,8 +184,8 @@ const placeOrder = async () => {
         acc[item.supplier_id] = {
           retailer_id: item.retailer_id,
           supplier_id: item.supplier_id,
-          status: 'pending',
-          payment_terms: paymentMethod.value,
+          status: 'PENDING',
+          payment_terms: 'PAID_ON_DELIVERY',
           delivery_address: deliveryAddress.value,
           region: 'default', // You might want to get this from user selection
           expected_delivery_date: null, // You might want to add a date picker

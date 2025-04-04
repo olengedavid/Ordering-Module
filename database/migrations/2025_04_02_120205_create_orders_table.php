@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('payment_terms')->default('PAID_ON_DELIVERY');
             $table->text('delivery_address');
             $table->string('region');
-            $table->date('expected_delivery_date');
+            $table->date('expected_delivery_date')->nullable();
             $table->date('delivered_date')->nullable();
             $table->string('delivery_confirmation_code')->nullable();
             $table->foreignId('created_by')->constrained('users');

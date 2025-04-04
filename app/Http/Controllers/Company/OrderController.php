@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Company;
 use App\Http\Controllers\Controller;
 use App\Models\Companies\Order;
 use Illuminate\Http\Request;
+use App\Models\Companies\OrderedProduct;
 
 class OrderController extends Controller
 {

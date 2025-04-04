@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
+
 class Order extends Model
 {
     use OrderEnums;
@@ -72,7 +73,7 @@ class Order extends Model
             'payment_terms' => 'required|in:' . implode(',', self::paymentTerms()),
             'delivery_address' => 'required|string',
             'region' => 'required|string',
-            'expected_delivery_date' => 'required|date|after:today',
+            'expected_delivery_date' => 'nullable|date|after:today',
             'delivered_date' => 'nullable|date',
             'delivery_confirmation_code' => 'nullable|string',
             'created_by' => 'required|exists:users,id',
