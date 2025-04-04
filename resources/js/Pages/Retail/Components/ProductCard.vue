@@ -83,11 +83,13 @@
       <button
         class="add-to-cart-btn"
         @click="addToCart"
-        :disabled="!product.inStock"
-        :class="{ disabled: !product.inStock }"
+        :disabled="!product.inStock || isInCart"
+        :class="{ 
+          disabled: !product.inStock || isInCart,
+          'remove-from-cart': isInCart 
+        }"
       >
-        <!-- <span class="cart-icon">🛒</span> -->
-        {{ product.inStock ? "Add to Cart" : "Out of Stock" }}
+        {{ product.inStock ? (isInCart ? 'Remove from Cart' : 'Add to Cart') : 'Out of Stock' }}
       </button>
     </div>
   </div>
@@ -118,7 +120,8 @@ export default {
     return {
       quantity: 1,
       successMessage: "",
-      errorMessage: ""
+      errorMessage: "",
+      isInCart: false
     };
   },
   methods: {
@@ -152,6 +155,7 @@ export default {
         const response = await axios.post("/retailers/cart/add", cartData);
 
         if (response.status === 201) {
+          this.isInCart = true;
           this.$emit("cart-updated");
           this.successMessage = "Product added to cart successfully";
           setTimeout(() => {
@@ -161,6 +165,31 @@ export default {
       } catch (error) {
         console.error("Error adding to cart:", error);
         this.errorMessage = "Failed to add product to cart. Please try again.";
+        setTimeout(() => {
+          this.errorMessage = "";
+        }, 3000);
+      }
+    },
+    async removeFromCart() {
+      if (!this.cartItemUuid) {
+        this.errorMessage = "An error occurred while removing the item from the cart";
+        return;
+      }
+
+      try {
+        const response = await axios.delete(`/retailers/cart/remove/${this.cartItemUuid}`);
+        
+        if (response.status === 200) {
+          this.isInCart = false;
+          this.cartItemUuid = null;
+          this.$emit("cart-updated");
+          this.successMessage = "Item removed from cart successfully";
+          setTimeout(() => {
+            this.successMessage = "";
+          }, 3000);
+        }
+      } catch (error) {
+        this.errorMessage = error.response?.data?.message || 'Failed to remove item from cart';
         setTimeout(() => {
           this.errorMessage = "";
         }, 3000);
@@ -503,6 +532,15 @@ export default {
   background: linear-gradient(135deg, #9e9e9e, #757575);
   cursor: not-allowed;
   transform: none;
+}
+
+.add-to-cart-btn.remove-from-cart {
+  background: #ffebee;
+  color: #f44336;
+}
+
+.add-to-cart-btn.remove-from-cart:hover {
+  transform: translateY(-2px);
 }
 
 .cart-icon {
