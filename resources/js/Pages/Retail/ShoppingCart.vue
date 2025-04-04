@@ -184,22 +184,26 @@ const placeOrder = async () => {
         acc[item.supplier_id] = {
           retailer_id: item.retailer_id,
           supplier_id: item.supplier_id,
-          status: 'PENDING',
+          status: 'REQUESTED',
           payment_terms: 'PAID_ON_DELIVERY',
           delivery_address: deliveryAddress.value,
           region: 'default', // You might want to get this from user selection
           expected_delivery_date: null, // You might want to add a date picker
           created_by: item.created_by,
-          products: []
+          products: [],
+          total_price: 0 
         };
       }
-      
+
+      const itemTotal = Number(item.quantity * item.unit_price);
       acc[item.supplier_id].products.push({
         warehouse_inventory_id: item.warehouse_inventory_id,
         quantity: item.quantity,
         unit_price: item.unit_price,
-        total_price: item.quantity * item.unit_price
+        total_price: itemTotal
       });
+
+      acc[item.supplier_id].total_price += itemTotal;
       
       return acc;
     }, {});

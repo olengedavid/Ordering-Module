@@ -97,4 +97,22 @@ class OrderController extends Controller
             ], 500);
         }
     }
+
+    public function search(Request $request)
+    {
+        $query = Order::with(['creator:id,name', 'supplier:id,company_name'])
+            ->when($request->status, function($q, $status) {
+                return $q->where('status', strtoupper($status));
+            })
+            ->when($request->search, function($q, $search) {
+                return $q->whereHas('supplier', function($query) use ($search) {
+                    $query->where('company_name', 'like', "%{$search}%");
+                });
+            })
+            ->latest();
+
+        $perPage = $request->per_page ?? 10;
+        $orders = $query->paginate($perPage);
+        return response()->json($orders);
+    }
 }

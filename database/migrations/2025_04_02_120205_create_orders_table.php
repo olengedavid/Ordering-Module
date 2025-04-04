@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
             $table->softDeletes();
             $table->uuid('uuid')->unique();
+            $table->string('order_ref')->unique();
+            $table->decimal('total_price', 10, 2);
             $table->foreignId('retailer_id')->constrained('companies');
             $table->foreignId('supplier_id')->constrained('companies');
             $table->string('status')->default('PENDING');

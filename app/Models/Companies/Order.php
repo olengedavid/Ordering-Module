@@ -26,7 +26,9 @@ class Order extends Model
         'expected_delivery_date',
         'delivered_date',
         'delivery_confirmation_code',
-        'created_by'
+        'created_by',
+        'order_ref',
+        'total_price'
     ];
 
     protected $casts = [
@@ -41,6 +43,7 @@ class Order extends Model
         parent::boot();
         static::creating(function ($order) {
             $order->uuid = Str::uuid()->toString();
+            $order->order_ref = 'IPO-' . strtoupper(Str::random(3)) . '' . date('y') . '' . strtoupper(Str::random(4));
         });
     }
 
@@ -77,6 +80,7 @@ class Order extends Model
             'delivered_date' => 'nullable|date',
             'delivery_confirmation_code' => 'nullable|string',
             'created_by' => 'required|exists:users,id',
+            'total_price' => 'required|numeric'
         ];
     }
 }

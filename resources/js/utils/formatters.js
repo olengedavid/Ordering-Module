@@ -17,3 +17,14 @@ export const formatNumber = (number, decimals = 2) => {
         maximumFractionDigits: decimals
     }).format(number);
 };
+
+export const formatDateOnly = (dateString) => {
+    if (!dateString) return '';
+    
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('en-KE', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    }).format(date);
+};

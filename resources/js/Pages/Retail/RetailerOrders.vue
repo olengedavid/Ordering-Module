@@ -35,7 +35,7 @@
           <thead>
             <tr>
               <th @click="sortBy('orderId')" class="sortable">
-                Order # <i :class="getSortIcon('orderId')"></i>
+                Order# <i :class="getSortIcon('orderId')"></i>
               </th>
               <th @click="sortBy('date')" class="sortable">
                 Order Date <i :class="getSortIcon('date')"></i>
@@ -73,26 +73,26 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="order in paginatedOrders" :key="order.orderId" @click="viewOrderDetails(order)" class="order-row">
-              <td>{{ order.orderId }}</td>
-              <td>{{ order.date }}</td>
-              <td v-if="activeTab === 'confirmed'">{{ order.expectedDeliveryDate }}</td>
+            <tr v-for="order in orders" :key="order.id" @click="viewOrderDetails(order)" class="order-row">
+              <td>{{order?.order_ref}}</td>
+              <td>{{ formatDateOnly(order?.created_at) }}</td>
+              <!-- <td v-if="activeTab === 'confirmed'">{{ order.expectedDeliveryDate }}</td>
               <td v-if="activeTab === 'delivered'">{{ order.expectedDeliveryDate }}</td>
               <td v-if="activeTab === 'confirmed'">
                 <span :class="getDeliveryTimeframeClass(order)">
                   {{ getDeliveryTimeframe(order) }}
                 </span>
-              </td>
-              <td v-if="activeTab === 'delivered'">{{ order.deliveryDate }}</td>
-              <td>{{ order.supplier }}</td>
-              <td v-if="activeTab === 'all' || activeTab === 'requests' || activeTab === 'cancelled'">{{ order.paymentMode }}</td>
-              <td v-if="activeTab === 'confirmed' || activeTab === 'delivered'">
+              </td> -->
+              <!-- <td v-if="activeTab === 'delivered'">{{ order.deliveryDate }}</td> -->
+              <td>{{ order?.supplier?.company_name }}</td>
+              <td v-if="activeTab === 'all' || activeTab === 'requests' || activeTab === 'cancelled'">{{ order?.payment_terms }}</td>
+              <!-- <td v-if="activeTab === 'confirmed' || activeTab === 'delivered'">
                 <span :class="getPayStatusClass(order)">
                   {{ order.payStatus }}
                 </span>
-              </td>
-              <td>Ksh {{ formatNumber(order.amount) }}</td>
-              <td>{{ order.orderedBy }}</td>
+              </td> -->
+              <td>Ksh {{ formatNumber(order?.total_price) }}</td>
+              <td>{{ order?.creator?.name }}</td>
             </tr>
           </tbody>
         </table>
@@ -131,6 +131,7 @@
 
 <script>
 import RetailerNavbar from "./Components/RetailerNavbar.vue";
+import { formatNumber, formatDateOnly } from "@/utils/formatters";
 
 export default {
   name: 'RetailerOrdersPage',
@@ -139,65 +140,68 @@ export default {
   },
   data() {
     return {
-      activeTab: 'requests',
+      activeTab: 'REQUESTED',
       tabs: [
-        { id: 'requests', name: 'Requests', count: 2 },
+        { id: 'REQUESTED', name: 'Requests', count: 2 },
         { id: 'confirmed', name: 'Confirmed', count: 10 },
         { id: 'delivered', name: 'Delivered', count: 32 },
         { id: 'cancelled', name: 'Cancelled', count: 4 },
       ],
-      allOrders: [
-        { orderId: 'JK-25-01', date: 'Feb 23, 2025', supplier: 'Aden Agri Supplies', paymentMode: 'Pay with Credit Facility', amount: 55000, orderedBy: 'James Muriithi' },
-        { orderId: 'JK-25-02', date: 'Feb 23, 2025', supplier: 'Green Agriculture Ltd', paymentMode: 'Cash on Delivery', amount: 103890, orderedBy: 'James Muriithi' },
-        { orderId: 'JK-25-03', date: 'Feb 23, 2025', supplier: 'Aden Agri Supplies', paymentMode: 'Mobile Money', amount: 55000, orderedBy: 'James Muriithi' },
-        { orderId: 'JK-25-04', date: 'Feb 23, 2025', supplier: 'Green Agriculture Ltd', paymentMode: 'Pay with Credit Facility', amount: 103890, orderedBy: 'James Muriithi' },
-        { orderId: 'JK-25-05', date: 'Feb 23, 2025', supplier: 'Aden Agri Supplies', paymentMode: 'Cash on Delivery', amount: 55000, orderedBy: 'James Muriithi' },
-        { orderId: 'JK-25-06', date: 'Feb 23, 2025', supplier: 'Green Agriculture Ltd', paymentMode: 'Mobile Money', amount: 103890, orderedBy: 'James Muriithi' },
-        { orderId: 'JK-25-07', date: 'Feb 23, 2025', supplier: 'Aden Agri Supplies', paymentMode: 'Pay with Credit Facility', amount: 55000, orderedBy: 'James Muriithi' },
-        { orderId: 'JK-25-08', date: 'Feb 23, 2025', supplier: 'Green Agriculture Ltd', paymentMode: 'Cash on Delivery', amount: 103890, orderedBy: 'James Muriithi' },
-        { orderId: 'JK-25-09', date: 'Feb 23, 2025', supplier: 'Green Agriculture Ltd', paymentMode: 'Mobile Money', amount: 103890, orderedBy: 'James Muriithi' },
-        { orderId: 'JK-25-10', date: 'Feb 23, 2025', supplier: 'Aden Agri Supplies', paymentMode: 'Pay with Credit Facility', amount: 55000, orderedBy: 'James Muriithi' },
-        { orderId: 'JK-25-11', date: 'Feb 23, 2025', supplier: 'Green Agriculture Ltd', paymentMode: 'Cash on Delivery', amount: 103890, orderedBy: 'James Muriithi' },
-        { orderId: 'JK-25-12', date: 'Feb 23, 2025', supplier: 'Aden Agri Supplies', paymentMode: 'Mobile Money', amount: 55000, orderedBy: 'James Muriithi' },
-        { orderId: 'JK-25-13', date: 'Feb 23, 2025', supplier: 'Green Agriculture Ltd', paymentMode: 'Pay with Credit Facility', amount: 103890, orderedBy: 'James Muriithi' },
-      ],
-      requestsOrders: [
-        { orderId: 'RQ-27-01', date: 'Feb 27, 2025', supplier: 'Farm Equipment Ltd', paymentMode: 'Mobile Money', amount: 78450, orderedBy: 'James Muriithi' },
-        { orderId: 'RQ-27-02', date: 'Feb 27, 2025', supplier: 'AgriTech Solutions', paymentMode: 'Pay with Credit Facility', amount: 80440, orderedBy: 'James Muriithi' },
-      ],
-      confirmedOrders: [
-        { orderId: 'CN-26-01', date: 'Feb 26, 2025', expectedDeliveryDate: 'Mar 1, 2025', supplier: 'Farm Equipment Ltd', payStatus: 'Not Paid', amount: 25670, orderedBy: 'James Muriithi' },
-        { orderId: 'CN-26-02', date: 'Feb 26, 2025', expectedDeliveryDate: 'Feb 27, 2025', supplier: 'AgriTech Solutions', payStatus: 'Paid', amount: 18990, orderedBy: 'David Kamau' },
-        { orderId: 'CN-26-03', date: 'Feb 26, 2025', expectedDeliveryDate: 'Feb 26, 2025', supplier: 'Farm Equipment Ltd', payStatus: 'Not Paid', amount: 32450, orderedBy: 'James Muriithi' },
-        { orderId: 'CN-25-04', date: 'Feb 25, 2025', expectedDeliveryDate: 'Feb 28, 2025', supplier: 'AgriTech Solutions', payStatus: 'Paid', amount: 27890, orderedBy: 'Sarah Njeri' },
-        { orderId: 'CN-25-05', date: 'Feb 25, 2025', expectedDeliveryDate: 'Feb 28, 2025', supplier: 'Farm Equipment Ltd', payStatus: 'Not Paid', amount: 15600, orderedBy: 'James Muriithi' },
-        { orderId: 'CN-24-06', date: 'Feb 24, 2025', expectedDeliveryDate: 'Feb 28, 2025', supplier: 'AgriTech Solutions', payStatus: 'Paid', amount: 20340, orderedBy: 'David Kamau' },
-        { orderId: 'CN-24-07', date: 'Feb 24, 2025', expectedDeliveryDate: 'Feb 27, 2025', supplier: 'Farm Equipment Ltd', payStatus: 'Not Paid', amount: 37220, orderedBy: 'James Muriithi' },
-        { orderId: 'CN-24-08', date: 'Feb 24, 2025', expectedDeliveryDate: 'Feb 27, 2025', supplier: 'AgriTech Solutions', payStatus: 'Paid', amount: 28570, orderedBy: 'Sarah Njeri' },
-        { orderId: 'CN-23-09', date: 'Feb 23, 2025', expectedDeliveryDate: 'Feb 26, 2025', supplier: 'Farm Equipment Ltd', payStatus: 'Not Paid', amount: 16240, orderedBy: 'James Muriithi' },
-        { orderId: 'CN-23-10', date: 'Feb 23, 2025', expectedDeliveryDate: 'Feb 26, 2025', supplier: 'AgriTech Solutions', payStatus: 'Paid', amount: 9932, orderedBy: 'David Kamau' },
-      ],
-      deliveredOrders: [
-        { orderId: 'DL-20-01', date: 'Feb 20, 2025', expectedDeliveryDate: 'Feb 24, 2025', supplier: 'Aden Agri Supplies', payStatus: 'Paid', amount: 125000, orderedBy: 'James Muriithi', deliveryDate: 'Feb 22, 2025' },
-        { orderId: 'DL-20-02', date: 'Feb 20, 2025', expectedDeliveryDate: 'Feb 21, 2025', supplier: 'Green Agriculture Ltd', payStatus: 'Not Paid', amount: 86770, orderedBy: 'David Kamau', deliveryDate: 'Feb 22, 2025' },
-        { orderId: 'DL-19-03', date: 'Feb 19, 2025', expectedDeliveryDate: 'Feb 18, 2025', supplier: 'Farm Equipment Ltd', payStatus: 'Paid', amount: 98450, orderedBy: 'Sarah Njeri', deliveryDate: 'Feb 21, 2025' },
-        { orderId: 'DL-19-04', date: 'Feb 19, 2025', expectedDeliveryDate: 'Feb 19, 2025', supplier: 'AgriTech Solutions', payStatus: 'Not Paid', amount: 112340, orderedBy: 'James Muriithi', deliveryDate: 'Feb 21, 2025' },
-        { orderId: 'DL-19-05', date: 'Feb 19, 2025', expectedDeliveryDate: 'Feb 23, 2025', supplier: 'Aden Agri Supplies', payStatus: 'Paid', amount: 74560, orderedBy: 'David Kamau', deliveryDate: 'Feb 21, 2025' },
-        { orderId: 'DL-18-06', date: 'Feb 18, 2025', expectedDeliveryDate: 'Feb 22, 2025', supplier: 'Green Agriculture Ltd', payStatus: 'Not Paid', amount: 193280, orderedBy: 'James Muriithi', deliveryDate: 'Feb 20, 2025' },
-        // Add more delivered orders to match the count
-      ],
-      cancelledOrders: [
-        { orderId: 'CA-26-01', date: 'Feb 26, 2025', supplier: 'Farm Equipment Ltd', paymentMode: 'Cash on Delivery', amount: 23450, orderedBy: 'James Muriithi', cancellationReason: 'Items no longer needed' },
-        { orderId: 'CA-25-02', date: 'Feb 25, 2025', supplier: 'Green Agriculture Ltd', paymentMode: 'Mobile Money', amount: 32890, orderedBy: 'David Kamau', cancellationReason: 'Price discrepancy' },
-        { orderId: 'CA-24-03', date: 'Feb 24, 2025', supplier: 'AgriTech Solutions', paymentMode: 'Pay with Credit Facility', amount: 15680, orderedBy: 'Sarah Njeri', cancellationReason: 'Supplier out of stock' },
-        { orderId: 'CA-22-04', date: 'Feb 22, 2025', supplier: 'Aden Agri Supplies', paymentMode: 'Cash on Delivery', amount: 13725, orderedBy: 'James Muriithi', cancellationReason: 'Duplicate order' },
-      ],
+      // allOrders: [
+      //   { orderId: 'JK-25-01', date: 'Feb 23, 2025', supplier: 'Aden Agri Supplies', paymentMode: 'Pay with Credit Facility', amount: 55000, orderedBy: 'James Muriithi' },
+      //   { orderId: 'JK-25-02', date: 'Feb 23, 2025', supplier: 'Green Agriculture Ltd', paymentMode: 'Cash on Delivery', amount: 103890, orderedBy: 'James Muriithi' },
+      //   { orderId: 'JK-25-03', date: 'Feb 23, 2025', supplier: 'Aden Agri Supplies', paymentMode: 'Mobile Money', amount: 55000, orderedBy: 'James Muriithi' },
+      //   { orderId: 'JK-25-04', date: 'Feb 23, 2025', supplier: 'Green Agriculture Ltd', paymentMode: 'Pay with Credit Facility', amount: 103890, orderedBy: 'James Muriithi' },
+      //   { orderId: 'JK-25-05', date: 'Feb 23, 2025', supplier: 'Aden Agri Supplies', paymentMode: 'Cash on Delivery', amount: 55000, orderedBy: 'James Muriithi' },
+      //   { orderId: 'JK-25-06', date: 'Feb 23, 2025', supplier: 'Green Agriculture Ltd', paymentMode: 'Mobile Money', amount: 103890, orderedBy: 'James Muriithi' },
+      //   { orderId: 'JK-25-07', date: 'Feb 23, 2025', supplier: 'Aden Agri Supplies', paymentMode: 'Pay with Credit Facility', amount: 55000, orderedBy: 'James Muriithi' },
+      //   { orderId: 'JK-25-08', date: 'Feb 23, 2025', supplier: 'Green Agriculture Ltd', paymentMode: 'Cash on Delivery', amount: 103890, orderedBy: 'James Muriithi' },
+      //   { orderId: 'JK-25-09', date: 'Feb 23, 2025', supplier: 'Green Agriculture Ltd', paymentMode: 'Mobile Money', amount: 103890, orderedBy: 'James Muriithi' },
+      //   { orderId: 'JK-25-10', date: 'Feb 23, 2025', supplier: 'Aden Agri Supplies', paymentMode: 'Pay with Credit Facility', amount: 55000, orderedBy: 'James Muriithi' },
+      //   { orderId: 'JK-25-11', date: 'Feb 23, 2025', supplier: 'Green Agriculture Ltd', paymentMode: 'Cash on Delivery', amount: 103890, orderedBy: 'James Muriithi' },
+      //   { orderId: 'JK-25-12', date: 'Feb 23, 2025', supplier: 'Aden Agri Supplies', paymentMode: 'Mobile Money', amount: 55000, orderedBy: 'James Muriithi' },
+      //   { orderId: 'JK-25-13', date: 'Feb 23, 2025', supplier: 'Green Agriculture Ltd', paymentMode: 'Pay with Credit Facility', amount: 103890, orderedBy: 'James Muriithi' },
+      // ],
+      // requestsOrders: [
+      //   { orderId: 'RQ-27-01', date: 'Feb 27, 2025', supplier: 'Farm Equipment Ltd', paymentMode: 'Mobile Money', amount: 78450, orderedBy: 'James Muriithi' },
+      //   { orderId: 'RQ-27-02', date: 'Feb 27, 2025', supplier: 'AgriTech Solutions', paymentMode: 'Pay with Credit Facility', amount: 80440, orderedBy: 'James Muriithi' },
+      // ],
+      // confirmedOrders: [
+      //   { orderId: 'CN-26-01', date: 'Feb 26, 2025', expectedDeliveryDate: 'Mar 1, 2025', supplier: 'Farm Equipment Ltd', payStatus: 'Not Paid', amount: 25670, orderedBy: 'James Muriithi' },
+      //   { orderId: 'CN-26-02', date: 'Feb 26, 2025', expectedDeliveryDate: 'Feb 27, 2025', supplier: 'AgriTech Solutions', payStatus: 'Paid', amount: 18990, orderedBy: 'David Kamau' },
+      //   { orderId: 'CN-26-03', date: 'Feb 26, 2025', expectedDeliveryDate: 'Feb 26, 2025', supplier: 'Farm Equipment Ltd', payStatus: 'Not Paid', amount: 32450, orderedBy: 'James Muriithi' },
+      //   { orderId: 'CN-25-04', date: 'Feb 25, 2025', expectedDeliveryDate: 'Feb 28, 2025', supplier: 'AgriTech Solutions', payStatus: 'Paid', amount: 27890, orderedBy: 'Sarah Njeri' },
+      //   { orderId: 'CN-25-05', date: 'Feb 25, 2025', expectedDeliveryDate: 'Feb 28, 2025', supplier: 'Farm Equipment Ltd', payStatus: 'Not Paid', amount: 15600, orderedBy: 'James Muriithi' },
+      //   { orderId: 'CN-24-06', date: 'Feb 24, 2025', expectedDeliveryDate: 'Feb 28, 2025', supplier: 'AgriTech Solutions', payStatus: 'Paid', amount: 20340, orderedBy: 'David Kamau' },
+      //   { orderId: 'CN-24-07', date: 'Feb 24, 2025', expectedDeliveryDate: 'Feb 27, 2025', supplier: 'Farm Equipment Ltd', payStatus: 'Not Paid', amount: 37220, orderedBy: 'James Muriithi' },
+      //   { orderId: 'CN-24-08', date: 'Feb 24, 2025', expectedDeliveryDate: 'Feb 27, 2025', supplier: 'AgriTech Solutions', payStatus: 'Paid', amount: 28570, orderedBy: 'Sarah Njeri' },
+      //   { orderId: 'CN-23-09', date: 'Feb 23, 2025', expectedDeliveryDate: 'Feb 26, 2025', supplier: 'Farm Equipment Ltd', payStatus: 'Not Paid', amount: 16240, orderedBy: 'James Muriithi' },
+      //   { orderId: 'CN-23-10', date: 'Feb 23, 2025', expectedDeliveryDate: 'Feb 26, 2025', supplier: 'AgriTech Solutions', payStatus: 'Paid', amount: 9932, orderedBy: 'David Kamau' },
+      // ],
+      // deliveredOrders: [
+      //   { orderId: 'DL-20-01', date: 'Feb 20, 2025', expectedDeliveryDate: 'Feb 24, 2025', supplier: 'Aden Agri Supplies', payStatus: 'Paid', amount: 125000, orderedBy: 'James Muriithi', deliveryDate: 'Feb 22, 2025' },
+      //   { orderId: 'DL-20-02', date: 'Feb 20, 2025', expectedDeliveryDate: 'Feb 21, 2025', supplier: 'Green Agriculture Ltd', payStatus: 'Not Paid', amount: 86770, orderedBy: 'David Kamau', deliveryDate: 'Feb 22, 2025' },
+      //   { orderId: 'DL-19-03', date: 'Feb 19, 2025', expectedDeliveryDate: 'Feb 18, 2025', supplier: 'Farm Equipment Ltd', payStatus: 'Paid', amount: 98450, orderedBy: 'Sarah Njeri', deliveryDate: 'Feb 21, 2025' },
+      //   { orderId: 'DL-19-04', date: 'Feb 19, 2025', expectedDeliveryDate: 'Feb 19, 2025', supplier: 'AgriTech Solutions', payStatus: 'Not Paid', amount: 112340, orderedBy: 'James Muriithi', deliveryDate: 'Feb 21, 2025' },
+      //   { orderId: 'DL-19-05', date: 'Feb 19, 2025', expectedDeliveryDate: 'Feb 23, 2025', supplier: 'Aden Agri Supplies', payStatus: 'Paid', amount: 74560, orderedBy: 'David Kamau', deliveryDate: 'Feb 21, 2025' },
+      //   { orderId: 'DL-18-06', date: 'Feb 18, 2025', expectedDeliveryDate: 'Feb 22, 2025', supplier: 'Green Agriculture Ltd', payStatus: 'Not Paid', amount: 193280, orderedBy: 'James Muriithi', deliveryDate: 'Feb 20, 2025' },
+      //   // Add more delivered orders to match the count
+      // ],
+      // cancelledOrders: [
+      //   { orderId: 'CA-26-01', date: 'Feb 26, 2025', supplier: 'Farm Equipment Ltd', paymentMode: 'Cash on Delivery', amount: 23450, orderedBy: 'James Muriithi', cancellationReason: 'Items no longer needed' },
+      //   { orderId: 'CA-25-02', date: 'Feb 25, 2025', supplier: 'Green Agriculture Ltd', paymentMode: 'Mobile Money', amount: 32890, orderedBy: 'David Kamau', cancellationReason: 'Price discrepancy' },
+      //   { orderId: 'CA-24-03', date: 'Feb 24, 2025', supplier: 'AgriTech Solutions', paymentMode: 'Pay with Credit Facility', amount: 15680, orderedBy: 'Sarah Njeri', cancellationReason: 'Supplier out of stock' },
+      //   { orderId: 'CA-22-04', date: 'Feb 22, 2025', supplier: 'Aden Agri Supplies', paymentMode: 'Cash on Delivery', amount: 13725, orderedBy: 'James Muriithi', cancellationReason: 'Duplicate order' },
+      // ],
       searchQuery: '',
       sortKey: 'orderId',
       sortDir: 'asc',
       currentPage: 1,
+      totalPages: 0,
       perPage: 10,
       perPageOptions: [10, 20, 50, 100],
+      formatNumber,
+      formatDateOnly
     };
   },
   computed: {
@@ -276,9 +280,9 @@ export default {
       const end = start + this.perPage;
       return this.filteredOrders.slice(start, end);
     },
-    totalPages() {
-      return Math.ceil(this.filteredOrders.length / this.perPage) || 1;
-    }
+    // totalPages() {
+    //   return Math.ceil(this.filteredOrders.length / this.perPage) || 1;
+    // }
   },
   methods: {
     formatNumber(value) {
@@ -373,8 +377,38 @@ export default {
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       
       return diffDays;
-    }
+    },
+    async fetchOrders() {
+      this.loading = true;
+      try {
+        const response = await axios.get(route('retailer.orders.search'), {
+          params: {
+            status: this.activeTab.toUpperCase(),
+            search: this.searchQuery,
+            page: this.currentPage,
+            per_page: this.perPage,
+            sort_key: this.sortKey,
+            sort_dir: this.sortDir
+          }
+        });
+       const {data} = response;
+        this.orders = data.data;
+        this.totalPages = data.last_page;
+        this.currentPage = data.current_page;
+        this.perPage = data.per_page;
+        this.totalOrders = data.total;
+
+      } catch (error) {
+        console.error('Error fetching orders:', error);
+      } finally {
+        this.loading = false;
+      }
+    },
+  },
+  mounted() {
+    this.fetchOrders();
   }
+  
 };
 </script>
 
