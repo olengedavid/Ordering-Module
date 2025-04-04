@@ -4,6 +4,7 @@ use App\Http\Controllers\Company\InventoryController;
 use App\Http\Controllers\RegionController;
 use App\Http\Controllers\OrderController;
 use Inertia\Inertia;
+use App\Http\Controllers\Company\CartController;
 
 Route::get('/retailers/products', [InventoryController::class, 'retailersIndex'])
         ->name('retailer.products.index');
@@ -28,4 +29,10 @@ Route::get('/retailers/orders/{id}', function ($id) {
         'id' => $id
     ]);
 })->name('retailer.orders.show');
+
+# Cart actions
+Route::post('retailers/cart/add', [CartController::class, 'addToCart'])->name('retailer.cart.add');
+Route::delete('retailers/cart/remove/{uuid}', [CartController::class, 'removeFromCart'])->name('retailer.cart.remove');
+Route::get('retailers/cart/items', [CartController::class, 'getCartItems'])->name('retailer.cart.items');
+Route::delete('retailers/cart/clear', [CartController::class, 'clearCart'])->name('retailer.cart.clear');
  

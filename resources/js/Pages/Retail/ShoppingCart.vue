@@ -2,7 +2,7 @@
     <RetailerNavbar />
     <div class="page-container">
       <div class="content-container">
-        <h1 class="page-title">Cart: <span class="item-count">{{ cartItems.length }} items</span></h1>
+        <h1 class="page-title">Cart: <span class="item-count">{{ cartItems.length }} items ++</span></h1>
         
         <div class="cart-layout">
           <!-- Left Column - Cart Items -->

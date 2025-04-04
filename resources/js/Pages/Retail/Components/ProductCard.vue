@@ -2,7 +2,11 @@
   <div class="product-card">
     <!-- Image container positioned above product details -->
     <div class="product-image-container">
-      <img class="product-image" :src="getPrimaryImagePreviewPath(product)" :alt="product.name" />
+      <img
+        class="product-image"
+        :src="getPrimaryImagePreviewPath(product)"
+        :alt="product.name"
+      />
       <div class="badge in-stock" v-if="product.inStock">In Stock</div>
       <div class="badge out-of-stock" v-else>Out of Stock</div>
       <div class="promotion-badge" v-if="product.promotion">
@@ -85,10 +89,16 @@
 </template>
 
 <script>
+import axios from "axios";
+
 export default {
   name: "ProductCard",
   props: {
     product: {
+      type: Object,
+      required: true,
+    },
+    currentUser: {
       type: Object,
       required: true,
     },
@@ -109,18 +119,54 @@ export default {
         this.quantity--;
       }
     },
-    addToCart() {
-      if (!this.product.inStock) return;
-      // Implementation for adding to cart
-      const totalPrice = this.product.promotion
-        ? this.calculateDiscountedTotal()
-        : this.calculateOriginalTotal();
+    // addToCart() {
+    //   if (!this.product.inStock) return;
+    //   // Implementation for adding to cart
+    //   const totalPrice = this.product.promotion
+    //     ? this.calculateDiscountedTotal()
+    //     : this.calculateOriginalTotal();
 
-      console.log(
-        `Added ${this.quantity} of ${
-          this.product.name
-        } to cart. Total: ${this.formatPrice(totalPrice)}`
-      );
+    //   console.log(
+    //     `Added ${this.quantity} of ${
+    //       this.product.name
+    //     } to cart. Total: ${this.formatPrice(totalPrice)}`
+    //   );
+    // 
+    async addToCart() {
+      if (!this.product.inStock) return;
+      console.log("product",this.product);
+      try {
+        const cartData = {
+          // retailer reference to be changed
+          retailer_id: this.product.company_id,
+          supplier_id: this.product.company_id,
+          warehouse_inventory_id: this.product.inventory_id,
+          quantity: 1,
+          unit_price: Number(this.product.selling_price),
+          min_order: Number(this.product.min_order),
+          max_order: Number(this.product.max_order),
+          created_by: this.currentUser.id,
+        };
+
+        console.log("cart",cartData);
+
+        const response = await axios.post("/retailers/cart/add", cartData);
+
+        if (response.status === 201) {
+          // this.$notify({
+          //   type: "success",
+          //   message: `Added ${this.quantity} of ${this.product.name} to cart`,
+          // });
+
+          // Emit event to update cart count
+          this.$emit("cart-updated");
+        }
+      } catch (error) {
+        // this.$notify({
+        //   type: "error",
+        //   message: error.response?.data?.message || "Error adding item to cart",
+        // });
+      }
     },
     formatDate(date) {
       const options = { year: "numeric", month: "short", day: "numeric" };

@@ -22,17 +22,17 @@
             <div v-else class="product-grid">
                 <!-- Row 1 -->
                 <div class="product-column" v-for="(product, index) in filteredProductsRow1" :key="'row1-' + index">
-                    <ProductCard :product="product" />
+                    <ProductCard :product="product" :currentUser="currentUser" />
                 </div>
 
                 <!-- Row 2 -->
                 <div class="product-column" v-for="(product, index) in filteredProductsRow2" :key="'row2-' + index">
-                    <ProductCard :product="product" />
+                    <ProductCard :product="product" :currentUser="currentUser" />
                 </div>
 
                 <!-- Row 3 -->
                 <div class="product-column" v-for="(product, index) in filteredProductsRow3" :key="'row3-' + index">
-                    <ProductCard :product="product" />
+                    <ProductCard :product="product" :currentUser="currentUser"/>
                 </div>
             </div>
         </div>
@@ -44,6 +44,9 @@ import ProductCard from "./Components/ProductCard.vue";
 import ProductSearchBar from "./Components/ProductSearchBar.vue";
 import RetailerNavbar from "./Components/RetailerNavbar.vue";
 import axios from "axios";
+
+// since this page ins't authenticated current user should be the retailer
+const currentUser = {id: 2, name: "John Doe", email: "oti1retailer@example.com", name: "John Doe", email: "EMAIL", role: "retailer"}
 
 export default {
     name: "ProductListingPage",
@@ -64,6 +67,7 @@ export default {
             isLoading: false,
             hasMoreProducts: true,
             retailerCountry: "Kenya",
+            currentUser
         };
     },
     computed: {
