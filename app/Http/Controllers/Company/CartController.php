@@ -65,7 +65,7 @@ class CartController extends Controller
     public function getCartItems(Request $request)
     {
         $cartItems = CartItem::where('retailer_id', $request->retailer_id)
-            ->with(['inventory.product'])
+            ->with(['inventory.product', 'supplier:id,company_name'])
             ->get();
 
         return response()->json($cartItems);
