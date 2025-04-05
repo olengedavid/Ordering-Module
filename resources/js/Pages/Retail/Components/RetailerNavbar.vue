@@ -106,7 +106,7 @@
     },
     data() {
       return {
-        cartCount: 3,
+        cartCount: 0,
         isMobileMenuOpen: false
       }
     },
@@ -125,8 +125,11 @@
         // Close mobile menu when a link is clicked
         this.isMobileMenuOpen = false;
         document.body.style.overflow = '';
-      }
-    }
+      },
+      updateCartCount(count) {
+        this.cartCount = count;
+      },
+    },
   }
   </script>
   

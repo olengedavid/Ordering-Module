@@ -37,4 +37,5 @@ Route::post('retailers/cart/add', [CartController::class, 'addToCart'])->name('r
 Route::delete('retailers/cart/remove/{uuid}', [CartController::class, 'removeFromCart'])->name('retailer.cart.remove');
 Route::get('retailers/cart/items', [CartController::class, 'getCartItems'])->name('retailer.cart.items');
 Route::delete('retailers/cart/clear', [CartController::class, 'clearCart'])->name('retailer.cart.clear');
+Route::get('retailers/cart/count', [CartController::class, 'getCartCount'])->name('retailer.cart.count');
  

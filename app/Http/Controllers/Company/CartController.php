@@ -85,4 +85,13 @@ class CartController extends Controller
             'message' => 'Cart items cleared successfully'
         ]);
     }
+
+    public function getCartCount(Request $request)
+    {
+        $count = CartItem::where('retailer_id', $request->retailer_id)->count();
+        
+        return response()->json([
+            'count' => $count
+        ]);
+    }
 }

@@ -9,6 +9,7 @@ const deliveryAddress = ref("");
 const paymentMethod = ref("");
 const deliveryFee = ref(0);
 const creditBalance = ref(55000);
+const navbarRef = ref(null);
 const cartItems = ref([
   {
     name: "All Purpose Fertilizer 14 Kgs",
@@ -91,7 +92,8 @@ const increaseQuantity = (index) => {
   ) {
     cartItems.value[index].quantity++;
     // Update the total price
-    cartItems.value[index].price = cartItems.value[index].quantity * cartItems.value[index].unit_price;
+    cartItems.value[index].price =
+      cartItems.value[index].quantity * cartItems.value[index].unit_price;
   }
 };
 
@@ -99,24 +101,29 @@ const decreaseQuantity = (index) => {
   if (cartItems.value[index].quantity > cartItems.value[index].min_order) {
     cartItems.value[index].quantity--;
     // Update the total price
-    cartItems.value[index].price = cartItems.value[index].quantity * cartItems.value[index].unit_price;
+    cartItems.value[index].price =
+      cartItems.value[index].quantity * cartItems.value[index].unit_price;
   }
 };
 
 const removeItem = async (index) => {
   try {
     const itemToRemove = cartItems.value[index];
-    const response = await axios.delete(`/retailers/cart/remove/${itemToRemove.uuid}`);
-    
+    const response = await axios.delete(
+      `/retailers/cart/remove/${itemToRemove.uuid}`
+    );
+
     if (response.status === 200) {
       cartItems.value.splice(index, 1);
+      fetchCartItemsCount();
       successMessage.value = "Item removed from cart successfully";
       setTimeout(() => {
         successMessage.value = "";
       }, 3000);
     }
   } catch (error) {
-    errorMessage.value = error.response?.data?.message || 'Failed to remove item from cart';
+    errorMessage.value =
+      error.response?.data?.message || "Failed to remove item from cart";
     setTimeout(() => {
       errorMessage.value = "";
     }, 3000);
@@ -194,14 +201,14 @@ const placeOrder = async () => {
         acc[item.supplier_id] = {
           retailer_id: item.retailer_id,
           supplier_id: item.supplier_id,
-          status: 'REQUESTED',
-          payment_terms: 'PAID_ON_DELIVERY',
+          status: "REQUESTED",
+          payment_terms: "PAID_ON_DELIVERY",
           delivery_address: deliveryAddress.value,
-          region: 'default', // You might want to get this from user selection
+          region: "default", // You might want to get this from user selection
           expected_delivery_date: null, // You might want to add a date picker
           created_by: item.created_by,
           products: [],
-          total_price: 0 
+          total_price: 0,
         };
       }
 
@@ -210,27 +217,30 @@ const placeOrder = async () => {
         warehouse_inventory_id: item.warehouse_inventory_id,
         quantity: item.quantity,
         unit_price: item.unit_price,
-        total_price: itemTotal
+        total_price: itemTotal,
       });
 
       acc[item.supplier_id].total_price += itemTotal;
-      
+
       return acc;
     }, {});
 
     // Create orders for each supplier
     for (const supplierOrder of Object.values(ordersBySupplier)) {
       console.log("Creating order for supplier:", supplierOrder);
-      const response = await axios.post('/retailers/create-order', supplierOrder);
-      
+      const response = await axios.post(
+        "/retailers/create-order",
+        supplierOrder
+      );
+
       if (response.status === 201) {
         // Clear cart items for this supplier
         // This should be done on the server side as wel
-        await axios.delete('/retailers/cart/clear', {
+        await axios.delete("/retailers/cart/clear", {
           params: {
             retailer_id: supplierOrder.retailer_id,
-            supplier_id: supplierOrder.supplier_id
-          }
+            supplier_id: supplierOrder.supplier_id,
+          },
         });
       }
     }
@@ -238,23 +248,44 @@ const placeOrder = async () => {
     // Refresh cart items
     await fetchCartItems();
 
-    toast.success('Orders placed successfully!');
+    toast.success("Orders placed successfully!");
   } catch (error) {
-    toast.error(error.response?.data?.message || 'Failed to place orders');
+    toast.error(error.response?.data?.message || "Failed to place orders");
+  }
+};
+
+const fetchCartItemsCount = async () => {
+  try {
+    const response = await axios.get(route("retailer.cart.count"), {
+      params: {
+        retailer_id: 1,
+      },
+    });
+    navbarRef.value?.updateCartCount(response.data.count);
+  } catch (error) {
+    console.error("Error fetching cart count:", error);
   }
 };
 
 onMounted(() => {
   fetchCartItems();
+  fetchCartItemsCount();
 });
 </script>
 
 <template>
-  <RetailerNavbar />
+  <RetailerNavbar ref="navbarRef" />
   <!-- Message container -->
   <div class="message-container">
-    <SuccessMessage v-if="successMessage" @close="successMessage = ''" v-slot="{}">{{ successMessage }}</SuccessMessage>
-    <ErrorMessage v-if="errorMessage" @close="errorMessage = ''" v-slot="{}">{{ errorMessage }}</ErrorMessage>
+    <SuccessMessage
+      v-if="successMessage"
+      @close="successMessage = ''"
+      v-slot="{}"
+      >{{ successMessage }}</SuccessMessage
+    >
+    <ErrorMessage v-if="errorMessage" @close="errorMessage = ''" v-slot="{}">{{
+      errorMessage
+    }}</ErrorMessage>
   </div>
   <div class="page-container">
     <div class="content-container">
@@ -282,7 +313,10 @@ onMounted(() => {
 
             <div class="cart-item-details">
               <h3 class="item-name">{{ item.name }}</h3>
-              <p class="item-weight"> {{ item?.inventory?.quantity_per_unit }} {{ item?.inventory?.product?.unit_of_measure }}</p>
+              <p class="item-weight">
+                {{ item?.inventory?.quantity_per_unit }}
+                {{ item?.inventory?.product?.unit_of_measure }}
+              </p>
 
               <div class="item-tag-container">
                 <span class="item-tag">{{ item.category }}</span>

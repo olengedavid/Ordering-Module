@@ -106,6 +106,7 @@ export default {
     SuccessMessage,
     ErrorMessage
   },
+  emits: ['cart-updated', 'cart-count-updated'],
   props: {
     product: {
       type: Object,
@@ -137,7 +138,6 @@ export default {
     },
     async addToCart() {
       if (!this.product.inStock) return;
-      console.log("product",this.product);
       try {
         const cartData = {
           retailer_id: this.product.company_id,
@@ -150,13 +150,12 @@ export default {
           created_by: this.currentUser.id,
         };
 
-        console.log("cart",cartData);
-
         const response = await axios.post("/retailers/cart/add", cartData);
 
         if (response.status === 201) {
           this.isInCart = true;
           this.$emit("cart-updated");
+          await this.fetchCartItemsCount();
           this.successMessage = "Product added to cart successfully";
           setTimeout(() => {
             this.successMessage = "";
@@ -183,6 +182,7 @@ export default {
           this.isInCart = false;
           this.cartItemUuid = null;
           this.$emit("cart-updated");
+          await this.fetchCartItemsCount();
           this.successMessage = "Item removed from cart successfully";
           setTimeout(() => {
             this.successMessage = "";
@@ -193,6 +193,19 @@ export default {
         setTimeout(() => {
           this.errorMessage = "";
         }, 3000);
+      }
+    },
+    async fetchCartItemsCount() {
+      try {
+        const response = await axios.get(route('retailer.cart.count'), {
+          params: {
+            retailer_id: this.product.company_id
+          }
+        });
+        
+        this.$emit('cart-count-updated', response.data.count);
+      } catch (error) {
+        console.error('Error fetching cart count:', error);
       }
     },
     formatDate(date) {
