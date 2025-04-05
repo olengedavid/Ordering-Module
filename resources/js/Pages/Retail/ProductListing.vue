@@ -113,17 +113,20 @@ export default {
         this.productsRow3.length > 0
       );
     },
-    allProducts() {
-      return [...this.productsRow1, ...this.productsRow2, ...this.productsRow3];
-    },
+    // allProducts() {
+    //   return [...this.productsRow1, ...this.productsRow2, ...this.productsRow3];
+    // },
     filteredProductsRow1() {
-      return this.filterProducts(this.productsRow1);
+        return this.productsRow1;
+    //   return this.filterProducts(this.productsRow1);
     },
     filteredProductsRow2() {
-      return this.filterProducts(this.productsRow2);
+        return this.productsRow2;
+    //   return this.filterProducts(this.productsRow2);
     },
     filteredProductsRow3() {
-      return this.filterProducts(this.productsRow3);
+        return this.productsRow3;
+    //   return this.filterProducts(this.productsRow3);
     },
   },
   methods: {
@@ -143,7 +146,8 @@ export default {
       this.searchQuery = filters.query;
       this.currentRegion = filters.region;
       this.filterType = filters.filter;
-      console.log("Applied all filters:", filters);
+      this.hasMoreProducts = true;
+      this.fetchProducts();
     },
     updateCartCount(count) {
       // If you have a navbar component that needs to be updated
@@ -161,65 +165,65 @@ export default {
         console.error("Error fetching cart count:", error);
       }
     },
-    filterProducts(products) {
-      // First filter by search query if exists
-      let filtered = [...products];
+    // filterProducts(products) {
+    //   // First filter by search query if exists
+    //   let filtered = [...products];
 
-      if (this.searchQuery && this.searchQuery.trim() !== "") {
-        const query = this.searchQuery.toLowerCase();
-        filtered = filtered.filter(
-          (product) =>
-            product.name.toLowerCase().includes(query) ||
-            product.description.toLowerCase().includes(query) ||
-            product.type.toLowerCase().includes(query)
-        );
-      }
+    //   if (this.searchQuery && this.searchQuery.trim() !== "") {
+    //     const query = this.searchQuery.toLowerCase();
+    //     filtered = filtered.filter(
+    //       (product) =>
+    //         product.name.toLowerCase().includes(query) ||
+    //         product.description.toLowerCase().includes(query) ||
+    //         product.type.toLowerCase().includes(query)
+    //     );
+    //   }
 
-      // Then apply any sorting based on filter type
-      switch (this.filterType) {
-        case "price_asc":
-          filtered.sort((a, b) => a.basePrice - b.basePrice);
-          break;
+    //   // Then apply any sorting based on filter type
+    //   switch (this.filterType) {
+    //     case "price_asc":
+    //       filtered.sort((a, b) => a.basePrice - b.basePrice);
+    //       break;
 
-        case "price_desc":
-          filtered.sort((a, b) => b.basePrice - a.basePrice);
-          break;
+    //     case "price_desc":
+    //       filtered.sort((a, b) => b.basePrice - a.basePrice);
+    //       break;
 
-        case "discount":
-          // Put products with promotions first
-          filtered.sort((a, b) => {
-            if (a.promotion && !b.promotion) return -1;
-            if (!a.promotion && b.promotion) return 1;
+    //     case "discount":
+    //       // Put products with promotions first
+    //       filtered.sort((a, b) => {
+    //         if (a.promotion && !b.promotion) return -1;
+    //         if (!a.promotion && b.promotion) return 1;
 
-            // If both have promotions, sort by discount percentage
-            if (a.promotion && b.promotion) {
-              const discountA = parseInt(a.promotion.discount);
-              const discountB = parseInt(b.promotion.discount);
-              return discountB - discountA;
-            }
+    //         // If both have promotions, sort by discount percentage
+    //         if (a.promotion && b.promotion) {
+    //           const discountA = parseInt(a.promotion.discount);
+    //           const discountB = parseInt(b.promotion.discount);
+    //           return discountB - discountA;
+    //         }
 
-            return 0;
-          });
-          break;
+    //         return 0;
+    //       });
+    //       break;
 
-        case "new":
-          // For demo purposes, we'll just randomize to simulate "newest"
-          filtered.sort(() => Math.random() - 0.5);
-          break;
-      }
+    //     case "new":
+    //       // For demo purposes, we'll just randomize to simulate "newest"
+    //       filtered.sort(() => Math.random() - 0.5);
+    //       break;
+    //   }
 
-      return filtered;
-    },
+    //   return filtered;
+    // },
     async fetchProducts(loadMore = false) {
       if (this.isLoading || (!loadMore && !this.hasMoreProducts)) return;
 
       try {
         this.isLoading = true;
         const params = new URLSearchParams({
-          // search: this.searchQuery || "",
+          search: this.searchQuery || "",
           // region: this.currentRegion || "",
           // category: this.filterType || "",
-          search: "",
+        //   search: "",
           region: "",
           category: "",
           manufacturer: "",

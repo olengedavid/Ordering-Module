@@ -32,7 +32,7 @@
         class="search-input"
         placeholder="Search for a product"
         v-model="searchQuery"
-        @keyup.enter="handleSearch"
+        @input="handleSearch"
       />
     </div>
 
@@ -367,7 +367,7 @@ export default {
       this.selectedManufacturers = [];
     },
     handleSearch() {
-      this.$emit("search", this.searchQuery);
+      // this.$emit("search", this.searchQuery);
     },
     clearFilters() {
       this.selectedCategories = [];
