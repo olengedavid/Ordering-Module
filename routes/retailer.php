@@ -16,6 +16,9 @@ Route::get('retailer/regions/search', [RegionController::class, 'searchRegions']
 Route::post('retailers/create-order', [OrderController::class, 'store'])->name('retailer.orders.create');     
 Route::put('retailers/update-order/{uuid}', [OrderController::class, 'update'])->name('retailer.orders.update');
 Route::get('retailers/orders/search', [OrderController::class, 'search'])->name('retailer.orders.search');
+Route::get('retailers/orders/counts', [OrderController::class, 'getOrderCounts'])->name('retailer.orders.counts');
+
+
 
 // Cart and Order Routes
 Route::get('/retailers/cart', function () {

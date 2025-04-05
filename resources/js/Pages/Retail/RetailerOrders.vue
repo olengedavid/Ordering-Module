@@ -3,32 +3,58 @@
   <div class="page-container">
     <div class="content-container">
       <h1 class="page-title">Orders</h1>
-      
+
       <!-- Tabs -->
       <div class="tabs-container">
         <ul class="tabs">
-          <li v-for="tab in tabs" :key="tab.id" 
-              :class="['tab', { active: activeTab === tab.id }]"
-              @click="setActiveTab(tab.id)">
+          <li
+            v-for="tab in tabs"
+            :key="tab.id"
+            :class="['tab', { active: activeTab === tab.id }]"
+            @click="setActiveTab(tab.id)"
+          >
             {{ tab.name }}
-            <span class="tab-count" v-if="tab.count">{{ tab.count }}</span>
+            <span class="tab-count" >{{ tab.count }}</span>
           </li>
         </ul>
       </div>
-      
+
       <!-- Table Controls - Search only -->
       <div class="table-controls">
         <div class="search-container">
           <div class="search-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" color="#000000" fill="none">
-              <path opacity="0.4" fill-rule="evenodd" clip-rule="evenodd" d="M16.7929 16.7929C17.1834 16.4024 17.8166 16.4024 18.2071 16.7929L22.7071 21.2929C23.0976 21.6834 23.0976 22.3166 22.7071 22.7071C22.3166 23.0976 21.6834 23.0976 21.2929 22.7071L16.7929 18.2071C16.4024 17.8166 16.4024 17.1834 16.7929 16.7929Z" fill="currentColor" />
-              <path fill-rule="evenodd" clip-rule="evenodd" d="M1 11C1 5.47715 5.47715 1 11 1C16.5228 1 21 5.47715 21 11C21 16.5228 16.5228 21 11 21C5.47715 21 1 16.5228 1 11ZM11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3Z" fill="currentColor" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              width="20"
+              height="20"
+              color="#000000"
+              fill="none"
+            >
+              <path
+                opacity="0.4"
+                fill-rule="evenodd"
+                clip-rule="evenodd"
+                d="M16.7929 16.7929C17.1834 16.4024 17.8166 16.4024 18.2071 16.7929L22.7071 21.2929C23.0976 21.6834 23.0976 22.3166 22.7071 22.7071C22.3166 23.0976 21.6834 23.0976 21.2929 22.7071L16.7929 18.2071C16.4024 17.8166 16.4024 17.1834 16.7929 16.7929Z"
+                fill="currentColor"
+              />
+              <path
+                fill-rule="evenodd"
+                clip-rule="evenodd"
+                d="M1 11C1 5.47715 5.47715 1 11 1C16.5228 1 21 5.47715 21 11C21 16.5228 16.5228 21 11 21C5.47715 21 1 16.5228 1 11ZM11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3Z"
+                fill="currentColor"
+              />
             </svg>
           </div>
-          <input type="text" class="search-input" placeholder="Search..." v-model="searchQuery">
+          <input
+            type="text"
+            class="search-input"
+            placeholder="Search..."
+            v-model="searchQuery"
+          />
         </div>
       </div>
-      
+
       <!-- Orders Table -->
       <div class="table-wrapper">
         <table class="orders-table">
@@ -40,46 +66,84 @@
               <th @click="sortBy('date')" class="sortable">
                 Order Date <i :class="getSortIcon('date')"></i>
               </th>
-              <th v-if="activeTab === 'confirmed'" @click="sortBy('expectedDeliveryDate')" class="sortable">
-                Expected Delivery Date <i :class="getSortIcon('expectedDeliveryDate')"></i>
+              <th
+                v-if="activeTab === 'confirmed'"
+                @click="sortBy('expectedDeliveryDate')"
+                class="sortable"
+              >
+                Expected Delivery Date
+                <i :class="getSortIcon('expectedDeliveryDate')"></i>
               </th>
-              <th v-if="activeTab === 'delivered'" @click="sortBy('expectedDeliveryDate')" class="sortable">
-                Expected Delivery Date <i :class="getSortIcon('expectedDeliveryDate')"></i>
+              <th
+                v-if="activeTab === 'delivered'"
+                @click="sortBy('expectedDeliveryDate')"
+                class="sortable"
+              >
+                Expected Delivery Date
+                <i :class="getSortIcon('expectedDeliveryDate')"></i>
               </th>
-              <th v-if="activeTab === 'confirmed'" @click="sortBy('expectedDeliveryDate')" class="sortable">
-                Delivery Timeframe <i :class="getSortIcon('expectedDeliveryDate')"></i>
+              <th
+                v-if="activeTab === 'confirmed'"
+                @click="sortBy('expectedDeliveryDate')"
+                class="sortable"
+              >
+                Delivery Timeframe
+                <i :class="getSortIcon('expectedDeliveryDate')"></i>
               </th>
-              <th v-if="activeTab === 'delivered'" @click="sortBy('deliveryDate')" class="sortable">
+              <th
+                v-if="activeTab === 'delivered'"
+                @click="sortBy('deliveryDate')"
+                class="sortable"
+              >
                 Delivered Date <i :class="getSortIcon('deliveryDate')"></i>
               </th>
               <th @click="sortBy('supplier')" class="sortable">
                 Supplier <i :class="getSortIcon('supplier')"></i>
               </th>
-              <th v-if="activeTab === 'requests' || activeTab === 'cancelled'" @click="sortBy('paymentMode')" class="sortable">
+              <th
+                v-if="activeTab === 'requests' || activeTab === 'cancelled'"
+                @click="sortBy('paymentMode')"
+                class="sortable"
+              >
                 Payment Mode <i :class="getSortIcon('paymentMode')"></i>
               </th>
-              <th v-if="activeTab === 'confirmed' || activeTab === 'delivered'" @click="sortBy('payStatus')" class="sortable">
+              <th
+                v-if="activeTab === 'confirmed' || activeTab === 'delivered'"
+                @click="sortBy('payStatus')"
+                class="sortable"
+              >
                 Pay Status <i :class="getSortIcon('payStatus')"></i>
               </th>
               <th @click="sortBy('amount')" class="sortable">
                 Amount <i :class="getSortIcon('amount')"></i>
               </th>
-              <th v-if="activeTab === 'requests'" @click="sortBy('orderedBy')" class="sortable">
+              <th
+                v-if="activeTab === 'requests'"
+                @click="sortBy('orderedBy')"
+                class="sortable"
+              >
                 Requested By <i :class="getSortIcon('orderedBy')"></i>
               </th>
-              <th v-if="activeTab !== 'requests'" @click="sortBy('orderedBy')" class="sortable">
+              <th
+                v-if="activeTab !== 'requests'"
+                @click="sortBy('orderedBy')"
+                class="sortable"
+              >
                 Ordered By <i :class="getSortIcon('orderedBy')"></i>
               </th>
             </tr>
           </thead>
           <tbody>
             <tr v-if="orders.length === 0">
-              <td colspan="11" class="empty-state">
-                No orders available
-              </td>
+              <td colspan="11" class="empty-state">No orders available</td>
             </tr>
-            <tr v-for="order in orders" :key="order.id" @click="viewOrderDetails(order)" class="order-row">
-              <td>{{order?.order_ref}}</td>
+            <tr
+              v-for="order in orders"
+              :key="order.id"
+              @click="viewOrderDetails(order)"
+              class="order-row"
+            >
+              <td>{{ order?.order_ref }}</td>
               <td>{{ formatDateOnly(order?.created_at) }}</td>
               <!-- <td v-if="activeTab === 'confirmed'">{{ order.expectedDeliveryDate }}</td>
               <td v-if="activeTab === 'delivered'">{{ order.expectedDeliveryDate }}</td>
@@ -90,7 +154,15 @@
               </td> -->
               <!-- <td v-if="activeTab === 'delivered'">{{ order.deliveryDate }}</td> -->
               <td>{{ order?.supplier?.company_name }}</td>
-              <td v-if="activeTab === 'all' || activeTab === 'requests' || activeTab === 'cancelled'">{{ order?.payment_terms }}</td>
+              <td
+                v-if="
+                  activeTab === 'all' ||
+                  activeTab === 'requests' ||
+                  activeTab === 'cancelled'
+                "
+              >
+                {{ order?.payment_terms }}
+              </td>
               <!-- <td v-if="activeTab === 'confirmed' || activeTab === 'delivered'">
                 <span :class="getPayStatusClass(order)">
                   {{ order.payStatus }}
@@ -102,30 +174,49 @@
           </tbody>
         </table>
       </div>
-      
+
       <!-- Pagination -->
       <div class="pagination-controls">
         <div class="per-page">
           <span>Show</span>
-          <select v-model="perPage" @change="resetPagination" class="per-page-select">
-            <option v-for="option in perPageOptions" :key="option" :value="option">
+          <select
+            v-model="perPage"
+            @change="resetPagination"
+            class="per-page-select"
+          >
+            <option
+              v-for="option in perPageOptions"
+              :key="option"
+              :value="option"
+            >
               {{ option }}
             </option>
           </select>
           <span>per page</span>
         </div>
         <div class="pagination-buttons">
-          <button class="pagination-btn" :disabled="currentPage === 1" @click="prevPage">
+          <button
+            class="pagination-btn"
+            :disabled="currentPage === 1"
+            @click="prevPage"
+          >
             Previous
           </button>
           <div class="page-numbers">
-            <span v-for="page in totalPages" :key="page"
-                 :class="['page-number', { active: currentPage === page }]"
-                 @click="goToPage(page)">
+            <span
+              v-for="page in totalPages"
+              :key="page"
+              :class="['page-number', { active: currentPage === page }]"
+              @click="goToPage(page)"
+            >
               {{ page }}
             </span>
           </div>
-          <button class="pagination-btn" :disabled="currentPage === totalPages" @click="nextPage">
+          <button
+            class="pagination-btn"
+            :disabled="currentPage === totalPages"
+            @click="nextPage"
+          >
             Next
           </button>
         </div>
@@ -139,100 +230,104 @@ import RetailerNavbar from "./Components/RetailerNavbar.vue";
 import { formatNumber, formatDateOnly } from "@/utils/formatters";
 
 export default {
-  name: 'RetailerOrdersPage',
+  name: "RetailerOrdersPage",
   components: {
-    RetailerNavbar
+    RetailerNavbar,
   },
   data() {
     return {
-      activeTab: 'REQUESTED',
+      activeTab: "REQUESTED",
       orders: [],
       tabs: [
-        { id: 'REQUESTED', name: 'Requests', count: 2 },
-        { id: 'confirmed', name: 'Confirmed', count: 10 },
-        { id: 'delivered', name: 'Delivered', count: 32 },
-        { id: 'cancelled', name: 'Cancelled', count: 4 },
+        { id: "REQUESTED", name: "Requests", count: 2 },
+        { id: "confirmed", name: "Confirmed", count: 10 },
+        { id: "delivered", name: "Delivered", count: 32 },
+        { id: "cancelled", name: "Cancelled", count: 4 },
       ],
-      searchQuery: '',
-      sortKey: 'orderId',
-      sortDir: 'asc',
+      searchQuery: "",
+      sortKey: "orderId",
+      sortDir: "asc",
       currentPage: 1,
       totalPages: 0,
       perPage: 10,
       perPageOptions: [10, 20, 50, 100],
       formatNumber,
-      formatDateOnly
+      formatDateOnly,
     };
   },
   computed: {
     filteredOrders() {
       let filtered = [];
-      
+
       // Select the appropriate orders array based on the active tab
-      switch(this.activeTab) {
-        case 'requests':
+      switch (this.activeTab) {
+        case "requests":
           filtered = [...this.requestsOrders];
           break;
-        case 'confirmed':
+        case "confirmed":
           filtered = [...this.confirmedOrders];
           break;
-        case 'delivered':
+        case "delivered":
           filtered = [...this.deliveredOrders];
           break;
-        case 'cancelled':
+        case "cancelled":
           filtered = [...this.cancelledOrders];
           break;
       }
-      
+
       // Filter by search query
-      if (this.searchQuery.trim() !== '') {
+      if (this.searchQuery.trim() !== "") {
         const query = this.searchQuery.toLowerCase();
-        filtered = filtered.filter(order => {
+        filtered = filtered.filter((order) => {
           // Search through all properties of the order
-          return Object.values(order).some(value => {
+          return Object.values(order).some((value) => {
             // Convert value to string and check if it includes the query
             if (value === null || value === undefined) return false;
             return value.toString().toLowerCase().includes(query);
           });
         });
       }
-      
+
       // Sort "Not Paid" orders to the top for confirmed and delivered tabs
-      if (this.activeTab === 'confirmed' || this.activeTab === 'delivered') {
+      if (this.activeTab === "confirmed" || this.activeTab === "delivered") {
         filtered.sort((a, b) => {
           // First sort by payment status (Not Paid comes first)
-          if (a.payStatus === 'Not Paid' && b.payStatus !== 'Not Paid') {
+          if (a.payStatus === "Not Paid" && b.payStatus !== "Not Paid") {
             return -1;
-          } else if (a.payStatus !== 'Not Paid' && b.payStatus === 'Not Paid') {
+          } else if (a.payStatus !== "Not Paid" && b.payStatus === "Not Paid") {
             return 1;
           }
-          
+
           // If payment status is the same, then sort by the current sort key
-          let modifier = this.sortDir === 'asc' ? 1 : -1;
+          let modifier = this.sortDir === "asc" ? 1 : -1;
           let aValue = a[this.sortKey];
           let bValue = b[this.sortKey];
-          
-          if (typeof aValue === 'number' && typeof bValue === 'number') {
+
+          if (typeof aValue === "number" && typeof bValue === "number") {
             return aValue < bValue ? -1 * modifier : 1 * modifier;
           } else {
-            return aValue.toString().localeCompare(bValue.toString()) * modifier;
+            return (
+              aValue.toString().localeCompare(bValue.toString()) * modifier
+            );
           }
         });
       } else {
         // Default sorting for other tabs
         filtered.sort((a, b) => {
-          let modifier = this.sortDir === 'asc' ? 1 : -1;
+          let modifier = this.sortDir === "asc" ? 1 : -1;
           let aValue = a[this.sortKey];
           let bValue = b[this.sortKey];
-          
-          if (typeof aValue === 'number' && typeof bValue === 'number') {
+
+          if (typeof aValue === "number" && typeof bValue === "number") {
             return aValue < bValue ? -1 * modifier : 1 * modifier;
           } else {
-            return aValue.toString().localeCompare(bValue.toString()) * modifier;
+            return (
+              aValue.toString().localeCompare(bValue.toString()) * modifier
+            );
           }
         });
       }
-      
+
       return filtered;
     },
     paginatedOrders() {
@@ -246,7 +341,10 @@ export default {
   },
   methods: {
     formatNumber(value) {
-      return value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      return value.toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
     },
     setActiveTab(tabId) {
       this.activeTab = tabId;
@@ -254,15 +352,17 @@ export default {
     },
     sortBy(key) {
       if (this.sortKey === key) {
-        this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
+        this.sortDir = this.sortDir === "asc" ? "desc" : "asc";
       } else {
         this.sortKey = key;
-        this.sortDir = 'asc';
+        this.sortDir = "asc";
       }
     },
     getSortIcon(key) {
-      if (this.sortKey !== key) return 'sort-icon sort-none';
-      return this.sortDir === 'asc' ? 'sort-icon sort-asc' : 'sort-icon sort-desc';
+      if (this.sortKey !== key) return "sort-icon sort-none";
+      return this.sortDir === "asc"
+        ? "sort-icon sort-asc"
+        : "sort-icon sort-desc";
     },
     goToPage(page) {
       this.currentPage = page;
@@ -282,93 +382,139 @@ export default {
     },
     viewOrderDetails(order) {
       // Navigate to order details page with order ID and data
-      this.$router.push({ 
-        name: 'order-view',
-        params: { 
-          id: order.orderId
+      this.$router.push({
+        name: "order-view",
+        params: {
+          id: order.orderId,
         },
         // Use query parameter to pass the complete order object
         query: {
-          orderData: JSON.stringify(order)
-        }
+          orderData: JSON.stringify(order),
+        },
       });
     },
     getDeliveryTimeframe(order) {
-      const days = this.calculateDaysBetween(order.date, order.expectedDeliveryDate);
-      return `${days} ${days === 1 ? 'Day' : 'Days'}`;
+      const days = this.calculateDaysBetween(
+        order.date,
+        order.expectedDeliveryDate
+      );
+      return `${days} ${days === 1 ? "Day" : "Days"}`;
     },
     getDeliveryTimeframeClass(order) {
-      const days = this.calculateDaysBetween(order.date, order.expectedDeliveryDate);
+      const days = this.calculateDaysBetween(
+        order.date,
+        order.expectedDeliveryDate
+      );
       return {
-        'delivery-timeframe-badge': true,
-        'delivery-timeframe-danger': days <= 0,
-        'delivery-timeframe-warning': days > 0 && days <= 2,
-        'delivery-timeframe-success': days > 2 && days <= 5,
-        'delivery-timeframe-info': days > 5
+        "delivery-timeframe-badge": true,
+        "delivery-timeframe-danger": days <= 0,
+        "delivery-timeframe-warning": days > 0 && days <= 2,
+        "delivery-timeframe-success": days > 2 && days <= 5,
+        "delivery-timeframe-info": days > 5,
       };
     },
     getPayStatusClass(order) {
       return {
-        'pay-status-badge': true,
-        'pay-status-paid': order.payStatus === 'Paid',
-        'pay-status-not-paid': order.payStatus === 'Not Paid'
+        "pay-status-badge": true,
+        "pay-status-paid": order.payStatus === "Paid",
+        "pay-status-not-paid": order.payStatus === "Not Paid",
       };
     },
     calculateDaysBetween(startDateStr, endDateStr) {
       // Parse date strings (assuming format like "Feb 26, 2025")
       const parseDate = (dateStr) => {
-        const [month, day, year] = dateStr.split(' ');
+        const [month, day, year] = dateStr.split(" ");
         const monthMap = {
-          'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
-          'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
+          Jan: 0,
+          Feb: 1,
+          Mar: 2,
+          Apr: 3,
+          May: 4,
+          Jun: 5,
+          Jul: 6,
+          Aug: 7,
+          Sep: 8,
+          Oct: 9,
+          Nov: 10,
+          Dec: 11,
         };
-        
+
         // Remove comma from day
-        const cleanDay = day.replace(',', '');
-        
+        const cleanDay = day.replace(",", "");
+
         return new Date(year, monthMap[month], parseInt(cleanDay));
       };
-      
+
       const startDate = parseDate(startDateStr);
       const endDate = parseDate(endDateStr);
-      
+
       // Calculate difference in days
       const diffTime = endDate - startDate;
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      
+
       return diffDays;
     },
     async fetchOrders() {
       this.loading = true;
       try {
-        const response = await axios.get(route('retailer.orders.search'), {
+        const response = await axios.get(route("retailer.orders.search"), {
           params: {
             status: this.activeTab.toUpperCase(),
             search: this.searchQuery,
             page: this.currentPage,
             per_page: this.perPage,
             sort_key: this.sortKey,
-            sort_dir: this.sortDir
-          }
+            sort_dir: this.sortDir,
+          },
         });
-       const {data} = response;
+        const { data } = response;
         this.orders = data.data;
         this.totalPages = data.last_page;
         this.currentPage = data.current_page;
         this.perPage = data.per_page;
         this.totalOrders = data.total;
-
       } catch (error) {
-        console.error('Error fetching orders:', error);
+        console.error("Error fetching orders:", error);
       } finally {
         this.loading = false;
+      }
+    },
+    async fetchOrderCounts() {
+      try {
+        const response = await axios.get(route("retailer.orders.counts"), {
+          params: {
+            retailer_id: 1,
+          },
+        });
+
+        // Update the tab counts with the response data
+        this.tabs = [
+          { id: "REQUESTED", name: "Requests", count: response.data.requested },
+          {
+            id: "CONFIRMED",
+            name: "Confirmed",
+            count: response.data.confirmed,
+          },
+          {
+            id: "DELIVERED",
+            name: "Delivered",
+            count: response.data.delivered,
+          },
+          {
+            id: "CANCELLED",
+            name: "Cancelled",
+            count: response.data.cancelled,
+          },
+        ];
+      } catch (error) {
+        console.error("Error fetching order counts:", error);
       }
     },
   },
   mounted() {
     this.fetchOrders();
-  }
-  
+    this.fetchOrderCounts();
+  },
 };
 </script>
 
@@ -379,7 +525,7 @@ export default {
   background-color: #f5f7fa;
   min-height: 100vh;
   padding: 40px 20px;
-  font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
+  font-family: "Inter", "Segoe UI", Roboto, sans-serif;
 }
 
 .content-container {
@@ -427,7 +573,7 @@ export default {
 }
 
 .tab.active::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: -1px;
   left: 0;
@@ -549,19 +695,19 @@ export default {
 }
 
 .sort-none::after {
-  content: '⇵';
+  content: "⇵";
   opacity: 0.3;
   font-size: 12px;
 }
 
 .sort-asc::after {
-  content: '↑';
+  content: "↑";
   color: #2563eb;
   font-size: 12px;
 }
 
 .sort-desc::after {
-  content: '↓';
+  content: "↓";
   color: #2563eb;
   font-size: 12px;
 }
@@ -697,23 +843,23 @@ export default {
 }
 
 .delivery-timeframe-danger {
-  background-color: #FECACA;
-  color: #B91C1C;
+  background-color: #fecaca;
+  color: #b91c1c;
 }
 
 .delivery-timeframe-warning {
-  background-color: #FEF3C7;
-  color: #D97706;
+  background-color: #fef3c7;
+  color: #d97706;
 }
 
 .delivery-timeframe-success {
-  background-color: #D1FAE5;
+  background-color: #d1fae5;
   color: #047857;
 }
 
 .delivery-timeframe-info {
-  background-color: #DBEAFE;
-  color: #1D4ED8;
+  background-color: #dbeafe;
+  color: #1d4ed8;
 }
 
 /* Pay Status Badges */
@@ -727,13 +873,13 @@ export default {
 }
 
 .pay-status-paid {
-  background-color: #D1FAE5;
+  background-color: #d1fae5;
   color: #047857;
 }
 
 .pay-status-not-paid {
-  background-color: #FECACA;
-  color: #B91C1C;
+  background-color: #fecaca;
+  color: #b91c1c;
 }
 
 @media (max-width: 768px) {
@@ -741,7 +887,7 @@ export default {
     flex-direction: column;
     gap: 16px;
   }
-  
+
   .search-container {
     max-width: 100%;
   }
@@ -752,7 +898,7 @@ export default {
     overflow-x: auto;
     padding-bottom: 8px;
   }
-  
+
   .page-numbers {
     display: none;
   }

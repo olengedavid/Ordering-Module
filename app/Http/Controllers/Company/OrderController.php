@@ -115,4 +115,37 @@ class OrderController extends Controller
         $orders = $query->paginate($perPage);
         return response()->json($orders);
     }
+
+    public function getOrderCounts(Request $request)
+    {
+        try {
+            $query = Order::query();
+
+            // Add retailer_id filter if provided
+            if ($request->has('retailer_id')) {
+                $query->where('retailer_id', $request->retailer_id);
+            }
+
+            // Add supplier_id filter if provided
+            if ($request->has('supplier_id')) {
+                $query->where('supplier_id', $request->supplier_id);
+            }
+
+            $counts = [
+                'total' => $query->count(),
+                'requested' => $query->where('status', 'REQUESTED')->count(),
+                'confirmed' => $query->where('status', 'CONFIRMED')->count(),
+                'delivered' => $query->where('status', 'DELIVERED')->count(),
+                'cancelled' => $query->where('status', 'CANCELLED')->count()
+            ];
+
+            return response()->json($counts);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error fetching order counts',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
