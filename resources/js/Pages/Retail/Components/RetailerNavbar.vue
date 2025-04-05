@@ -24,7 +24,7 @@
           <Link :href="route('retailer.products.index')" class="nav-link" active-class="active">Browse Products</Link>
           <Link :href="route('retailer.orders')" class="nav-link" active-class="active">
             Your Orders
-            <span class="order-badge">2</span>
+            <span class="order-badge">{{ orderCount }}</span>
           </Link>
         </div>
         
@@ -86,7 +86,7 @@
           <Link :href="route('retailer.products.index')" class="mobile-nav-link" active-class="active" @click="closeMobileMenu">Browse Products</Link>
           <Link :href="route('retailer.orders')" class="mobile-nav-link" active-class="active" @click="closeMobileMenu">
             Your Orders
-            <span class="order-badge">1</span>
+            <span class="order-badge">{{ orderCount }}</span>
           </Link>
         </div>
       </div>
@@ -98,6 +98,7 @@
   
   <script>
   import { Link } from '@inertiajs/vue3';
+  import axios from 'axios';
   
   export default {
     name: 'NavbarComponent',
@@ -107,7 +108,8 @@
     data() {
       return {
         cartCount: 0,
-        isMobileMenuOpen: false
+        isMobileMenuOpen: false,
+        orderCount: 0
       }
     },
     methods: {
@@ -129,7 +131,24 @@
       updateCartCount(count) {
         this.cartCount = count;
       },
+      async fetchOrderCounts() {
+        try {
+          const response = await axios.get(route("retailer.orders.counts"), {
+            params: {
+              retailer_id: 1,
+            },
+          });
+
+          // Update the order count with the requested orders count
+          this.orderCount = response.data.requested;
+        } catch (error) {
+          console.error("Error fetching order counts:", error);
+        }
+      },
     },
+    mounted() {
+      this.fetchOrderCounts();
+    }
   }
   </script>
   
