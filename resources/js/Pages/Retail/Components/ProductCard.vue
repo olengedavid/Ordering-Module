@@ -522,7 +522,7 @@ export default {
 .add-to-cart-btn {
   width: 100%;
   padding: 10px;
-  background: linear-gradient(135deg, #0EAD09, #0EAD09);
+  background: #0e64a5;
   color: white;
   border: none;
   border-radius: 8px;
@@ -537,7 +537,7 @@ export default {
 }
 
 .add-to-cart-btn:hover:not(.disabled) {
-  background: linear-gradient(135deg, #0EAD09, #0EAD09);
+  background: #0e64a5;
   transform: translateY(-2px);
 }
 
