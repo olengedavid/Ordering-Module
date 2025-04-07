@@ -122,7 +122,8 @@ export default {
       quantity: 1,
       successMessage: "",
       errorMessage: "",
-      isInCart: false
+      isInCart: false,
+      cartItemUuid: null
     };
   },
   methods: {
@@ -264,7 +265,31 @@ export default {
 
       return "https://via.placeholder.com/50";
     },
+    async checkIfInCart() {
+      try {
+        const response = await axios.get("/retailers/cart/items", {
+          params: {
+            retailer_id: this.product.company_id
+          }
+        });
+        
+        const cartItem = response.data.find(
+          item => item.warehouse_inventory_id === this.product.inventory_id
+        );
+        
+        if (cartItem) {
+          this.isInCart = true;
+          this.cartItemUuid = cartItem.uuid;
+          this.quantity = cartItem.quantity;
+        }
+      } catch (error) {
+        console.error("Error checking cart status:", error);
+      }
+    },
   },
+  mounted() {
+    this.checkIfInCart();
+  }
 };
 </script>
 
