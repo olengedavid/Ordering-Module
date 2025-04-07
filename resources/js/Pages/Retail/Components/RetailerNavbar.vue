@@ -24,7 +24,7 @@
           <Link :href="route('retailer.products.index')" class="nav-link" active-class="active">Browse Products</Link>
           <Link :href="route('retailer.orders')" class="nav-link" active-class="active">
             Your Orders
-            <span class="order-badge">{{ orderCount }}</span>
+            <span v-if="orderCount > 0" class="order-badge">{{ orderCount }}</span>
           </Link>
         </div>
         
@@ -86,7 +86,7 @@
           <Link :href="route('retailer.products.index')" class="mobile-nav-link" active-class="active" @click="closeMobileMenu">Browse Products</Link>
           <Link :href="route('retailer.orders')" class="mobile-nav-link" active-class="active" @click="closeMobileMenu">
             Your Orders
-            <span class="order-badge">{{ orderCount }}</span>
+            <span v-if="orderCount > 0" class="order-badge">{{ orderCount }}</span>
           </Link>
         </div>
       </div>
