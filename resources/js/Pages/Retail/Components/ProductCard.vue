@@ -116,6 +116,10 @@ export default {
       type: Object,
       required: true,
     },
+    cartItem: {
+      type: Object,
+      default: null
+    }
   },
   data() {
     return {
@@ -125,6 +129,22 @@ export default {
       isInCart: false,
       cartItemUuid: null
     };
+  },
+  watch: {
+    cartItem: {
+      immediate: true,
+      handler(newCartItem) {
+        if (newCartItem) {
+          this.isInCart = true;
+          this.cartItemUuid = newCartItem.uuid;
+          this.quantity = newCartItem.quantity;
+        } else {
+          this.isInCart = false;
+          this.cartItemUuid = null;
+          this.quantity = 1;
+        }
+      }
+    }
   },
   methods: {
     increaseQuantity() {
@@ -265,31 +285,7 @@ export default {
 
       return "https://via.placeholder.com/50";
     },
-    async checkIfInCart() {
-      try {
-        const response = await axios.get("/retailers/cart/items", {
-          params: {
-            retailer_id: this.product.company_id
-          }
-        });
-        
-        const cartItem = response.data.find(
-          item => item.warehouse_inventory_id === this.product.inventory_id
-        );
-        
-        if (cartItem) {
-          this.isInCart = true;
-          this.cartItemUuid = cartItem.uuid;
-          this.quantity = cartItem.quantity;
-        }
-      } catch (error) {
-        console.error("Error checking cart status:", error);
-      }
-    },
   },
-  mounted() {
-    this.checkIfInCart();
-  }
 };
 </script>
 

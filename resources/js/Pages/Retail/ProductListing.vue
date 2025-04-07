@@ -32,6 +32,7 @@
           <ProductCard
             :product="product"
             :currentUser="currentUser"
+            :cartItem="getCartItemForProduct(product)"
             @cart-count-updated="updateCartCount"
           />
         </div>
@@ -45,6 +46,7 @@
           <ProductCard
             :product="product"
             :currentUser="currentUser"
+            :cartItem="getCartItemForProduct(product)"
             @cart-count-updated="updateCartCount"
           />
         </div>
@@ -58,6 +60,7 @@
           <ProductCard
             :product="product"
             :currentUser="currentUser"
+            :cartItem="getCartItemForProduct(product)"
             @cart-count-updated="updateCartCount"
           />
         </div>
@@ -103,6 +106,7 @@ export default {
       retailerCountry: "Kenya",
       currentUser,
       cartCount: 0,
+      cartItems: []
     };
   },
   computed: {
@@ -160,6 +164,21 @@ export default {
       } catch (error) {
         console.error("Error fetching cart count:", error);
       }
+    },
+    async fetchCartItems() {
+      try {
+        const response = await axios.get("/retailers/cart/items", {
+          params: {
+            retailer_id: 1
+          }
+        });
+        this.cartItems = response.data;
+      } catch (error) {
+        console.error("Error fetching cart items:", error);
+      }
+    },
+    getCartItemForProduct(product) {
+      return this.cartItems.find(item => item.warehouse_inventory_id === product.inventory_id);
     },
     filterProducts(products) {
       // First filter by search query if exists
@@ -272,6 +291,7 @@ export default {
   mounted() {
     this.fetchProducts();
     this.fetchCartItemsCount();
+    this.fetchCartItems();
   },
 };
 </script>
