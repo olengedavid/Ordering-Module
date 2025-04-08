@@ -80,7 +80,57 @@ const editInventoryItem = (inventory) => {
   showingModal.value = true;
 };
 
+const validatePromoFields = () => {
+  const errors = {};
+  
+  // Check if any promo field has been filled
+  if (form.promo_amount || form.promo_start_date || form.promo_end_date) {
+    // If any field is filled, all fields become required
+    if (!form.promo_amount) {
+      errors.promo_amount = "Promo amount is required when using promo";
+    }
+    if (!form.promo_start_date) {
+      errors.promo_start_date = "Promo start date is required when using promo";
+    }
+    if (!form.promo_end_date) {
+      errors.promo_end_date = "Promo end date is required when using promo";
+    }
+
+    // Only proceed with other validations if all fields are filled
+    if (form.promo_amount && form.promo_start_date && form.promo_end_date) {
+      // Check if promo amount is less than selling price
+      if (parseFloat(form.promo_amount) >= parseFloat(form.selling_price)) {
+        errors.promo_amount = "Promo amount must be less than selling price";
+      }
+
+      const startDate = new Date(form.promo_start_date);
+      const endDate = new Date(form.promo_end_date);
+      
+      // Check if end date is before start date
+      if (endDate < startDate) {
+        errors.promo_end_date = "Promo end date cannot be before start date";
+      }
+      
+      // Check if dates have at least 1 day difference
+      const diffTime = Math.abs(endDate - startDate);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      if (diffDays < 1) {
+        errors.promo_dates = "Promo dates must have at least 1 day difference";
+      }
+    }
+  }
+
+  return errors;
+};
+
 const createInventory = () => {
+  // Validate promo fields first
+  const promoErrors = validatePromoFields();
+  if (Object.keys(promoErrors).length > 0) {
+    formErrors.value = promoErrors;
+    return;
+  }
+
   if (editingInventory.value) {
     form.put(
       route("supplier.inventories.update", {
@@ -766,7 +816,7 @@ onUnmounted(() => {
                   />
                   <InputError
                     class="mt-2"
-                    :message="form.errors.promo_amount"
+                    :message="form.errors.promo_amount || formErrors.promo_amount"
                   />
                 </div>
 
@@ -794,7 +844,7 @@ onUnmounted(() => {
                   />
                   <InputError
                     class="mt-2"
-                    :message="form.errors.promo_end_date"
+                    :message="form.errors.promo_end_date || formErrors.promo_end_date || formErrors.promo_dates"
                   />
                 </div>
 
