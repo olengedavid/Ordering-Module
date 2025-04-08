@@ -83,9 +83,9 @@
       <button
         class="add-to-cart-btn"
         @click="addToCart"
-        :disabled="!product.inStock || isInCart"
+        :disabled="!product.inStock"
         :class="{ 
-          disabled: !product.inStock || isInCart,
+          disabled: !product.inStock,
           'remove-from-cart': isInCart 
         }"
       >
@@ -116,14 +116,35 @@ export default {
       type: Object,
       required: true,
     },
+    cartItem: {
+      type: Object,
+      default: null
+    }
   },
   data() {
     return {
       quantity: 1,
       successMessage: "",
       errorMessage: "",
-      isInCart: false
+      isInCart: false,
+      cartItemUuid: null
     };
+  },
+  watch: {
+    cartItem: {
+      immediate: true,
+      handler(newCartItem) {
+        if (newCartItem) {
+          this.isInCart = true;
+          this.cartItemUuid = newCartItem.uuid;
+          this.quantity = newCartItem.quantity;
+        } else {
+          this.isInCart = false;
+          this.cartItemUuid = null;
+          this.quantity = 1;
+        }
+      }
+    }
   },
   methods: {
     increaseQuantity() {
@@ -138,6 +159,12 @@ export default {
     },
     async addToCart() {
       if (!this.product.inStock) return;
+      
+      if (this.isInCart) {
+        await this.removeFromCart();
+        return;
+      }
+
       try {
         const cartData = {
           retailer_id: this.product.company_id,
@@ -522,7 +549,7 @@ export default {
 .add-to-cart-btn {
   width: 100%;
   padding: 10px;
-  background: linear-gradient(135deg, #0EAD09, #0EAD09);
+  background: #0e64a5;
   color: white;
   border: none;
   border-radius: 8px;
@@ -537,7 +564,7 @@ export default {
 }
 
 .add-to-cart-btn:hover:not(.disabled) {
-  background: linear-gradient(135deg, #0EAD09, #0EAD09);
+  background: #0e64a5;
   transform: translateY(-2px);
 }
 
@@ -553,6 +580,8 @@ export default {
 }
 
 .add-to-cart-btn.remove-from-cart:hover {
+  background: #ffebee;
+  color: #f44336;
   transform: translateY(-2px);
 }
 

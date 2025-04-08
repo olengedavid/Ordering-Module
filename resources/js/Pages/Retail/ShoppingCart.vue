@@ -248,9 +248,16 @@ const placeOrder = async () => {
     // Refresh cart items
     await fetchCartItems();
 
-    toast.success("Orders placed successfully!");
+    // Show success message
+    successMessage.value = "Orders placed successfully!";
+    setTimeout(() => {
+      successMessage.value = "";
+    }, 3000);
   } catch (error) {
-    toast.error(error.response?.data?.message || "Failed to place orders");
+    errorMessage.value = error.response?.data?.message || "Failed to place orders";
+    setTimeout(() => {
+      errorMessage.value = "";
+    }, 3000);
   }
 };
 

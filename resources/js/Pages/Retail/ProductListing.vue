@@ -11,7 +11,7 @@
       />
 
       <h1 class="page-title">
-        All Products in: <span class="location">{{ currentRegion.join(', ') }}</span>
+        All Products in: <span class="location">{{ Array.isArray(currentRegion) ? currentRegion.join(", ") : currentRegion }}</span>
       </h1>
 
       <div v-if="isLoading" class="loading-state">Loading products...</div>
@@ -32,6 +32,7 @@
           <ProductCard
             :product="product"
             :currentUser="currentUser"
+            :cartItem="getCartItemForProduct(product)"
             @cart-count-updated="updateCartCount"
           />
         </div>
@@ -45,6 +46,7 @@
           <ProductCard
             :product="product"
             :currentUser="currentUser"
+            :cartItem="getCartItemForProduct(product)"
             @cart-count-updated="updateCartCount"
           />
         </div>
@@ -58,6 +60,7 @@
           <ProductCard
             :product="product"
             :currentUser="currentUser"
+            :cartItem="getCartItemForProduct(product)"
             @cart-count-updated="updateCartCount"
           />
         </div>
@@ -103,6 +106,7 @@ export default {
       retailerCountry: "Kenya",
       currentUser,
       cartCount: 0,
+      cartItems: []
     };
   },
   computed: {
@@ -134,11 +138,17 @@ export default {
       this.searchQuery = query;
       console.log("Search query:", query);
     },
+<<<<<<< HEAD
     handleRegionChange(region) {
       this.currentRegion = region;
       this.hasMoreProducts = true;
       console.log("Region changed to:", region);
       this.fetchProducts();
+=======
+    handleRegionChange(regions) {
+      this.currentRegion = regions;
+      console.log("Region changed to:", regions);
+>>>>>>> 0c558701dfb76a4f09d5003e580bef1085fe554b
     },
     handleFilterChange(filterType) {
       this.filterType = filterType;
@@ -167,6 +177,21 @@ export default {
       } catch (error) {
         console.error("Error fetching cart count:", error);
       }
+    },
+    async fetchCartItems() {
+      try {
+        const response = await axios.get("/retailers/cart/items", {
+          params: {
+            retailer_id: 1
+          }
+        });
+        this.cartItems = response.data;
+      } catch (error) {
+        console.error("Error fetching cart items:", error);
+      }
+    },
+    getCartItemForProduct(product) {
+      return this.cartItems.find(item => item.warehouse_inventory_id === product.inventory_id);
     },
     // filterProducts(products) {
     //   // First filter by search query if exists
@@ -224,11 +249,16 @@ export default {
         this.isLoading = true;
         const params = {
           search: this.searchQuery || "",
+<<<<<<< HEAD
           region: this.currentRegion || [],
           // category: this.filterType || "",
         //   search: "",
         //   region: [],
           category: "",
+=======
+          region: this.currentRegion || "",
+          category: this.filterType || "",
+>>>>>>> 0c558701dfb76a4f09d5003e580bef1085fe554b
           manufacturer: "",
           limit: 20,
           lastId: loadMore ? this.lastId : "",
@@ -283,6 +313,7 @@ export default {
   mounted() {
     this.fetchProducts();
     this.fetchCartItemsCount();
+    this.fetchCartItems();
   },
 };
 </script>
