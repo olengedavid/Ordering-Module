@@ -32,7 +32,7 @@
         class="search-input"
         placeholder="Search for a product"
         v-model="searchQuery"
-        @input="handleSearch"
+        @keypress.enter="handleSearch"
       />
     </div>
 
@@ -285,6 +285,7 @@ export default {
       ],
     };
   },
+  emits: ['products-search'],
   methods: {
     toggleRegionDropdown() {
       this.isRegionDropdownOpen = !this.isRegionDropdownOpen;
@@ -368,7 +369,7 @@ export default {
       this.selectedManufacturers = [];
     },
     handleSearch() {
-      // this.$emit("search", this.searchQuery);
+      this.$emit("products-search", this.searchQuery);
     },
     clearFilters() {
       this.selectedCategories = [];

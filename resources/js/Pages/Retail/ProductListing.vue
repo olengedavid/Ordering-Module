@@ -4,7 +4,7 @@
     <div class="content-container">
       <!-- Newly added Product Search Component -->
       <ProductSearchBar
-        @search="handleSearch"
+        @products-search="handleSearch"
         @region-change="handleRegionChange"
         @filter-change="handleFilterChange"
         @apply-filters="applyAllFilters"
@@ -136,12 +136,12 @@ export default {
   methods: {
     handleSearch(query) {
       this.searchQuery = query;
-      console.log("Search query:", query);
+      this.hasMoreProducts = true;
+      this.fetchProducts();
     },
     handleRegionChange(region) {
       this.currentRegion = region;
       this.hasMoreProducts = true;
-      console.log("Region changed to:", region);
       this.fetchProducts();
     },
     handleFilterChange(filterType) {
@@ -242,9 +242,9 @@ export default {
       try {
         this.isLoading = true;
         const params = {
-          search: this.searchQuery || "",
-          region: this.currentRegion || "",
-          category: this.filterType || "",
+         search: this.searchQuery || "",
+         region: this.currentRegion || "",
+        //  category: this.filterType || "",
           manufacturer: "",
           limit: 20,
           lastId: loadMore ? this.lastId : "",
