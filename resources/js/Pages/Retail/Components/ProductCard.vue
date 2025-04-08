@@ -580,6 +580,8 @@ export default {
 }
 
 .add-to-cart-btn.remove-from-cart:hover {
+  background: #ffebee;
+  color: #f44336;
   transform: translateY(-2px);
 }
 
