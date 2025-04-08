@@ -37,48 +37,39 @@ class InventoryController extends Controller
                 'inventories.quantity_per_unit',
                 'companies.company_name as supplier',
                 'inventories.company_id',
-                'inventories.warehouse_id',
-                'delivery_regions.region',
+                'inventories.warehouse_id'
             )
             ->join('companies', 'inventories.company_id', '=', 'companies.id')
             ->join('products', 'inventories.product_id', '=', 'products.id')
             ->join('warehouses', 'inventories.warehouse_id', '=', 'warehouses.id')
-            ->join('delivery_regions', 'warehouses.id', '=', 'delivery_regions.warehouse_id')
             ->where('products.status', 'active')
-            ->where('inventories.stock_quantity', '>', 0);
-
+            ->where('inventories.stock_quantity', '>', 0)
+            ->with(['warehouse' => function($query) {
+                $query->select('id', 'uuid', 'name')-> with(['deliveryRegions:id,warehouse_id,region,delivery_fee']);
+            }]);
+    
         if ($request->search) {
             $query->where('products.name', 'like', '%' . $request->search . '%');
         }
-
+    
         if ($request->region) {
-            // dd($request->region);
-            $region = $request->region;
-            is_array($region) ?  
-            $query->whereHas('deliveryRegions', function ($q) use ($region) {
-                $q->whereIn('region',  $region);
-            }):  $query->where('delivery_regions.region',  $region);
-            
-            // is_array($request->region) ?  
-            // $query->where('delivery_regions.region', $request->region): 
-            // $query->whereHas('deliveryRegions', function ($q) use ($region) {
-            //     $q->whereIn('region', $region);
-            // });
- 
+            $query->whereHas('warehouse.deliveryRegions', function($q) use ($request) {
+                $q->where('region', $request->region);
+            });
         }
-
+    
         if ($request->category) {
             $query->where('products.category', $request->category);
         }
-
+    
         if ($request->manufacturer) {
             $query->where('products.manufucturer', $request->manufacturer);
         }
-
+    
         if ($request->lastId) {
             $query->where('inventories.id', '>', $request->lastId);
         }
-
+    
         $limit = $request->limit ?? 20;
         return $query->orderBy('inventories.id')
                     ->limit($limit)

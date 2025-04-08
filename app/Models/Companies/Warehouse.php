@@ -5,6 +5,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use App\Models\Companies\Company;
+use App\Models\Companies\DeliveryRegion;
 
 class Warehouse extends Model
 {
@@ -52,5 +53,10 @@ class Warehouse extends Model
     public function company()
     {
         return $this->belongsTo(Company::class, 'company_id');
+    }
+
+    public function deliveryRegions()
+    {
+        return $this->hasMany(DeliveryRegion::class, 'warehouse_id');
     }
 }

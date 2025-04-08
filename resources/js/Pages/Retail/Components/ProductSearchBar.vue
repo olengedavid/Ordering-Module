@@ -68,7 +68,7 @@
           </svg>
         </div>
         <span class="dropdown-label">
-          {{ getRegionSummary() }}
+          {{ selectedRegion || "Select Region" }}
         </span>
         <div class="dropdown-arrow">
           <svg
@@ -92,46 +92,14 @@
         v-if="isRegionDropdownOpen"
       >
         <div class="section-divider first-section">Region</div>
-        <div class="select-all-container">
-          <button class="select-all-btn" @click="selectAllRegions">
-            Select All
-          </button>
-          <button class="select-all-btn" @click="unselectAllRegions">
-            Unselect All
-          </button>
-        </div>
         <div
-          class="dropdown-item checkbox-item"
+          class="dropdown-item"
           v-for="region in regions"
           :key="region"
-          @click="toggleRegion(region)"
+          @click="selectRegion(region)"
+          :class="{ active: region === selectedRegion }"
         >
           {{ region }}
-          <span class="checkbox" :class="{ checked: isRegionSelected(region) }">
-            <svg
-              v-if="isRegionSelected(region)"
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <polyline points="20 6 9 17 4 12"></polyline>
-            </svg>
-          </span>
-        </div>
-
-        <div class="filter-actions">
-          <button class="clear-filters-btn" @click="clearRegions">
-            Clear All
-          </button>
-          <button class="apply-filters-btn" @click="applyRegionFilters">
-            Apply
-          </button>
         </div>
       </div>
     </div>
@@ -264,7 +232,7 @@ export default {
       searchQuery: "",
       isRegionDropdownOpen: false,
       isFilterDropdownOpen: false,
-      selectedRegions: [], // Default region
+      selectedRegion: null, // Default region
       selectedCategories: [],
       selectedManufacturers: [],
       regions: ["Meru", "Nairobi", "Nakuru", "Mombasa", "Kisumu", "Eldoret"],
@@ -285,7 +253,7 @@ export default {
       ],
     };
   },
-  emits: ['products-search'],
+  emits: ["products-search"],
   methods: {
     toggleRegionDropdown() {
       this.isRegionDropdownOpen = !this.isRegionDropdownOpen;
@@ -387,7 +355,7 @@ export default {
       this.isFilterDropdownOpen = false;
       this.$emit("apply-filters", {
         query: this.searchQuery,
-        regions: this.selectedRegions,
+        regions: this.selectedRegion,
         categories: this.selectedCategories,
         manufacturers: this.selectedManufacturers,
       });
@@ -419,6 +387,11 @@ export default {
         this.isRegionDropdownOpen = false;
         this.isFilterDropdownOpen = false;
       }
+    },
+    selectRegion(region) {
+      this.selectedRegion = region;
+      this.isRegionDropdownOpen = false;
+      this.$emit("region-change", region);
     },
     async fetchRegionsForRetailer() {
       try {
@@ -709,6 +682,24 @@ export default {
 .select-all-btn:hover {
   background-color: #e3f2fd;
   border-color: #1976d2;
+}
+
+.dropdown-item {
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  color: #424242;
+  text-align: left;
+}
+
+.dropdown-item:hover {
+  background-color: #f5f5f5;
+}
+
+.dropdown-item.active {
+  background-color: #e3f2fd;
+  color: #1976d2;
+  font-weight: 500;
 }
 
 /* Responsive adjustments - Updated to stack region and filter dropdowns */
