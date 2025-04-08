@@ -5,6 +5,7 @@ use App\Http\Controllers\RegionController;
 use App\Http\Controllers\Company\OrderController;
 use Inertia\Inertia;
 use App\Http\Controllers\Company\CartController;
+use Illuminate\Http\Request;
 
 Route::get('/retailers/products', [InventoryController::class, 'retailersIndex'])
         ->name('retailer.products.index');
@@ -17,6 +18,13 @@ Route::post('retailers/create-order', [OrderController::class, 'store'])->name('
 Route::put('retailers/update-order/{uuid}', [OrderController::class, 'update'])->name('retailer.orders.update');
 Route::get('retailers/orders/search', [OrderController::class, 'search'])->name('retailer.orders.search');
 Route::get('retailers/orders/counts', [OrderController::class, 'getOrderCounts'])->name('retailer.orders.counts');
+Route::get('/retailers/orders/show', function (Request $request) {
+    return Inertia::render('Retail/Components/OrderDetails', [
+        'uuid' => $request->query('uuid')
+    ]);
+})->name('retailer.orders.show');
+Route::get('retailers/orders/view', [OrderController::class, 'show'])->name('retailer.orders.view');
+Route::get('retailers/order-items', [OrderController::class, 'getOrderItems'])->name('retailer.order.items');
 
 
 
@@ -29,11 +37,6 @@ Route::get('/retailers/orders', function () {
     return Inertia::render('Retail/RetailerOrders');
 })->name('retailer.orders');
 
-Route::get('/retailers/orders/{id}', function ($id) {
-    return Inertia::render('Retail/Components/OrderDetails', [
-        'id' => $id
-    ]);
-})->name('retailer.orders.show');
 
 # Cart actions
 Route::post('retailers/cart/add', [CartController::class, 'addToCart'])->name('retailer.cart.add');

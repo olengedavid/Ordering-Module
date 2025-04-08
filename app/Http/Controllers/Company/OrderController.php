@@ -116,6 +116,35 @@ class OrderController extends Controller
         return response()->json($orders);
     }
 
+    public function show(Request $request){
+        $order = Order::where('uuid', $request->uuid)->firstOrFail();
+        return response()->json($order);
+    }
+
+
+    public function getOrderItems(Request $request)
+    {
+        try {
+            $order = Order::where('uuid', $request->uuid)->firstOrFail();
+            
+            $items = OrderedProduct::where('order_id', $order->id)
+                ->with([
+                    'inventory:id,product_id,warehouse_id,selling_price,quantity_per_unit',
+                    'inventory.product:id,name,description,category',
+                    'inventory.warehouse:id,name'
+                ])
+                ->paginate($request->per_page ?? 10);
+
+            return response()->json($items);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error fetching order items',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function getOrderCounts(Request $request)
     {
         try {

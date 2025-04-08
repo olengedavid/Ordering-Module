@@ -382,19 +382,7 @@ export default {
     },
     viewOrderDetails(order) {
       // Navigate to order details page with dummy data
-      this.$inertia.visit(route('retailer.orders.show', { id: order.order_ref }), {
-        data: {
-          id: order.order_ref,
-          orderData: {
-            orderId: order.order_ref,
-            date: order.created_at,
-            supplier: order.supplier?.company_name,
-            amount: order.total_price,
-            orderedBy: order.creator?.name,
-            paymentMode: order.payment_terms,
-            payStatus: "Not Paid"
-          }
-        },
+      this.$inertia.visit(route('retailer.orders.show', { ref: order.order_ref, uuid: order.uuid}), {
         preserveState: true,
         preserveScroll: true,
       });
