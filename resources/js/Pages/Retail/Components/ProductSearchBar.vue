@@ -264,7 +264,7 @@ export default {
       searchQuery: "",
       isRegionDropdownOpen: false,
       isFilterDropdownOpen: false,
-      selectedRegions: ["Meru"], // Default region
+      selectedRegions: [], // Default region
       selectedCategories: [],
       selectedManufacturers: [],
       regions: ["Meru", "Nairobi", "Nakuru", "Mombasa", "Kisumu", "Eldoret"],

@@ -38,6 +38,7 @@ class InventoryController extends Controller
                 'companies.company_name as supplier',
                 'inventories.company_id',
                 'inventories.warehouse_id',
+                'delivery_regions.region',
             )
             ->join('companies', 'inventories.company_id', '=', 'companies.id')
             ->join('products', 'inventories.product_id', '=', 'products.id')
@@ -51,7 +52,19 @@ class InventoryController extends Controller
         }
 
         if ($request->region) {
-            $query->where('delivery_regions.region', $request->region);
+            // dd($request->region);
+            $region = $request->region;
+            is_array($region) ?  
+            $query->whereHas('deliveryRegions', function ($q) use ($region) {
+                $q->whereIn('region',  $region);
+            }):  $query->where('delivery_regions.region',  $region);
+            
+            // is_array($request->region) ?  
+            // $query->where('delivery_regions.region', $request->region): 
+            // $query->whereHas('deliveryRegions', function ($q) use ($region) {
+            //     $q->whereIn('region', $region);
+            // });
+ 
         }
 
         if ($request->category) {

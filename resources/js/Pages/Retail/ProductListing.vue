@@ -11,7 +11,7 @@
       />
 
       <h1 class="page-title">
-        All Products in: <span class="location">{{ currentRegion }}</span>
+        All Products in: <span class="location">{{ currentRegion.join(', ') }}</span>
       </h1>
 
       <div v-if="isLoading" class="loading-state">Loading products...</div>
@@ -91,7 +91,7 @@ export default {
   },
   data() {
     return {
-      currentRegion: "Meru",
+      currentRegion: [],
       searchQuery: "",
       filterType: "new",
       productsRow1: [],
@@ -136,7 +136,9 @@ export default {
     },
     handleRegionChange(region) {
       this.currentRegion = region;
+      this.hasMoreProducts = true;
       console.log("Region changed to:", region);
+      this.fetchProducts();
     },
     handleFilterChange(filterType) {
       this.filterType = filterType;
@@ -147,6 +149,7 @@ export default {
       this.currentRegion = filters.region;
       this.filterType = filters.filter;
       this.hasMoreProducts = true;
+      console.log("Filters applied:", filters);
       this.fetchProducts();
     },
     updateCartCount(count) {
@@ -219,20 +222,24 @@ export default {
 
       try {
         this.isLoading = true;
-        const params = new URLSearchParams({
+        const params = {
           search: this.searchQuery || "",
-          // region: this.currentRegion || "",
+          region: this.currentRegion || [],
           // category: this.filterType || "",
         //   search: "",
-          region: "",
+        //   region: [],
           category: "",
           manufacturer: "",
           limit: 20,
           lastId: loadMore ? this.lastId : "",
-        });
+        };
+
+        console.log("params ++", params);
 
         const response = await axios.get(
-          `/retailers/product-search?${params.toString()}`
+          `/retailers/product-search?`, {
+            params,
+          }
         );
 
         if (response.data) {

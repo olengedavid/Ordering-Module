@@ -61,4 +61,9 @@ class Inventory extends Model
     {
         return $this->belongsTo(Warehouse::class, 'warehouse_id');
     } 
+
+    public function deliveryRegions()
+{
+    return $this->hasMany(DeliveryRegion::class, 'warehouse_id', 'warehouse_id');
+}
 }
