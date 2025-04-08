@@ -83,9 +83,9 @@
       <button
         class="add-to-cart-btn"
         @click="addToCart"
-        :disabled="!product.inStock || isInCart"
+        :disabled="!product.inStock"
         :class="{ 
-          disabled: !product.inStock || isInCart,
+          disabled: !product.inStock,
           'remove-from-cart': isInCart 
         }"
       >
@@ -159,6 +159,12 @@ export default {
     },
     async addToCart() {
       if (!this.product.inStock) return;
+      
+      if (this.isInCart) {
+        await this.removeFromCart();
+        return;
+      }
+
       try {
         const cartData = {
           retailer_id: this.product.company_id,
