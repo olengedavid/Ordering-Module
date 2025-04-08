@@ -381,16 +381,22 @@ export default {
       this.currentPage = 1;
     },
     viewOrderDetails(order) {
-      // Navigate to order details page with order ID and data
-      this.$router.push({
-        name: "order-view",
-        params: {
-          id: order.orderId,
+      // Navigate to order details page with dummy data
+      this.$inertia.visit(route('retailer.orders.show', { id: order.order_ref }), {
+        data: {
+          id: order.order_ref,
+          orderData: {
+            orderId: order.order_ref,
+            date: order.created_at,
+            supplier: order.supplier?.company_name,
+            amount: order.total_price,
+            orderedBy: order.creator?.name,
+            paymentMode: order.payment_terms,
+            payStatus: "Not Paid"
+          }
         },
-        // Use query parameter to pass the complete order object
-        query: {
-          orderData: JSON.stringify(order),
-        },
+        preserveState: true,
+        preserveScroll: true,
       });
     },
     getDeliveryTimeframe(order) {

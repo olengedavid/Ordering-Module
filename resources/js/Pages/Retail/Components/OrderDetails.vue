@@ -244,13 +244,13 @@
         required: true
       },
       orderData: {
-        type: String,
-        default: null
+        type: Object,
+        required: true
       }
     },
     data() {
       return {
-        order: null,
+        order: this.orderData,
         orderItems: [
           {
             name: 'All Purpose Fertilizer 14 Kgs',
@@ -345,7 +345,6 @@
         currentItemsPage: 1,
         itemsPerPage: 10,
         perPageOptions: [5, 10, 20, 50],
-        // Dialog state
         dialog: {
           show: false,
           title: '',
@@ -357,41 +356,7 @@
       };
     },
     created() {
-      console.log('Route params received:', this.$route.params);
-      console.log('Route query received:', this.$route.query);
-      
-      // Parse the order data from the route query if available
-      if (this.$route.query.orderData) {
-        try {
-          this.order = JSON.parse(this.$route.query.orderData);
-          console.log('Order data loaded from query:', this.order);
-        } catch (error) {
-          console.error('Error parsing order data from query:', error);
-        }
-      } else if (this.orderData) {
-        // Fallback to props if available
-        try {
-          this.order = JSON.parse(this.orderData);
-          console.log('Order data loaded from props:', this.order);
-        } catch (error) {
-          console.error('Error parsing order data from props:', error);
-        }
-      } else {
-        // Fetch order data using ID as a last resort
-        console.log('No order data received, would fetch order data for ID:', this.id);
-        
-        // For demo purposes, just set a loading state
-        setTimeout(() => {
-          this.order = {
-            orderId: this.id,
-            date: 'Feb 25, 2025',
-            supplier: 'Sample Supplier',
-            amount: 12345,
-            orderedBy: 'Demo User'
-          };
-          console.log('Fallback data loaded instead:', this.order);
-        }, 1000);
-      }
+      console.log('Order data received:', this.orderData);
     },
     computed: {
       showPayButton() {
