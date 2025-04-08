@@ -11,7 +11,7 @@
       />
 
       <h1 class="page-title">
-        All Products in: <span class="location">{{ currentRegion }}</span>
+        All Products in: <span class="location">{{ Array.isArray(currentRegion) ? currentRegion.join(", ") : currentRegion }}</span>
       </h1>
 
       <div v-if="isLoading" class="loading-state">Loading products...</div>
@@ -138,9 +138,9 @@ export default {
       this.searchQuery = query;
       console.log("Search query:", query);
     },
-    handleRegionChange(region) {
-      this.currentRegion = region;
-      console.log("Region changed to:", region);
+    handleRegionChange(regions) {
+      this.currentRegion = regions;
+      console.log("Region changed to:", regions);
     },
     handleFilterChange(filterType) {
       this.filterType = filterType;
@@ -240,11 +240,8 @@ export default {
         this.isLoading = true;
         const params = new URLSearchParams({
           search: this.searchQuery || "",
-          // region: this.currentRegion || "",
-          // category: this.filterType || "",
-        //   search: "",
-          region: "",
-          category: "",
+          region: this.currentRegion || "",
+          category: this.filterType || "",
           manufacturer: "",
           limit: 20,
           lastId: loadMore ? this.lastId : "",

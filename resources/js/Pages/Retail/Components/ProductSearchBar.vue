@@ -317,12 +317,13 @@ export default {
       this.selectedRegions = [...this.regions];
     },
     unselectAllRegions() {
-      // Keep at least one region selected (Meru as default)
-      this.selectedRegions = ["Meru"];
+      this.selectedRegions = [];
+      this.$emit("region-change", this.selectedRegions);
     },
     clearRegions() {
       // Keep at least one region
       this.selectedRegions = ["Meru"];
+      this.$emit("region-change", this.selectedRegions);
     },
     applyRegionFilters() {
       this.isRegionDropdownOpen = false;
@@ -396,7 +397,7 @@ export default {
       } else if (this.selectedRegions.length === 1) {
         return this.selectedRegions[0];
       } else {
-        return `${this.selectedRegions.length} regions`;
+        return this.selectedRegions.join(", ");
       }
     },
     getFilterSummary() {
