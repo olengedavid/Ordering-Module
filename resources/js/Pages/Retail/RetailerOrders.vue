@@ -349,6 +349,7 @@ export default {
     setActiveTab(tabId) {
       this.activeTab = tabId;
       this.resetPagination();
+      this.fetchOrders();
     },
     sortBy(key) {
       if (this.sortKey === key) {
@@ -451,9 +452,15 @@ export default {
     async fetchOrders() {
       this.loading = true;
       try {
+        const statusMap = {
+          REQUESTED: 'REQUESTED',
+          CONFIRMED: 'CONFIRMED',
+          DELIVERED: 'DELIVERED',
+          CANCELLED: 'CANCELLED'
+        };
         const response = await axios.get(route("retailer.orders.search"), {
           params: {
-            status: this.activeTab.toUpperCase(),
+            status: statusMap[this.activeTab], // Use the mapped status
             search: this.searchQuery,
             page: this.currentPage,
             per_page: this.perPage,
