@@ -138,17 +138,11 @@ export default {
       this.searchQuery = query;
       console.log("Search query:", query);
     },
-<<<<<<< HEAD
     handleRegionChange(region) {
       this.currentRegion = region;
       this.hasMoreProducts = true;
       console.log("Region changed to:", region);
       this.fetchProducts();
-=======
-    handleRegionChange(regions) {
-      this.currentRegion = regions;
-      console.log("Region changed to:", regions);
->>>>>>> 0c558701dfb76a4f09d5003e580bef1085fe554b
     },
     handleFilterChange(filterType) {
       this.filterType = filterType;
@@ -249,16 +243,8 @@ export default {
         this.isLoading = true;
         const params = {
           search: this.searchQuery || "",
-<<<<<<< HEAD
-          region: this.currentRegion || [],
-          // category: this.filterType || "",
-        //   search: "",
-        //   region: [],
-          category: "",
-=======
           region: this.currentRegion || "",
           category: this.filterType || "",
->>>>>>> 0c558701dfb76a4f09d5003e580bef1085fe554b
           manufacturer: "",
           limit: 20,
           lastId: loadMore ? this.lastId : "",
