@@ -256,6 +256,7 @@ export default {
         });
 
         this.retailer = response.data;
+        sessionStorage.setItem('retailerData', JSON.stringify(response.data));
 
         this.fetchProducts();
         this.fetchCartItemsCount();

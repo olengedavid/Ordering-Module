@@ -166,15 +166,16 @@ export default {
       }
 
       try {
+        const retailerData = JSON.parse(sessionStorage.getItem('retailerData'));
         const cartData = {
-          retailer_id: this.product.company_id,
+          retailer_id: retailerData.company.id,
           supplier_id: this.product.company_id,
           warehouse_inventory_id: this.product.inventory_id,
           quantity: this.quantity,
           unit_price: Number(this.product.selling_price),
           min_order: Number(this.product.min_order),
           max_order: Number(this.product.max_order),
-          created_by: this.currentUser.id,
+          created_by: retailerData.user.id,
         };
 
         const response = await axios.post("/retailers/cart/add", cartData);
@@ -223,10 +224,11 @@ export default {
       }
     },
     async fetchCartItemsCount() {
+      const retailerData = JSON.parse(sessionStorage.getItem('retailerData'));
       try {
         const response = await axios.get(route('retailer.cart.count'), {
           params: {
-            retailer_id: this.product.company_id
+            retailer_id: retailerData.company.id
           }
         });
         

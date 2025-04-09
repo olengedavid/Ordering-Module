@@ -165,11 +165,12 @@ function getPrimaryImagePreviewPath(product) {
 }
 
 const fetchCartItems = async () => {
+  const retailerData = JSON.parse(sessionStorage.getItem('retailerData'));
   loading.value = true;
   try {
     const response = await axios.get("/retailers/cart/items", {
       params: {
-        retailer_id: 1,
+        retailer_id: retailerData.company.id,
       },
     });
 
@@ -193,20 +194,21 @@ const fetchCartItems = async () => {
 const placeOrder = async () => {
   // look into this later
   // if (!canPlaceOrder.value) return;
-
+  const retailerData = JSON.parse(sessionStorage.getItem('retailerData'));
+  
   try {
     // Group cart items by supplier
     const ordersBySupplier = cartItems.value.reduce((acc, item) => {
       if (!acc[item.supplier_id]) {
         acc[item.supplier_id] = {
-          retailer_id: item.retailer_id,
+          retailer_id: retailerData.company.id,
           supplier_id: item.supplier_id,
           status: "REQUESTED",
           payment_terms: "PAID_ON_DELIVERY",
           delivery_address: deliveryAddress.value,
           region: "default", // You might want to get this from user selection
           expected_delivery_date: null, // You might want to add a date picker
-          created_by: item.created_by,
+          created_by: retailerData.user.id,
           products: [],
           total_price: 0,
         };
@@ -262,10 +264,11 @@ const placeOrder = async () => {
 };
 
 const fetchCartItemsCount = async () => {
+  const retailerData = JSON.parse(sessionStorage.getItem('retailerData'));
   try {
     const response = await axios.get(route("retailer.cart.count"), {
       params: {
-        retailer_id: 1,
+        retailer_id: retailerData.company.id,
       },
     });
     navbarRef.value?.updateCartCount(response.data.count);

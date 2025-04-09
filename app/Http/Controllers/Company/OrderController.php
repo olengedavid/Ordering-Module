@@ -109,6 +109,9 @@ class OrderController extends Controller
                     $query->where('company_name', 'like', "%{$search}%");
                 });
             })
+            ->when($request->retailer_id, function($q, $retailer_id) {
+                return $q->where('retailer_id', $retailer_id);
+            })
             ->latest();
 
         $perPage = $request->per_page ?? 10;

@@ -386,6 +386,8 @@ export default {
       return diffDays;
     },
     async fetchOrders() {
+      const retailerData = JSON.parse(sessionStorage.getItem('retailerData'));
+
       this.loading = true;
       try {
         const statusMap = {
@@ -402,6 +404,7 @@ export default {
             per_page: this.perPage,
             sort_key: this.sortKey,
             sort_dir: this.sortDir,
+            retailer_id: retailerData.company.id,
           },
         });
         const { data } = response;
@@ -417,10 +420,11 @@ export default {
       }
     },
     async fetchOrderCounts() {
+      const retailerData = JSON.parse(sessionStorage.getItem('retailerData'));
       try {
         const response = await axios.get(route("retailer.orders.counts"), {
           params: {
-            retailer_id: 1,
+            retailer_id: retailerData.company.id,
           },
         });
 
