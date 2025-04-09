@@ -51,12 +51,17 @@
             class="search-input"
             placeholder="Search..."
             v-model="searchQuery"
+            @keyup.enter="handleSearch"
           />
+          <button class="search-button" @click="handleSearch">Search</button>
         </div>
       </div>
 
       <!-- Orders Table -->
       <div class="table-wrapper">
+        <div v-if="loading" class="loading-overlay">
+          <div class="loading-spinner"></div>
+        </div>
         <table class="orders-table">
           <thead>
             <tr>
@@ -178,21 +183,7 @@
       <!-- Pagination -->
       <div class="pagination-controls">
         <div class="per-page">
-          <span>Show</span>
-          <select
-            v-model="perPage"
-            @change="resetPagination"
-            class="per-page-select"
-          >
-            <option
-              v-for="option in perPageOptions"
-              :key="option"
-              :value="option"
-            >
-              {{ option }}
-            </option>
-          </select>
-          <span>per page</span>
+          <span>Showing {{ (currentPage - 1) * perPage + 1 }} to {{ Math.min(currentPage * perPage, totalOrders) }} of {{ totalOrders }} orders</span>
         </div>
         <div class="pagination-buttons">
           <button
@@ -253,93 +244,38 @@ export default {
       perPageOptions: [10, 20, 50, 100],
       formatNumber,
       formatDateOnly,
+      loading: false,
+      totalOrders: 0
     };
   },
-  computed: {
-    filteredOrders() {
-      let filtered = [];
-
-      // Select the appropriate orders array based on the active tab
-      switch (this.activeTab) {
-        case "requests":
-          filtered = [...this.requestsOrders];
-          break;
-        case "confirmed":
-          filtered = [...this.confirmedOrders];
-          break;
-        case "delivered":
-          filtered = [...this.deliveredOrders];
-          break;
-        case "cancelled":
-          filtered = [...this.cancelledOrders];
-          break;
+  watch: {
+    currentPage: {
+      handler() {
+        this.fetchOrders();
       }
-
-      // Filter by search query
-      if (this.searchQuery.trim() !== "") {
-        const query = this.searchQuery.toLowerCase();
-        filtered = filtered.filter((order) => {
-          // Search through all properties of the order
-          return Object.values(order).some((value) => {
-            // Convert value to string and check if it includes the query
-            if (value === null || value === undefined) return false;
-            return value.toString().toLowerCase().includes(query);
-          });
-        });
-      }
-
-      // Sort "Not Paid" orders to the top for confirmed and delivered tabs
-      if (this.activeTab === "confirmed" || this.activeTab === "delivered") {
-        filtered.sort((a, b) => {
-          // First sort by payment status (Not Paid comes first)
-          if (a.payStatus === "Not Paid" && b.payStatus !== "Not Paid") {
-            return -1;
-          } else if (a.payStatus !== "Not Paid" && b.payStatus === "Not Paid") {
-            return 1;
-          }
-
-          // If payment status is the same, then sort by the current sort key
-          let modifier = this.sortDir === "asc" ? 1 : -1;
-          let aValue = a[this.sortKey];
-          let bValue = b[this.sortKey];
-
-          if (typeof aValue === "number" && typeof bValue === "number") {
-            return aValue < bValue ? -1 * modifier : 1 * modifier;
-          } else {
-            return (
-              aValue.toString().localeCompare(bValue.toString()) * modifier
-            );
-          }
-        });
-      } else {
-        // Default sorting for other tabs
-        filtered.sort((a, b) => {
-          let modifier = this.sortDir === "asc" ? 1 : -1;
-          let aValue = a[this.sortKey];
-          let bValue = b[this.sortKey];
-
-          if (typeof aValue === "number" && typeof bValue === "number") {
-            return aValue < bValue ? -1 * modifier : 1 * modifier;
-          } else {
-            return (
-              aValue.toString().localeCompare(bValue.toString()) * modifier
-            );
-          }
-        });
-      }
-
-      return filtered;
     },
-    paginatedOrders() {
-      const start = (this.currentPage - 1) * this.perPage;
-      const end = start + this.perPage;
-      return this.filteredOrders.slice(start, end);
+    perPage: {
+      handler() {
+        this.resetPagination();
+        this.fetchOrders();
+      }
     },
-    // totalPages() {
-    //   return Math.ceil(this.filteredOrders.length / this.perPage) || 1;
-    // }
+    sortKey: {
+      handler() {
+        this.fetchOrders();
+      }
+    },
+    sortDir: {
+      handler() {
+        this.fetchOrders();
+      }
+    }
   },
   methods: {
+    handleSearch() {
+      this.resetPagination();
+      this.fetchOrders();
+    },
     formatNumber(value) {
       return value.toLocaleString(undefined, {
         minimumFractionDigits: 2,
@@ -624,16 +560,18 @@ export default {
 
 .search-container {
   position: relative;
-  width: 300px; /* Reduced width */
+  width: 400px;
   max-width: 100%;
+  display: flex;
+  align-items: center;
 }
 
 .search-input {
   width: 100%;
-  box-sizing: border-box; /* Ensures padding is included in width */
+  box-sizing: border-box;
   padding: 10px 16px 10px 40px;
   border: 1px solid #e5e7eb;
-  border-radius: 6px;
+  border-radius: 6px 0 0 6px;
   font-size: 0.95rem;
   color: #1e293b;
   background-color: white;
@@ -652,6 +590,26 @@ export default {
   top: 50%;
   transform: translateY(-50%);
   color: #94a3b8;
+}
+
+.search-button {
+  padding: 10px 16px;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 0 6px 6px 0;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.search-button:hover {
+  background-color: #1d4ed8;
+}
+
+.search-button:active {
+  background-color: #1e40af;
 }
 
 /* Table */
@@ -903,5 +861,33 @@ export default {
   .page-numbers {
     display: none;
   }
+}
+
+/* Loading Overlay */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #2563eb;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 </style>
