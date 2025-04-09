@@ -65,6 +65,12 @@ const editInventoryItem = (inventory) => {
   editingInventory.value = true;
   editingInventoryUuid.value = inventory.uuid;
 
+   // Format dates to YYYY-MM-DD
+   const formatDate = (dateString) => {
+    if (!dateString) return '';
+    return dateString.split(' ')[0]; // Take only the date part
+  };
+
   form.product_id = inventory.product_id;
   form.warehouse_id = inventory.warehouse_id;
   form.cost_price = inventory.cost_price;
@@ -73,10 +79,11 @@ const editInventoryItem = (inventory) => {
   form.min_order = inventory.min_order;
   form.max_order = inventory.max_order;
   form.promo_amount = inventory.promo_amount;
-  form.promo_start_date = inventory.promo_start_date;
-  form.promo_end_date = inventory.promo_end_date;
+  form.promo_start_date = formatDate(inventory.promo_start_date);
+  form.promo_end_date = formatDate(inventory.promo_end_date);
   form.status = inventory.status;
 
+  console.log("Editing inventory:", form);
   showingModal.value = true;
 };
 
