@@ -106,7 +106,8 @@ export default {
       retailerCountry: "Kenya",
       currentUser,
       cartCount: 0,
-      cartItems: []
+      cartItems: [],
+      retailer: null,
     };
   },
   computed: {
@@ -164,7 +165,7 @@ export default {
       try {
         const response = await axios.get(route("retailer.cart.count"), {
           params: {
-            retailer_id: 1,
+            retailer_id: this.retailer?.user.id,
           },
         });
         this.$refs.navbar?.updateCartCount(response.data.count);
@@ -176,7 +177,7 @@ export default {
       try {
         const response = await axios.get("/retailers/cart/items", {
           params: {
-            retailer_id: 1
+            retailer_id: this.retailer?.user.id,
           }
         });
         this.cartItems = response.data;
@@ -187,55 +188,7 @@ export default {
     getCartItemForProduct(product) {
       return this.cartItems.find(item => item.warehouse_inventory_id === product.inventory_id);
     },
-    // filterProducts(products) {
-    //   // First filter by search query if exists
-    //   let filtered = [...products];
-
-    //   if (this.searchQuery && this.searchQuery.trim() !== "") {
-    //     const query = this.searchQuery.toLowerCase();
-    //     filtered = filtered.filter(
-    //       (product) =>
-    //         product.name.toLowerCase().includes(query) ||
-    //         product.description.toLowerCase().includes(query) ||
-    //         product.type.toLowerCase().includes(query)
-    //     );
-    //   }
-
-    //   // Then apply any sorting based on filter type
-    //   switch (this.filterType) {
-    //     case "price_asc":
-    //       filtered.sort((a, b) => a.basePrice - b.basePrice);
-    //       break;
-
-    //     case "price_desc":
-    //       filtered.sort((a, b) => b.basePrice - a.basePrice);
-    //       break;
-
-    //     case "discount":
-    //       // Put products with promotions first
-    //       filtered.sort((a, b) => {
-    //         if (a.promotion && !b.promotion) return -1;
-    //         if (!a.promotion && b.promotion) return 1;
-
-    //         // If both have promotions, sort by discount percentage
-    //         if (a.promotion && b.promotion) {
-    //           const discountA = parseInt(a.promotion.discount);
-    //           const discountB = parseInt(b.promotion.discount);
-    //           return discountB - discountA;
-    //         }
-
-    //         return 0;
-    //       });
-    //       break;
-
-    //     case "new":
-    //       // For demo purposes, we'll just randomize to simulate "newest"
-    //       filtered.sort(() => Math.random() - 0.5);
-    //       break;
-    //   }
-
-    //   return filtered;
-    // },
+    
     async fetchProducts(loadMore = false) {
       if (this.isLoading || (!loadMore && !this.hasMoreProducts)) return;
 
@@ -250,8 +203,7 @@ export default {
           lastId: loadMore ? this.lastId : "",
         };
 
-        console.log("params ++", params);
-
+      
         const response = await axios.get(
           `/retailers/product-search?`, {
             params,
@@ -295,11 +247,27 @@ export default {
         this.isLoading = false;
       }
     },
+    async syncCompany() {
+      try {
+        const response = await axios.get(route('retailer.company.sync'), {
+          params: {
+            refreshtoken: 'e51661ad-9147-44a3-b744-73bc68d67124'
+          }
+        });
+
+        this.retailer = response.data;
+
+        this.fetchProducts();
+        this.fetchCartItemsCount();
+        this.fetchCartItems();
+      } catch (error) {
+        console.error('Error syncing company:', error);
+      }
+    },
+
   },
   mounted() {
-    this.fetchProducts();
-    this.fetchCartItemsCount();
-    this.fetchCartItems();
+    this.syncCompany();
   },
 };
 </script>

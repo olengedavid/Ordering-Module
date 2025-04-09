@@ -15,10 +15,19 @@ use PHPMailer\PHPMailer\PHPMailer;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\RedirectResponse;
+use App\Services\ExternalApiService;
+use Illuminate\Support\Str;
+use App\Enums\UserType;
 
 
 class CompanyController extends Controller
 {
+    protected $externalApiService;
+
+    public function __construct(ExternalApiService $externalApiService)
+    {
+        $this->externalApiService = $externalApiService;
+    }
     /**
      *  Display create supplier page
      */
@@ -198,4 +207,71 @@ class CompanyController extends Controller
 
         return redirect()->back()->with('success', 'Company activated successfully');
     }
+
+
+    public function syncCompanyFromIpos(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            // Get refresh token and fetch new token
+            $refreshToken = $request->query('refreshtoken');
+            $tokenResponse = $this->externalApiService->getRefreshToken($refreshToken)->json();
+            
+            if (!isset($tokenResponse['data']['token'])) {
+                return response()->json(['error' => 'Invalid refresh token'], 400);
+            }
+
+            $token = $tokenResponse['data']['token'];
+            $userData = $tokenResponse['data']['user'];
+
+            // Fetch company details
+            $companyResponse = $this->externalApiService->getCompanyDetails($token, $userData['companyId'])->json();
+            $companyData = $companyResponse['data'];
+
+            // Create or update company
+            $company = Company::updateOrCreate(
+                ['ex_company_id' => $companyData['id']],
+                [
+                    'company_name' => $companyData['name'],
+                    'email' => $companyData['email'],
+                    'phone_number' => $companyData['phoneNumber'],
+                    'office_address' => $companyData['address'] ?? 'Default Address',
+                    'logo' => $companyData['logo'],
+                    'status' => 'active',
+                   'krapin' => $companyData['taxPin'] ?? '',
+                   'country' => $companyData['countryName'] ?? 'Kenya',
+                   'industry' => 'Retail',
+                   'contact_person' => $userData['firstName'] . ' ' . $userData['lastName'],
+                   'ex_company_id' => $companyData['id'],
+                ]
+            );
+
+            // Create user if not exists
+            $user = User::firstOrCreate(
+                ['email' => $userData['email']],
+                [
+                    'name' => $userData['firstName'] . ' ' . $userData['lastName'],
+                    'password' => bcrypt(Str::random(16)), // Fixed: using Str::random()
+                    'user_type' => UserType::Retailer,
+                    'company_id' => $company->id,
+                    'email' => $userData['email'],
+                    'status' => 'active',
+                ]
+            );
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Company and user synchronized successfully',
+                'company' => $company,
+                'user' => $user
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
 }

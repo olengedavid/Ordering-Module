@@ -19,7 +19,8 @@ class Company extends Model
         'status',
         'contact_person',
         'created_by',
-        'country'
+        'country',
+        'ex_company_id'
     ];
 
     protected $casts = [

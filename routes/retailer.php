@@ -6,6 +6,12 @@ use App\Http\Controllers\Company\OrderController;
 use Inertia\Inertia;
 use App\Http\Controllers\Company\CartController;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Company\CompanyController; 
+
+#Sync Routes
+Route::get('retailers/sync-company', [CompanyController::class, 'syncCompanyFromIpos'])
+    ->name('retailer.company.sync');
+
 
 Route::get('/retailers/products', [InventoryController::class, 'retailersIndex'])
         ->name('retailer.products.index');
