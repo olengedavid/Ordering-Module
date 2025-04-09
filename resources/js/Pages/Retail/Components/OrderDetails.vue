@@ -350,11 +350,17 @@ export default {
         let aValue = a[this.itemSortKey];
         let bValue = b[this.itemSortKey];
 
+        // Handle null/undefined values
+        if (aValue === null || aValue === undefined) return 1 * modifier;
+        if (bValue === null || bValue === undefined) return -1 * modifier;
+
+        // Handle numeric values
         if (typeof aValue === "number" && typeof bValue === "number") {
-          return aValue < bValue ? -1 * modifier : 1 * modifier;
-        } else {
-          return aValue.toString().localeCompare(bValue.toString()) * modifier;
+          return (aValue - bValue) * modifier;
         }
+
+        // Handle string values
+        return String(aValue).localeCompare(String(bValue)) * modifier;
       });
 
       return filtered;
