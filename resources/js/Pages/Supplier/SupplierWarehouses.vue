@@ -368,7 +368,62 @@
                 <!-- Region Input for Deliver To -->
                 <div class="form-group">
                   <label for="deliverTo">Deliver To <span class="required">*</span></label>
-                  <input type="text" id="deliverTo" v-model="deliveryRegionForm.region" required placeholder="Enter region name">
+                  <div class="custom-select-container region-select-container">
+                    <div 
+                      class="custom-select-trigger region-select-trigger" 
+                      @click="toggleRegionDropdown"
+                      :class="{ active: isRegionDropdownOpen }"
+                    >
+                      <span>{{ deliveryRegionForm.region || "Select region" }}</span>
+                      <svg 
+                        class="dropdown-arrow" 
+                        :class="{ open: isRegionDropdownOpen }"
+                        xmlns="http://www.w3.org/2000/svg" 
+                        width="16" 
+                        height="16" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        stroke-width="2" 
+                        stroke-linecap="round" 
+                        stroke-linejoin="round"
+                      >
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                      </svg>
+                    </div>
+                    
+                    <div class="custom-select-dropdown region-select-dropdown" v-show="isRegionDropdownOpen">
+                      <div class="search-box">
+                        <input
+                          type="text"
+                          v-model="regionSearch"
+                          @input="filterRegions"
+                          placeholder="Search region..."
+                          class="dropdown-search"
+                          @click.stop
+                        >
+                      </div>
+                      
+                      <div class="dropdown-options">
+                        <div v-if="loadingRegions" class="loading-state">
+                          Loading regions...
+                        </div>
+                        <template v-else>
+                          <div
+                            v-for="region in filteredRegions"
+                            :key="region"
+                            class="dropdown-option"
+                            @click="selectRegion(region)"
+                          >
+                            {{ region }}
+                          </div>
+                          <div v-if="filteredRegions.length === 0" class="no-results">
+                            No regions match your search
+                          </div>
+                        </template>
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 
                 <div class="form-group">
@@ -1023,49 +1078,14 @@ const selectCountry = (country) => {
 
 const toggleRegionDropdown = () => {
   isRegionDropdownOpen.value = !isRegionDropdownOpen.value;
-
   if (isRegionDropdownOpen.value) {
-    // Reset search when opening
     regionSearch.value = "";
     filteredRegions.value = [...regions.value];
-
-    // Close the other dropdown if open
-    isCountryDropdownOpen.value = false;
-
-    // Calculate dropdown position
-    nextTick(() => {
-      const trigger = document.querySelector(".region-select-trigger");
-      const dropdown = document.querySelector(".region-select-dropdown");
-
-      if (!trigger || !dropdown) return;
-
-      const triggerRect = trigger.getBoundingClientRect();
-      const viewportHeight = window.innerHeight;
-
-      const spaceBelow = viewportHeight - triggerRect.bottom;
-      const dropdownHeight = Math.min(
-        250,
-        filteredRegions.value.length * 36 + 70
-      );
-
-      if (spaceBelow < dropdownHeight) {
-        dropdown.classList.add("dropdown-top");
-      } else {
-        dropdown.classList.remove("dropdown-top");
-      }
-    });
-  }
-};
-
-const closeRegionDropdownOutside = (event) => {
-  const dropdown = document.querySelector(".region-select-container");
-  if (dropdown && !dropdown.contains(event.target)) {
-    isRegionDropdownOpen.value = false;
   }
 };
 
 const filterRegions = () => {
-  if (regionSearch.value.trim() === "") {
+  if (!regionSearch.value.trim()) {
     filteredRegions.value = [...regions.value];
   } else {
     const query = regionSearch.value.toLowerCase();
@@ -1076,8 +1096,35 @@ const filterRegions = () => {
 };
 
 const selectRegion = (region) => {
-  form.region = region;
+  // If we're in the warehouse form
+  if (showWarehouseModal.value) {
+    form.region = region;
+  } else {
+    // If we're in the delivery region form
+    deliveryRegionForm.region = region;
+  }
   isRegionDropdownOpen.value = false;
+  regionSearch.value = "";
+};
+
+const fetchRegions = async () => {
+  loadingRegions.value = true;
+  try {
+    const response = await axios.get(route("admin.regions.search"), {
+      params: {
+        country: "Kenya", // Default to Kenya for now
+        per_page: 100, // Get more regions to avoid pagination
+      },
+    });
+    regions.value = response.data.data.map((region) => region.region);
+    filteredRegions.value = [...regions.value];
+  } catch (error) {
+    console.error("Error fetching regions:", error);
+    regions.value = [];
+    filteredRegions.value = [];
+  } finally {
+    loadingRegions.value = false;
+  }
 };
 
 // Pagination methods
@@ -1118,18 +1165,22 @@ onMounted(() => {
   // Initialize filtered countries and regions
   searchRegions("Kenya");
   fetchSupplierWarehouses();
+  fetchDeliveryRegions();
+  fetchRegions();
   filteredCountries.value = [...countries.value];
   filteredRegions.value = [...regions.value];
 
   // Add click outside listener for dropdowns
   document.addEventListener("click", closeCountryDropdownOutside);
   document.addEventListener("click", closeRegionDropdownOutside);
+  document.addEventListener("click", closeDropdownsOutside);
 });
 
 onBeforeUnmount(() => {
   // Clean up the event listeners
   document.removeEventListener("click", closeCountryDropdownOutside);
   document.removeEventListener("click", closeRegionDropdownOutside);
+  document.removeEventListener("click", closeDropdownsOutside);
 });
 
 // Add this with your other refs
@@ -1465,6 +1516,7 @@ onMounted(() => {
   searchRegions("Kenya");
   fetchSupplierWarehouses();
   fetchDeliveryRegions();
+  fetchRegions();
   filteredCountries.value = [...countries.value];
   filteredRegions.value = [...regions.value];
 
@@ -1496,6 +1548,7 @@ const closeDropdownsOutside = (event) => {
   if (!clickedInside) {
     isWarehouseDropdownOpen.value = false;
     isStatusDropdownOpen.value = false;
+    isRegionDropdownOpen.value = false;
   }
 };
 
@@ -1528,6 +1581,14 @@ const handleDeliveryRegionPageChange = (page) => {
 const handleDeliveryRegionPerPageChange = (newPerPage) => {
   deliveryRegionPerPage.value = newPerPage;
   fetchDeliveryRegions();
+};
+
+// Add closeRegionDropdownOutside method
+const closeRegionDropdownOutside = (event) => {
+  const dropdown = document.querySelector(".region-select-container");
+  if (dropdown && !dropdown.contains(event.target)) {
+    isRegionDropdownOpen.value = false;
+  }
 };
 </script>
 
