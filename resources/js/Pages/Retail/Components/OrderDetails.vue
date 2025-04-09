@@ -1,4 +1,5 @@
 <template>
+  <RetailerNavbar />
   <div class="page-container">
     <div class="content-container">
       <div class="header-container">
@@ -274,9 +275,13 @@
 import axios from "axios";
 import { formatNumber, formatDateOnly } from "@/utils/formatters";
 import { router } from '@inertiajs/vue3';
+import RetailerNavbar from './RetailerNavbar.vue';
 
 export default {
   name: "OrderView",
+  components: {
+    RetailerNavbar
+  },
   props: {
     uuid: {
       type: String,
