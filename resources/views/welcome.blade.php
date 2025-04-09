@@ -48,6 +48,7 @@
                 border-radius: 5px;
                 margin: 20px 0;
             }
+           
         </style>
     </head>
     <body>
@@ -69,7 +70,9 @@
                 
                 <p>For security reasons, we recommend changing your password after your first login.</p>
                 
-                <a href="{{ config('app.url') }}/login" class="button">Login to IPOS</a>
+                <a href="{{ config('app.url') }}/login" style="display: inline-block; padding: 10px 20px; background-color: #2263AB; color: #ffffff !important; text-decoration: none; border-radius: 5px; margin: 20px 0;">
+                  Login to IPOS
+                </a>
                 
                 <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
             </div>
