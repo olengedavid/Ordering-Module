@@ -273,6 +273,7 @@
 <script>
 import axios from "axios";
 import { formatNumber, formatDateOnly } from "@/utils/formatters";
+import { router } from '@inertiajs/vue3';
 
 export default {
   name: "OrderView",
@@ -417,7 +418,10 @@ export default {
       return diffDays;
     },
     goBack() {
-      this.$router.go(-1);
+      router.visit(route('retailer.orders'), {
+        preserveState: true,
+        preserveScroll: true,
+      });
     },
 
     // Dialog Methods
