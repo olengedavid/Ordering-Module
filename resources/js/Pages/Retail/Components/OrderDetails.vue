@@ -11,30 +11,30 @@
       <div v-if="order" class="order-details-container">
         <!-- Order Header with Status -->
         <div class="order-header">
-          <div class="order-id">Order #{{ order.orderId }}</div>
-          <div v-if="order.payStatus" :class="getPayStatusClass(order)">
-            {{ order.payStatus }}
+          <div class="order-id">Order #{{ order.order_ref }}</div>
+          <div v-if="order.payment_status" :class="getPayStatusClass(order)">
+            {{ order.payment_status }}
           </div>
-          <div v-else-if="order.paymentMode" class="payment-mode">
-            {{ order.paymentMode }}
+          <div v-else-if="order.payment_terms" class="payment-mode">
+            {{ order.payment_terms }}
           </div>
         </div>
 
-        <!-- Order Details Panel - New single container design -->
+        <!-- Order Details Panel -->
         <div class="order-details-panel">
           <div class="detail-row">
             <span class="detail-label">Order Date:</span>
-            <span class="detail-value">{{ order.date }}</span>
+            <span class="detail-value">{{ formatDateOnly(order.created_at) }}</span>
           </div>
 
-          <div class="detail-row" v-if="order.expectedDeliveryDate">
+          <div class="detail-row" v-if="order.expected_delivery_date">
             <span class="detail-label">Expected Delivery:</span>
-            <span class="detail-value">{{ order.expectedDeliveryDate }}</span>
+            <span class="detail-value">{{ formatDateOnly(order.expected_delivery_date) }}</span>
           </div>
 
-          <div class="detail-row" v-if="order.deliveryDate">
+          <div class="detail-row" v-if="order.delivery_date">
             <span class="detail-label">Delivered On:</span>
-            <span class="detail-value">{{ order.deliveryDate }}</span>
+            <span class="detail-value">{{ formatDateOnly(order.delivery_date) }}</span>
           </div>
 
           <div class="detail-row" v-if="hasDeliveryTimeframe">
@@ -48,50 +48,37 @@
 
           <div class="detail-row">
             <span class="detail-label">Supplier:</span>
-            <span class="detail-value">{{ order.supplier }}</span>
+            <span class="detail-value">{{ order.supplier?.company_name }}</span>
           </div>
 
           <div class="detail-row">
             <span class="detail-label">Amount:</span>
-            <span class="detail-value"
-              >Ksh {{ formatNumber(order.amount) }}</span
-            >
+            <span class="detail-value">Ksh {{ formatNumber(order.total_price) }}</span>
           </div>
 
           <div class="detail-row">
             <span class="detail-label">Ordered By:</span>
-            <span class="detail-value">{{ order.orderedBy }}</span>
+            <span class="detail-value">{{ order.creator?.name }}</span>
           </div>
 
-          <div class="detail-row" v-if="order.paymentMode">
-            <span class="detail-label">Payment Mode:</span>
-            <span class="detail-value">{{ order.paymentMode }}</span>
+          <div class="detail-row" v-if="order.payment_terms">
+            <span class="detail-label">Payment Terms:</span>
+            <span class="detail-value">{{ order.payment_terms }}</span>
           </div>
 
-          <div class="detail-row" v-if="order.payStatus">
+          <div class="detail-row" v-if="order.payment_status">
             <span class="detail-label">Payment Status:</span>
             <span class="detail-value">
               <span :class="getPayStatusClass(order)">
-                {{ order.payStatus }}
+                {{ order.payment_status }}
               </span>
             </span>
           </div>
 
-          <div class="detail-row" v-if="order.cancellationReason">
+          <div class="detail-row" v-if="order.cancellation_reason">
             <span class="detail-label">Cancellation Reason:</span>
-            <span class="detail-value">{{ order.cancellationReason }}</span>
+            <span class="detail-value">{{ order.cancellation_reason }}</span>
           </div>
-
-          <!-- Dynamically display any other properties we might have missed -->
-          <template
-            v-for="(value, key) in getAdditionalProperties()"
-            :key="key"
-          >
-            <div class="detail-row">
-              <span class="detail-label">{{ formatPropertyName(key) }}:</span>
-              <span class="detail-value">{{ value }}</span>
-            </div>
-          </template>
         </div>
 
         <!-- Product Items Table Section -->
@@ -142,102 +129,35 @@
                   <th @click="sortItemsBy('name')" class="sortable">
                     Product <i :class="getItemSortIcon('name')"></i>
                   </th>
-                  <th @click="sortItemsBy('availableQty')" class="sortable">
-                    Available Qty
-                    <i :class="getItemSortIcon('availableQty')"></i>
-                  </th>
                   <th @click="sortItemsBy('quantity')" class="sortable">
                     Ordered Qty <i :class="getItemSortIcon('quantity')"></i>
                   </th>
-                  <th @click="sortItemsBy('pricePerItem')" class="sortable">
-                    Unit Price <i :class="getItemSortIcon('pricePerItem')"></i>
+                  <th @click="sortItemsBy('unit_price')" class="sortable">
+                    Unit Price <i :class="getItemSortIcon('unit_price')"></i>
                   </th>
-                  <th @click="sortItemsBy('price')" class="sortable">
-                    Total Price <i :class="getItemSortIcon('price')"></i>
+                  <th @click="sortItemsBy('total_price')" class="sortable">
+                    Total Price <i :class="getItemSortIcon('total_price')"></i>
                   </th>
-                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                <tr
-                  v-for="(item, index) in paginatedItems"
-                  :key="index"
-                  class="item-row"
-                >
+                <tr v-for="(item, index) in paginatedItems" :key="index" class="item-row">
                   <td>
                     <div class="product-cell">
                       <div class="product-image">
-                        <img :src="item.imageUrl" :alt="item.name" />
+                        <img :src="item.product?.image_url || '/images/placeholder.png'" :alt="item.product?.name" />
                       </div>
                       <div class="product-info">
-                        <span class="product-name">{{ item.name }}</span>
+                        <span class="product-name">{{ item.product?.name }}</span>
                         <div class="product-meta">
-                          {{ item.type }} · {{ item.weight }}
+                          {{ item.product?.category?.name }} · {{ item.product?.weight }} {{ item.product?.weight_unit }}
                         </div>
                       </div>
                     </div>
                   </td>
-                  <td>
-                    <span
-                      :class="{
-                        'status-badge': true,
-                        'out-of-stock': item.outOfStock,
-                        'in-stock': !item.outOfStock,
-                      }"
-                    >
-                      {{
-                        item.outOfStock
-                          ? "Out of Stock"
-                          : item.availableQty || "In Stock"
-                      }}
-                    </span>
-                  </td>
-                  <td>
-                    <div class="quantity-selector">
-                      <button
-                        @click="decreaseItemQuantity(item)"
-                        :disabled="
-                          item.quantity <= (item.minOrder || 1) ||
-                          item.outOfStock
-                        "
-                        class="quantity-btn"
-                      >
-                        -
-                      </button>
-                      <span class="quantity">{{ item.quantity }}</span>
-                      <button
-                        @click="increaseItemQuantity(item)"
-                        :disabled="
-                          item.quantity >= (item.maxOrder || 50) ||
-                          item.outOfStock
-                        "
-                        class="quantity-btn"
-                      >
-                        +
-                      </button>
-                    </div>
-                  </td>
-                  <td>Ksh {{ formatNumber(item.pricePerItem) }}</td>
-                  <td>Ksh {{ formatNumber(item.price) }}</td>
-                  <td>
-                    <button @click="showDeleteDialog(index)" class="delete-btn">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="18"
-                        height="18"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      >
-                        <path d="M3 6h18"></path>
-                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                      </svg>
-                    </button>
-                  </td>
+                  <td>{{ item.quantity }}</td>
+                  <td>Ksh {{ formatNumber(item.unit_price) }}</td>
+                  <td>Ksh {{ formatNumber(item.total_price) }}</td>
                 </tr>
               </tbody>
             </table>
@@ -274,10 +194,7 @@
                 <span
                   v-for="page in totalItemsPages"
                   :key="page"
-                  :class="[
-                    'page-number',
-                    { active: currentItemsPage === page },
-                  ]"
+                  :class="['page-number', { active: currentItemsPage === page }]"
                   @click="goToItemsPage(page)"
                 >
                   {{ page }}
@@ -301,7 +218,7 @@
           </button>
           <button
             class="action-button secondary"
-            v-if="order.payStatus === 'Not Paid'"
+            v-if="order.payment_status === 'NOT_PAID'"
           >
             Send Reminder
           </button>
@@ -353,8 +270,10 @@
   </div>
 </template>
   
-  <script>
+<script>
 import axios from "axios";
+import { formatNumber, formatDateOnly } from "@/utils/formatters";
+
 export default {
   name: "OrderView",
   props: {
@@ -365,100 +284,8 @@ export default {
   },
   data() {
     return {
-      order: this.orderData,
-      orderItems: [
-        {
-          name: "All Purpose Fertilizer 14 Kgs",
-          weight: "14 Kilograms",
-          type: "Fertilizer",
-          price: 3450,
-          pricePerItem: 3450,
-          quantity: 1,
-          availableQty: 25,
-          minOrder: 1,
-          maxOrder: 50,
-          maxOrderUnit: "items",
-          supplier: "Aden Agri Supplies",
-          promotion: null,
-          outOfStock: false,
-          imageUrl:
-            "https://image.made-in-china.com/202f0j00SKpWwAoscucy/High-Quality-BOPP-Laminated-PP-Woven-Chemicals-Urea-Fertilizer-Bag-25kg-50kg-100kg.jpg",
-        },
-        {
-          name: "Starter Fertilizer 20 Kgs",
-          weight: "20 Kilograms",
-          type: "Fertilizer",
-          price: 3450,
-          pricePerItem: 3450,
-          quantity: 1,
-          availableQty: 15,
-          minOrder: 1,
-          maxOrder: 50,
-          maxOrderUnit: "item",
-          supplier: "Aden Agri Supplies",
-          promotion: {
-            discount: "50% OFF",
-            endDate: "Mar 12, 2025",
-          },
-          outOfStock: false,
-          imageUrl:
-            "https://image.made-in-china.com/202f0j00SKpWwAoscucy/High-Quality-BOPP-Laminated-PP-Woven-Chemicals-Urea-Fertilizer-Bag-25kg-50kg-100kg.jpg",
-        },
-        {
-          name: "DAP Fertilizer 46 Kgs",
-          weight: "46 Kilograms",
-          type: "Fertilizer",
-          price: 6900,
-          pricePerItem: 3450,
-          quantity: 2,
-          availableQty: 0,
-          minOrder: 1,
-          maxOrder: 50,
-          maxOrderUnit: "items",
-          supplier: "Green Agriculture Ltd",
-          promotion: null,
-          outOfStock: true,
-          imageUrl:
-            "https://image.made-in-china.com/202f0j00SKpWwAoscucy/High-Quality-BOPP-Laminated-PP-Woven-Chemicals-Urea-Fertilizer-Bag-25kg-50kg-100kg.jpg",
-        },
-        {
-          name: "Organic Compost 25 Kgs",
-          weight: "25 Kilograms",
-          type: "Soil Amendment",
-          price: 4800,
-          pricePerItem: 2400,
-          quantity: 2,
-          availableQty: 32,
-          minOrder: 1,
-          maxOrder: 30,
-          maxOrderUnit: "items",
-          supplier: "Green Agriculture Ltd",
-          promotion: null,
-          outOfStock: false,
-          imageUrl:
-            "https://image.made-in-china.com/202f0j00SKpWwAoscucy/High-Quality-BOPP-Laminated-PP-Woven-Chemicals-Urea-Fertilizer-Bag-25kg-50kg-100kg.jpg",
-        },
-        {
-          name: "Phosphate Fertilizer 15 Kgs",
-          weight: "15 Kilograms",
-          type: "Fertilizer",
-          price: 2950,
-          pricePerItem: 2950,
-          quantity: 1,
-          availableQty: 8,
-          minOrder: 1,
-          maxOrder: 40,
-          maxOrderUnit: "items",
-          supplier: "Farm Equipment Ltd",
-          promotion: {
-            discount: "25% OFF",
-            endDate: "Mar 05, 2025",
-          },
-          outOfStock: false,
-          imageUrl:
-            "https://image.made-in-china.com/202f0j00SKpWwAoscucy/High-Quality-BOPP-Laminated-PP-Woven-Chemicals-Urea-Fertilizer-Bag-25kg-50kg-100kg.jpg",
-        },
-      ],
+      order: null,
+      orderItems: [],
       itemSearchQuery: "",
       itemSortKey: "name",
       itemSortDir: "asc",
@@ -473,29 +300,28 @@ export default {
         action: null,
         data: null,
       },
+      formatNumber,
+      formatDateOnly,
     };
-  },
-  created() {
-    console.log("Order data received:", this.orderData);
   },
   computed: {
     showPayButton() {
       return (
         this.order &&
-        (this.order.payStatus === "Not Paid" ||
-          (this.order.paymentMode && this.order.paymentMode !== "Paid"))
+        (this.order.payment_status === "NOT_PAID" ||
+          (this.order.payment_terms && this.order.payment_terms !== "PAID"))
       );
     },
     hasDeliveryTimeframe() {
-      return this.order && this.order.date && this.order.expectedDeliveryDate;
+      return this.order && this.order.created_at && this.order.expected_delivery_date;
     },
     canCancelOrder() {
       // Only allow cancellation for requests or confirmed orders that are not yet delivered
       return (
         this.order &&
-        (this.order.orderId.startsWith("RQ-") ||
-          this.order.orderId.startsWith("CN-")) &&
-        !this.order.deliveryDate
+        (this.order.status === "REQUESTED" ||
+          this.order.status === "CONFIRMED") &&
+        !this.order.delivery_date
       );
     },
     filteredItems() {
@@ -505,9 +331,7 @@ export default {
       if (this.itemSearchQuery.trim() !== "") {
         const query = this.itemSearchQuery.toLowerCase();
         filtered = filtered.filter((item) => {
-          // Search through relevant properties of the item - still including type and weight in search
           return ["name", "type", "weight", "quantity"].some((prop) => {
-            // Convert value to string and check if it includes the query
             if (item[prop] === null || item[prop] === undefined) return false;
             return item[prop].toString().toLowerCase().includes(query);
           });
@@ -545,28 +369,37 @@ export default {
         maximumFractionDigits: 2,
       });
     },
+    formatDateOnly(dateString) {
+      if (!dateString) return '';
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    },
     getPayStatusClass(order) {
       return {
         "pay-status-badge": true,
-        "pay-status-paid": order.payStatus === "Paid",
-        "pay-status-not-paid": order.payStatus === "Not Paid",
+        "pay-status-paid": order.payment_status === "PAID",
+        "pay-status-not-paid": order.payment_status === "NOT_PAID",
       };
     },
     getDeliveryTimeframe(order) {
-      if (!order.date || !order.expectedDeliveryDate) return "";
+      if (!order.created_at || !order.expected_delivery_date) return "";
 
       const days = this.calculateDaysBetween(
-        order.date,
-        order.expectedDeliveryDate
+        order.created_at,
+        order.expected_delivery_date
       );
       return `${days} ${days === 1 ? "Day" : "Days"}`;
     },
     getDeliveryTimeframeClass(order) {
-      if (!order.date || !order.expectedDeliveryDate) return "";
+      if (!order.created_at || !order.expected_delivery_date) return "";
 
       const days = this.calculateDaysBetween(
-        order.date,
-        order.expectedDeliveryDate
+        order.created_at,
+        order.expected_delivery_date
       );
       return {
         "delivery-timeframe-badge": true,
@@ -577,37 +410,10 @@ export default {
       };
     },
     calculateDaysBetween(startDateStr, endDateStr) {
-      // Parse date strings (assuming format like "Feb 26, 2025")
-      const parseDate = (dateStr) => {
-        const [month, day, year] = dateStr.split(" ");
-        const monthMap = {
-          Jan: 0,
-          Feb: 1,
-          Mar: 2,
-          Apr: 3,
-          May: 4,
-          Jun: 5,
-          Jul: 6,
-          Aug: 7,
-          Sep: 8,
-          Oct: 9,
-          Nov: 10,
-          Dec: 11,
-        };
-
-        // Remove comma from day
-        const cleanDay = day.replace(",", "");
-
-        return new Date(year, monthMap[month], parseInt(cleanDay));
-      };
-
-      const startDate = parseDate(startDateStr);
-      const endDate = parseDate(endDateStr);
-
-      // Calculate difference in days
+      const startDate = new Date(startDateStr);
+      const endDate = new Date(endDateStr);
       const diffTime = endDate - startDate;
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
       return diffDays;
     },
     goBack() {
@@ -865,7 +671,7 @@ export default {
             per_page: this.itemsPerPage
           }
         });
-        this.orderItems = response.data.data; // Assuming paginated response
+        this.orderItems = response.data.data;
         this.resetItemsPagination();
       } catch (error) {
         console.error("Error fetching order items:", error);
@@ -880,7 +686,7 @@ export default {
 };
 </script>
   
-  <style scoped>
+<style scoped>
 .page-container {
   display: flex;
   justify-content: center;
