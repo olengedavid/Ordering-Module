@@ -16,8 +16,8 @@
           <div v-if="order.payment_status" :class="getPayStatusClass(order)">
             {{ order.payment_status }}
           </div>
-          <div v-else-if="order.payment_terms" class="payment-mode">
-            {{ order.payment_terms }}
+          <div v-else :class="getStatusBadgeClass">
+            {{ order.status }}
           </div>
         </div>
 
@@ -372,6 +372,16 @@ export default {
     },
     totalItemsPages() {
       return Math.ceil(this.filteredItems.length / this.itemsPerPage) || 1;
+    },
+    getStatusBadgeClass() {
+      if (!this.order?.status) return '';
+      const status = this.order.status.toLowerCase();
+      return {
+        'status-badge-requested': status === 'requested',
+        'status-badge-confirmed': status === 'confirmed',
+        'status-badge-delivered': status === 'delivered',
+        'status-badge-cancelled': status === 'cancelled'
+      };
     },
   },
   methods: {
@@ -1205,7 +1215,7 @@ export default {
 }
 
 .page-number.active {
-  background-color: #2563eb;
+  background-color: #0e64a5;
   color: white;
   font-weight: 600;
 }
@@ -1491,5 +1501,42 @@ export default {
     width: 36px;
     height: 36px;
   }
+}
+
+/* Status Badge Styles */
+.status-badge-requested {
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  background-color: rgba(251, 191, 36, 0.1);
+  color: #d97706;
+}
+
+.status-badge-confirmed {
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  background-color: rgba(37, 99, 235, 0.1);
+  color: #2563eb;
+}
+
+.status-badge-delivered {
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #047857;
+}
+
+.status-badge-cancelled {
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
 }
 </style>
