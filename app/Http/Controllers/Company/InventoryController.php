@@ -35,6 +35,9 @@ class InventoryController extends Controller
                 'inventories.max_order',
                 'inventories.currency',
                 'inventories.quantity_per_unit',
+                'inventories.promo_amount',
+                'inventories.promo_start_date',
+                'inventories.promo_end_date',
                 'companies.company_name as supplier',
                 'inventories.company_id',
                 'inventories.warehouse_id'
