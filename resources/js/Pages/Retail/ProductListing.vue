@@ -165,7 +165,7 @@ export default {
       try {
         const response = await axios.get(route("retailer.cart.count"), {
           params: {
-            retailer_id: this.retailer?.user.id,
+            retailer_id: this.retailer?.company.id,
           },
         });
         this.$refs.navbar?.updateCartCount(response.data.count);
@@ -177,7 +177,7 @@ export default {
       try {
         const response = await axios.get("/retailers/cart/items", {
           params: {
-            retailer_id: this.retailer?.user.id,
+            retailer_id: this.retailer?.company.id,
           }
         });
         this.cartItems = response.data;
