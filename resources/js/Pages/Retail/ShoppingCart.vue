@@ -10,68 +10,41 @@ const paymentMethod = ref("");
 const deliveryFee = ref(0);
 const creditBalance = ref(55000);
 const navbarRef = ref(null);
-const cartItems = ref([
-  {
-    name: "All Purpose Fertilizer 14 Kgs",
-    weight: "14 Kilograms",
-    type: "Fertilizer",
-    price: 3450,
-    pricePerItem: 3450,
-    quantity: 1,
-    minOrder: 1,
-    maxOrder: 50,
-    maxOrderUnit: "items",
-    supplier: "Aden Agri Supplies",
-    promotion: null,
-    outOfStock: false,
-    imageUrl:
-      "https://image.made-in-china.com/202f0j00SKpWwAoscucy/High-Quality-BOPP-Laminated-PP-Woven-Chemicals-Urea-Fertilizer-Bag-25kg-50kg-100kg.jpg",
-  },
-  {
-    name: "Starter Fertilizer 20 Kgs",
-    weight: "20 Kilograms",
-    type: "Fertilizer",
-    price: 3450,
-    pricePerItem: 3450,
-    quantity: 1,
-    minOrder: 1,
-    maxOrder: 50,
-    maxOrderUnit: "item",
-    supplier: "Aden Agri Supplies",
-    promotion: {
-      discount: "50% OFF",
-      endDate: "Mar 12, 2025",
-    },
-    outOfStock: false,
-    imageUrl:
-      "https://image.made-in-china.com/202f0j00SKpWwAoscucy/High-Quality-BOPP-Laminated-PP-Woven-Chemicals-Urea-Fertilizer-Bag-25kg-50kg-100kg.jpg",
-  },
-  {
-    name: "DAP Fertilizer 46 Kgs",
-    weight: "46 Kilograms",
-    type: "Fertilizer",
-    price: 6900,
-    pricePerItem: 3450,
-    quantity: 1,
-    minOrder: 1,
-    maxOrder: 50,
-    maxOrderUnit: "items",
-    supplier: "Green Agriculture Ltd",
-    promotion: null,
-    outOfStock: true,
-    imageUrl:
-      "https://image.made-in-china.com/202f0j00SKpWwAoscucy/High-Quality-BOPP-Laminated-PP-Woven-Chemicals-Urea-Fertilizer-Bag-25kg-50kg-100kg.jpg",
-  },
-]);
+const cartItems = ref([]);
 const loading = ref(false);
 const error = ref(null);
 const successMessage = ref("");
 const errorMessage = ref("");
 
+const hasActivePromotion = (item) => {
+  if (!item.inventory?.promo_amount || !item.inventory?.promo_start_date || !item.inventory?.promo_end_date) {
+    return false;
+  }
+  
+  const now = new Date();
+  const startDate = new Date(item.inventory.promo_start_date);
+  const endDate = new Date(item.inventory.promo_end_date);
+  
+  return now >= startDate && now <= endDate;
+};
+
+const getItemPrice = (item) => {
+  if (hasActivePromotion(item)) {
+    return Number(item.inventory.promo_amount);
+  }
+  return Number(item.unit_price);
+};
+
+const getDiscountPercentage = (item) => {
+  if (!hasActivePromotion(item)) return 0;
+  const discount = ((item.unit_price - item.inventory.promo_amount) / item.unit_price) * 100;
+  return Math.round(discount);
+};
+
 const totalAmount = computed(() => {
   return (
     cartItems.value.reduce(
-      (total, item) => total + item.unit_price * item.quantity,
+      (total, item) => total + getItemPrice(item) * item.quantity,
       0
     ) + deliveryFee.value
   );
@@ -357,12 +330,15 @@ onMounted(() => {
               </div>
 
               <div class="item-price">
-                <!-- <span class="price"
-                  >Ksh {{ formatNumber(item.price * item.quantity) }}</span
-                > -->
-                <!-- <span class="price-per-item"
-                  >Ksh {{ formatNumber(item.pricePerItem) }} per item</span
-                > -->
+                <template v-if="hasActivePromotion(item)">
+                  <div class="original-price">Ksh {{ formatNumber(item.unit_price * item.quantity) }}</div>
+                  <div class="discounted-price">Ksh {{ formatNumber(item.inventory.promo_amount * item.quantity) }}</div>
+                  <div class="discount-tag">{{ getDiscountPercentage(item) }}% OFF</div>
+                </template>
+                <template v-else>
+                  <div class="price">Ksh {{ formatNumber(item.unit_price * item.quantity) }}</div>
+                </template>
+                <span class="price-per-item">Ksh {{ formatNumber(getItemPrice(item)) }} per item</span>
               </div>
 
               <div class="product-meta-grid">
@@ -716,6 +692,30 @@ onMounted(() => {
   height: 3px;
   background: linear-gradient(90deg, #5b9bd5, #8ab4f8);
   border-radius: 3px;
+}
+
+.original-price {
+  color: #78909c;
+  text-decoration: line-through;
+  font-size: 0.9rem;
+  margin-bottom: 4px;
+}
+
+.discounted-price {
+  color: #e91e63;
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+
+.discount-tag {
+  display: inline-block;
+  background: linear-gradient(135deg, #ff6d00, #ff3d00);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-top: 4px;
 }
 
 .price {
