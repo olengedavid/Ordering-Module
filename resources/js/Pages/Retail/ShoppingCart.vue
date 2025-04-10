@@ -244,6 +244,8 @@ const placeOrder = async () => {
             supplier_id: supplierOrder.supplier_id,
           },
         });
+      // Redirect to orders page
+      window.location.href = route('retailer.orders');
       }
     }
 
