@@ -119,8 +119,16 @@ class OrderController extends Controller
         return response()->json($orders);
     }
 
-    public function show(Request $request){
-        $order = Order::where('uuid', $request->uuid)->firstOrFail();
+    public function show(Request $request)
+    {
+        $order = Order::where('uuid', $request->uuid)
+            ->with([
+                'supplier:id,company_name',
+                'retailer:id,company_name',
+                'creator:id,name'
+            ])
+            ->firstOrFail();
+            
         return response()->json($order);
     }
 
@@ -131,11 +139,11 @@ class OrderController extends Controller
             $order = Order::where('uuid', $request->uuid)->firstOrFail();
             
             $items = OrderedProduct::where('order_id', $order->id)
-                ->with([
-                    'inventory:id,product_id,warehouse_id,selling_price,quantity_per_unit',
-                    'inventory.product:id,name,description,category',
-                    'inventory.warehouse:id,name'
-                ])
+            ->with([
+                'inventory:id,product_id,warehouse_id,selling_price,quantity_per_unit',
+                'inventory.product:id,name,description,category,images',
+                'inventory.warehouse:id,name'
+            ])
                 ->paginate($request->per_page ?? 10);
 
             return response()->json($items);

@@ -25,17 +25,23 @@
         <div class="order-details-panel">
           <div class="detail-row">
             <span class="detail-label">Order Date:</span>
-            <span class="detail-value">{{ formatDateOnly(order.created_at) }}</span>
+            <span class="detail-value">{{
+              formatDateOnly(order.created_at)
+            }}</span>
           </div>
 
           <div class="detail-row" v-if="order.expected_delivery_date">
             <span class="detail-label">Expected Delivery:</span>
-            <span class="detail-value">{{ formatDateOnly(order.expected_delivery_date) }}</span>
+            <span class="detail-value">{{
+              formatDateOnly(order.expected_delivery_date)
+            }}</span>
           </div>
 
           <div class="detail-row" v-if="order.delivery_date">
             <span class="detail-label">Delivered On:</span>
-            <span class="detail-value">{{ formatDateOnly(order.delivery_date) }}</span>
+            <span class="detail-value">{{
+              formatDateOnly(order.delivery_date)
+            }}</span>
           </div>
 
           <div class="detail-row" v-if="hasDeliveryTimeframe">
@@ -54,7 +60,9 @@
 
           <div class="detail-row">
             <span class="detail-label">Amount:</span>
-            <span class="detail-value">Ksh {{ formatNumber(order.total_price) }}</span>
+            <span class="detail-value"
+              >Ksh {{ formatNumber(order.total_price) }}</span
+            >
           </div>
 
           <div class="detail-row">
@@ -142,16 +150,29 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(item, index) in paginatedItems" :key="index" class="item-row">
+                <tr
+                  v-for="(item, index) in paginatedItems"
+                  :key="index"
+                  class="item-row"
+                >
                   <td>
                     <div class="product-cell">
                       <div class="product-image">
-                        <img :src="item.product?.image_url || '/images/placeholder.png'" :alt="item.product?.name" />
+                        <img
+                          :src="
+                            item?.image_url || '/images/placeholder.png'
+                          "
+                          :alt="item.product?.name"
+                        />
                       </div>
                       <div class="product-info">
-                        <span class="product-name">{{ item.product?.name }}</span>
+                        <span class="product-name">{{
+                          item.product?.name
+                        }}</span>
                         <div class="product-meta">
-                          {{ item.product?.category?.name }} · {{ item.product?.weight }} {{ item.product?.weight_unit }}
+                          {{ item.product?.category?.name }} ·
+                          {{ item.product?.weight }}
+                          {{ item.product?.weight_unit }}
                         </div>
                       </div>
                     </div>
@@ -195,7 +216,10 @@
                 <span
                   v-for="page in totalItemsPages"
                   :key="page"
-                  :class="['page-number', { active: currentItemsPage === page }]"
+                  :class="[
+                    'page-number',
+                    { active: currentItemsPage === page },
+                  ]"
                   @click="goToItemsPage(page)"
                 >
                   {{ page }}
@@ -274,18 +298,18 @@
 <script>
 import axios from "axios";
 import { formatNumber, formatDateOnly } from "@/utils/formatters";
-import { router } from '@inertiajs/vue3';
-import RetailerNavbar from './RetailerNavbar.vue';
+import { router } from "@inertiajs/vue3";
+import RetailerNavbar from "./RetailerNavbar.vue";
 
 export default {
   name: "OrderView",
   components: {
-    RetailerNavbar
+    RetailerNavbar,
   },
   props: {
     uuid: {
       type: String,
-      required: true
+      required: true,
     },
   },
   data() {
@@ -319,7 +343,9 @@ export default {
       );
     },
     hasDeliveryTimeframe() {
-      return this.order && this.order.created_at && this.order.expected_delivery_date;
+      return (
+        this.order && this.order.created_at && this.order.expected_delivery_date
+      );
     },
     canCancelOrder() {
       // Only allow cancellation for requests or confirmed orders that are not yet delivered
@@ -374,13 +400,13 @@ export default {
       return Math.ceil(this.filteredItems.length / this.itemsPerPage) || 1;
     },
     getStatusBadgeClass() {
-      if (!this.order?.status) return '';
+      if (!this.order?.status) return "";
       const status = this.order.status.toLowerCase();
       return {
-        'status-badge-requested': status === 'requested',
-        'status-badge-confirmed': status === 'confirmed',
-        'status-badge-delivered': status === 'delivered',
-        'status-badge-cancelled': status === 'cancelled'
+        "status-badge-requested": status === "requested",
+        "status-badge-confirmed": status === "confirmed",
+        "status-badge-delivered": status === "delivered",
+        "status-badge-cancelled": status === "cancelled",
       };
     },
   },
@@ -392,12 +418,12 @@ export default {
       });
     },
     formatDateOnly(dateString) {
-      if (!dateString) return '';
+      if (!dateString) return "";
       const date = new Date(dateString);
-      return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
       });
     },
     getPayStatusClass(order) {
@@ -439,7 +465,7 @@ export default {
       return diffDays;
     },
     goBack() {
-      router.visit(route('retailer.orders'), {
+      router.visit(route("retailer.orders"), {
         preserveState: true,
         preserveScroll: true,
       });
@@ -691,16 +717,48 @@ export default {
     async fetchOrderItems() {
       try {
         const response = await axios.get(route("retailer.order.items"), {
-          params: { 
+          params: {
             uuid: this.uuid,
-            per_page: this.itemsPerPage
-          }
+            per_page: this.itemsPerPage,
+          },
         });
-        this.orderItems = response.data.data;
+        this.orderItems = response.data.data.map((item) => {
+          return {
+            ...item,
+            image_url: this.getPrimaryImagePreviewPath(item.inventory.product),
+          };
+        });
         this.resetItemsPagination();
       } catch (error) {
         console.error("Error fetching order items:", error);
       }
+    },
+
+    getPrimaryImagePreviewPath(product) {
+      if (!product.images) return "https://via.placeholder.com/50";
+
+      try {
+        let images;
+        const parsedImages =
+          typeof product.images === "string"
+            ? JSON.parse(product.images)
+            : product.images;
+
+        // Handle both array and object formats
+        images = Array.isArray(parsedImages)
+          ? parsedImages
+          : Object.values(parsedImages);
+
+        const primaryImage = images.find((img) => img.type === "primary");
+
+        if (primaryImage?.path) {
+          return `/storage/${primaryImage.path}`;
+        }
+      } catch (error) {
+        console.error("Error processing product images:", error);
+      }
+
+      return "https://via.placeholder.com/50";
     },
   },
 
