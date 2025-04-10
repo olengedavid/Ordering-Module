@@ -12,8 +12,6 @@
         :src="getPrimaryImagePreviewPath(product)"
         :alt="product.name"
       />
-      <div class="badge in-stock" v-if="product.inStock">In Stock</div>
-      <div class="badge out-of-stock" v-else>Out of Stock</div>
       <div class="promotion-badge" v-if="product.promotion">
         <div class="discount">{{ product.promotion.discount }}</div>
         <div class="promo-details">
@@ -336,11 +334,7 @@ export default {
   transform: scale(1.03);
 }
 
-/* Out of Stock styling */
-.product-card:not(.in-stock) .product-image {
-  opacity: 0.7;
-  filter: grayscale(40%);
-}
+
 
 .badge {
   position: absolute;
@@ -351,16 +345,6 @@ export default {
   font-size: 0.7rem;
   font-weight: 600;
   z-index: 2;
-}
-
-.in-stock {
-  background: linear-gradient(135deg, #00c853, #009624);
-  color: white;
-}
-
-.out-of-stock {
-  background: linear-gradient(135deg, #f44336, #d32f2f);
-  color: white;
 }
 
 /* Promotion badge styling */

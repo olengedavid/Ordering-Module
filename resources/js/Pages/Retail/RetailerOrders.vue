@@ -598,7 +598,7 @@ export default {
 
 .search-button {
   padding: 10px 16px;
-  background-color: #2563eb;
+  background-color: #0e64a5;
   color: white;
   border: none;
   border-radius: 0 6px 6px 0;
@@ -609,11 +609,11 @@ export default {
 }
 
 .search-button:hover {
-  background-color: #1d4ed8;
+  background-color: #0e64a5;
 }
 
 .search-button:active {
-  background-color: #1e40af;
+  background-color: #0e64a5;
 }
 
 /* Table */
@@ -665,13 +665,13 @@ export default {
 
 .sort-asc::after {
   content: "↑";
-  color: #2563eb;
+  color: #0e64a5;
   font-size: 12px;
 }
 
 .sort-desc::after {
   content: "↓";
-  color: #2563eb;
+  color: #0e64a5;
   font-size: 12px;
 }
 
@@ -771,7 +771,7 @@ export default {
 }
 
 .page-number.active {
-  background-color: #2563eb;
+  background-color: #0e64a5;
   color: white;
   font-weight: 600;
 }
@@ -885,7 +885,7 @@ export default {
   width: 40px;
   height: 40px;
   border: 4px solid #f3f3f3;
-  border-top: 4px solid #2563eb;
+  border-top: 4px solid #0e64a5;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }

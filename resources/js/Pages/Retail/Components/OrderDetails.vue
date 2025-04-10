@@ -1,4 +1,5 @@
 <template>
+  <RetailerNavbar />
   <div class="page-container">
     <div class="content-container">
       <div class="header-container">
@@ -15,8 +16,8 @@
           <div v-if="order.payment_status" :class="getPayStatusClass(order)">
             {{ order.payment_status }}
           </div>
-          <div v-else-if="order.payment_terms" class="payment-mode">
-            {{ order.payment_terms }}
+          <div v-else :class="getStatusBadgeClass">
+            {{ order.status }}
           </div>
         </div>
 
@@ -274,9 +275,13 @@
 import axios from "axios";
 import { formatNumber, formatDateOnly } from "@/utils/formatters";
 import { router } from '@inertiajs/vue3';
+import RetailerNavbar from './RetailerNavbar.vue';
 
 export default {
   name: "OrderView",
+  components: {
+    RetailerNavbar
+  },
   props: {
     uuid: {
       type: String,
@@ -345,11 +350,17 @@ export default {
         let aValue = a[this.itemSortKey];
         let bValue = b[this.itemSortKey];
 
+        // Handle null/undefined values
+        if (aValue === null || aValue === undefined) return 1 * modifier;
+        if (bValue === null || bValue === undefined) return -1 * modifier;
+
+        // Handle numeric values
         if (typeof aValue === "number" && typeof bValue === "number") {
-          return aValue < bValue ? -1 * modifier : 1 * modifier;
-        } else {
-          return aValue.toString().localeCompare(bValue.toString()) * modifier;
+          return (aValue - bValue) * modifier;
         }
+
+        // Handle string values
+        return String(aValue).localeCompare(String(bValue)) * modifier;
       });
 
       return filtered;
@@ -361,6 +372,16 @@ export default {
     },
     totalItemsPages() {
       return Math.ceil(this.filteredItems.length / this.itemsPerPage) || 1;
+    },
+    getStatusBadgeClass() {
+      if (!this.order?.status) return '';
+      const status = this.order.status.toLowerCase();
+      return {
+        'status-badge-requested': status === 'requested',
+        'status-badge-confirmed': status === 'confirmed',
+        'status-badge-delivered': status === 'delivered',
+        'status-badge-cancelled': status === 'cancelled'
+      };
     },
   },
   methods: {
@@ -1194,7 +1215,7 @@ export default {
 }
 
 .page-number.active {
-  background-color: #2563eb;
+  background-color: #0e64a5;
   color: white;
   font-weight: 600;
 }
@@ -1480,5 +1501,42 @@ export default {
     width: 36px;
     height: 36px;
   }
+}
+
+/* Status Badge Styles */
+.status-badge-requested {
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  background-color: rgba(251, 191, 36, 0.1);
+  color: #d97706;
+}
+
+.status-badge-confirmed {
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  background-color: rgba(37, 99, 235, 0.1);
+  color: #2563eb;
+}
+
+.status-badge-delivered {
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #047857;
+}
+
+.status-badge-cancelled {
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
 }
 </style>
