@@ -12,10 +12,10 @@
         :src="getPrimaryImagePreviewPath(product)"
         :alt="product.name"
       />
-      <div class="promotion-badge" v-if="product.promotion">
-        <div class="discount">{{ product.promotion.discount }}</div>
+      <div class="promotion-badge" v-if="hasActivePromotion">
+        <div class="discount">{{ discountPercentage }}% OFF</div>
         <div class="promo-details">
-          Ends {{ formatDate(product.promotion.endDate) }}
+          Ends {{ formatDate(product.promo_end_date) }}
         </div>
       </div>
     </div>
@@ -64,7 +64,7 @@
         <div>Max: {{ Math.floor(product.max_order) }} items</div>
       </div>
 
-      <div class="pricing" v-if="product.promotion">
+      <div class="pricing" v-if="hasActivePromotion">
         <div class="original-price">
           {{ formatPrice(calculateOriginalTotal()) }}
         </div>
@@ -127,6 +127,24 @@ export default {
       isInCart: false,
       cartItemUuid: null
     };
+  },
+  computed: {
+    hasActivePromotion() {
+      if (!this.product.promo_amount || !this.product.promo_start_date || !this.product.promo_end_date) {
+        return false;
+      }
+      
+      const now = new Date();
+      const startDate = new Date(this.product.promo_start_date);
+      const endDate = new Date(this.product.promo_end_date);
+      
+      return now >= startDate && now <= endDate;
+    },
+    discountPercentage() {
+      if (!this.hasActivePromotion) return 0;
+      const discount = ((this.product.selling_price - this.product.promo_amount) / this.product.selling_price) * 100;
+      return Math.round(discount);
+    }
   },
   watch: {
     cartItem: {
@@ -236,20 +254,17 @@ export default {
       }
     },
     formatDate(date) {
+      if (!date) return '';
+      const dateObj = new Date(date);
       const options = { year: "numeric", month: "short", day: "numeric" };
-      return date.toLocaleDateString("en-US", options);
+      return dateObj.toLocaleDateString("en-US", options);
     },
     calculateOriginalTotal() {
       return this.product.selling_price * this.quantity;
     },
     calculateDiscountedTotal() {
-      if (!this.product.promotion) return this.calculateOriginalTotal();
-
-      const discountMatch = this.product.promotion.discount.match(/\d+/);
-      if (!discountMatch) return this.calculateOriginalTotal();
-
-      const discountPercent = parseInt(discountMatch[0]);
-      return this.calculateOriginalTotal() * (1 - discountPercent / 100);
+      if (!this.hasActivePromotion) return this.calculateOriginalTotal();
+      return this.product.promo_amount * this.quantity;
     },
     formatPrice(price) {
       // Format price with comma separators and currency
