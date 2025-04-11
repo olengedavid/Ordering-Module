@@ -11,7 +11,12 @@
       />
 
       <h1 class="page-title">
-        All Products in: <span class="location">{{ Array.isArray(currentRegion) ? currentRegion.join(", ") : currentRegion }}</span>
+        All Products in:
+        <span class="location">{{
+          Array.isArray(currentRegion)
+            ? currentRegion.join(", ")
+            : currentRegion
+        }}</span>
       </h1>
 
       <div v-if="isLoading" class="loading-state">Loading products...</div>
@@ -96,7 +101,7 @@ export default {
     return {
       currentRegion: [],
       searchQuery: "",
-      filterType: "new",
+      filterType: { categories: [], manufacturers: [] },
       productsRow1: [],
       productsRow2: [],
       productsRow3: [],
@@ -122,16 +127,16 @@ export default {
     //   return [...this.productsRow1, ...this.productsRow2, ...this.productsRow3];
     // },
     filteredProductsRow1() {
-        return this.productsRow1;
-    //   return this.filterProducts(this.productsRow1);
+      return this.productsRow1;
+      //   return this.filterProducts(this.productsRow1);
     },
     filteredProductsRow2() {
-        return this.productsRow2;
-    //   return this.filterProducts(this.productsRow2);
+      return this.productsRow2;
+      //   return this.filterProducts(this.productsRow2);
     },
     filteredProductsRow3() {
-        return this.productsRow3;
-    //   return this.filterProducts(this.productsRow3);
+      return this.productsRow3;
+      //   return this.filterProducts(this.productsRow3);
     },
   },
   methods: {
@@ -147,6 +152,8 @@ export default {
     },
     handleFilterChange(filterType) {
       this.filterType = filterType;
+      this.hasMoreProducts = true;
+      this.fetchProducts();
       console.log("Filter changed to:", filterType);
     },
     applyAllFilters(filters) {
@@ -178,7 +185,7 @@ export default {
         const response = await axios.get("/retailers/cart/items", {
           params: {
             retailer_id: this.retailer?.company.id,
-          }
+          },
         });
         this.cartItems = response.data;
       } catch (error) {
@@ -186,29 +193,28 @@ export default {
       }
     },
     getCartItemForProduct(product) {
-      return this.cartItems.find(item => item.warehouse_inventory_id === product.inventory_id);
+      return this.cartItems.find(
+        (item) => item.warehouse_inventory_id === product.inventory_id
+      );
     },
-    
+
     async fetchProducts(loadMore = false) {
       if (this.isLoading || (!loadMore && !this.hasMoreProducts)) return;
 
       try {
         this.isLoading = true;
         const params = {
-         search: this.searchQuery || "",
-         region: this.currentRegion || "",
-        //  category: this.filterType || "",
-          manufacturer: "",
+          search: this.searchQuery || "",
+          region: this.currentRegion || "",
+          categories: this.filterType.categories,
+          manufacturers: this.filterType.manufacturers,
           limit: 20,
           lastId: loadMore ? this.lastId : "",
         };
 
-      
-        const response = await axios.get(
-          `/retailers/product-search?`, {
-            params,
-          }
-        );
+        const response = await axios.get(`/retailers/product-search?`, {
+          params,
+        });
 
         if (response.data) {
           const newProducts = response.data.map((product) => ({
@@ -249,23 +255,22 @@ export default {
     },
     async syncCompany() {
       try {
-        const response = await axios.get(route('retailer.company.sync'), {
+        const response = await axios.get(route("retailer.company.sync"), {
           params: {
-            refreshtoken: 'e51661ad-9147-44a3-b744-73bc68d67124'
-          }
+            refreshtoken: "e51661ad-9147-44a3-b744-73bc68d67124",
+          },
         });
 
         this.retailer = response.data;
-        sessionStorage.setItem('retailerData', JSON.stringify(response.data));
+        sessionStorage.setItem("retailerData", JSON.stringify(response.data));
 
         this.fetchProducts();
         this.fetchCartItemsCount();
         this.fetchCartItems();
       } catch (error) {
-        console.error('Error syncing company:', error);
+        console.error("Error syncing company:", error);
       }
     },
-
   },
   mounted() {
     this.syncCompany();

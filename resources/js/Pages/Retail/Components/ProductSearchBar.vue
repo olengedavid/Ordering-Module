@@ -148,10 +148,10 @@
           {{ category.name }}
           <span
             class="checkbox"
-            :class="{ checked: isCategorySelected(category.id) }"
+            :class="{ checked: isCategorySelected(category.name) }"
           >
             <svg
-              v-if="isCategorySelected(category.id)"
+              v-if="isCategorySelected(category.name)"
               xmlns="http://www.w3.org/2000/svg"
               width="16"
               height="16"
@@ -186,10 +186,10 @@
           {{ manufacturer.name }}
           <span
             class="checkbox"
-            :class="{ checked: isManufacturerSelected(manufacturer.id) }"
+            :class="{ checked: isManufacturerSelected(manufacturer.name) }"
           >
             <svg
-              v-if="isManufacturerSelected(manufacturer.id)"
+              v-if="isManufacturerSelected(manufacturer.name)"
               xmlns="http://www.w3.org/2000/svg"
               width="16"
               height="16"
@@ -237,20 +237,8 @@ export default {
       selectedManufacturers: [],
       regions: ["Meru", "Nairobi", "Nakuru", "Mombasa", "Kisumu", "Eldoret"],
       retailerCountry: "Kenya",
-      categories: [
-        { id: 1, name: "Fertilizer" },
-        { id: 2, name: "Lawn Care" },
-        { id: 3, name: "Organic" },
-        { id: 4, name: "Specialty" },
-        { id: 5, name: "Pest Control" },
-      ],
-      manufacturers: [
-        { id: 1, name: "Aden Agri Supplies" },
-        { id: 2, name: "Green Growth Ltd" },
-        { id: 3, name: "EcoFarm Supplies" },
-        { id: 4, name: "FarmTech Solutions" },
-        { id: 5, name: "Nature's Best" },
-      ],
+      categories: [],
+      manufacturers: [],
     };
   },
   emits: ["products-search"],
@@ -299,17 +287,17 @@ export default {
       this.$emit("region-change", this.selectedRegions);
     },
     toggleCategory(category) {
-      const index = this.selectedCategories.indexOf(category.id);
+      const index = this.selectedCategories.indexOf(category.name);
       if (index === -1) {
-        this.selectedCategories.push(category.id);
+        this.selectedCategories.push(category.name);
       } else {
         this.selectedCategories.splice(index, 1);
       }
     },
     toggleManufacturer(manufacturer) {
-      const index = this.selectedManufacturers.indexOf(manufacturer.id);
+      const index = this.selectedManufacturers.indexOf(manufacturer.name);
       if (index === -1) {
-        this.selectedManufacturers.push(manufacturer.id);
+        this.selectedManufacturers.push(manufacturer.name);
       } else {
         this.selectedManufacturers.splice(index, 1);
       }
@@ -322,7 +310,7 @@ export default {
     },
     // New methods for selecting all categories
     selectAllCategories() {
-      this.selectedCategories = this.categories.map((category) => category.id);
+      this.selectedCategories = this.categories.map((category) => category.name);
     },
     unselectAllCategories() {
       this.selectedCategories = [];
@@ -330,7 +318,7 @@ export default {
     // New methods for selecting all manufacturers
     selectAllManufacturers() {
       this.selectedManufacturers = this.manufacturers.map(
-        (manufacturer) => manufacturer.id
+        (manufacturer) => manufacturer.name
       );
     },
     unselectAllManufacturers() {
@@ -407,10 +395,37 @@ export default {
         this.regions = [];
       }
     },
+    async fetchCategories() {
+      try {
+        const response = await axios.get(route("static.categories"));
+        this.categories = response.data.map((category, index) => ({
+          id: index + 1,
+          name: category,
+        }));
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+        this.categories = [];
+      }
+    },
+
+    async fetchManufacturers() {
+      try {
+        const response = await axios.get(route("static.manufacturers"));
+        this.manufacturers = response.data.map((manufacturer, index) => ({
+          id: index + 1,
+          name: manufacturer,
+        }));
+      } catch (error) {
+        console.error("Error fetching manufacturers:", error);
+        this.manufacturers = [];
+      }
+    },
   },
   mounted() {
     document.addEventListener("click", this.closeDropdowns);
     this.fetchRegionsForRetailer();
+    this.fetchCategories();
+    this.fetchManufacturers();
   },
   beforeUnmount() {
     document.removeEventListener("click", this.closeDropdowns);

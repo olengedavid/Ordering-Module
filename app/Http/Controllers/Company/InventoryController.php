@@ -61,12 +61,12 @@ class InventoryController extends Controller
             });
         }
     
-        if ($request->category) {
-            $query->where('products.category', $request->category);
+        if ($request->categories && is_array($request->categories)) {
+            $query->whereIn('products.category', $request->categories);
         }
     
-        if ($request->manufacturer) {
-            $query->where('products.manufucturer', $request->manufacturer);
+        if ($request->manufacturers && is_array($request->manufacturers)) {
+            $query->whereIn('products.manufucturer', $request->manufacturers);
         }
     
         if ($request->lastId) {
