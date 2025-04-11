@@ -86,11 +86,15 @@ class InventoryController extends Controller
 
         $inventories = Inventory::where('company_id', $company->id)
             ->with(['product', 'warehouse'])
-            ->whereHas('product', function ($query) use ($search) {
-                $query->where('name', 'like', "%{$search}%");
-            })
-            ->orWhereHas('warehouse', function ($query) use ($search) {
-                $query->where('name', 'like', "%{$search}%");
+            ->where(function ($query) use ($search) {
+                if ($search) {
+                    $query->whereHas('product', function ($query) use ($search) {
+                        $query->where('name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('warehouse', function ($query) use ($search) {
+                        $query->where('name', 'like', "%{$search}%");
+                    });
+                }
             })
             ->latest()
             ->paginate($request->per_page);
