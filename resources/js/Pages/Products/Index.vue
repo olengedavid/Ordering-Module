@@ -6,6 +6,7 @@ import { useForm, usePage } from "@inertiajs/vue3";
 import CustomPagination from "@/Components/CustomPagination.vue";
 import SuccessMessage from "@/Components/SuccessMessage.vue";
 import ErrorMessage from "@/Components/ErrorMessage.vue";
+import SearchableDropdown from "@/Components/SearchableDropdown.vue";
 
 const showProductModal = ref(false);
 const editingProduct = ref(false);
@@ -28,24 +29,8 @@ const perPage = ref(10);
 const lastPage = ref(1);
 
 const units = ref([]);
-
-
-
-// Add product categories array
-const productCategories = [
-  "Beverages",
-  "Dairy",
-  "Meat & Poultry",
-  "Seafood",
-  "Fruits & Vegetables",
-  "Bakery",
-  "Grains & Pasta",
-  "Canned Goods",
-  "Snacks",
-  "Condiments & Sauces",
-  "Baking Supplies",
-  "Oils & Vinegars",
-];
+const manufacturers = ref([]);
+const categories = ref([]);
 
 const form = useForm({
   name: "",
@@ -65,29 +50,17 @@ const form = useForm({
 const isCategoryOpen = ref(false);
 const isUnitOpen = ref(false);
 const isStatusOpen = ref(false);
-const categorySearchQuery = ref('');
-const unitSearchQuery = ref('');
-const statusSearchQuery = ref('');
-const filteredCategories = ref([...productCategories]);
+const categorySearchQuery = ref("");
+const unitSearchQuery = ref("");
+const statusSearchQuery = ref("");
 const filteredUnits = ref([]);
-const filteredStatuses = ref(['Active', 'Inactive']);
+const filteredStatuses = ref(["Active", "Inactive"]);
 
-// Add dropdown methods
-const toggleCategoryDropdown = () => {
-  isCategoryOpen.value = !isCategoryOpen.value;
-  if (isCategoryOpen.value) {
-    categorySearchQuery.value = '';
-    filteredCategories.value = [...productCategories];
-  }
-  // Close other dropdowns
-  isUnitOpen.value = false;
-  isStatusOpen.value = false;
-};
 
 const toggleUnitDropdown = () => {
   isUnitOpen.value = !isUnitOpen.value;
   if (isUnitOpen.value) {
-    unitSearchQuery.value = '';
+    unitSearchQuery.value = "";
     filteredUnits.value = [...units.value];
   }
   // Close other dropdowns
@@ -98,43 +71,52 @@ const toggleUnitDropdown = () => {
 const toggleStatusDropdown = () => {
   isStatusOpen.value = !isStatusOpen.value;
   if (isStatusOpen.value) {
-    statusSearchQuery.value = '';
-    filteredStatuses.value = ['Active', 'Inactive'];
+    statusSearchQuery.value = "";
+    filteredStatuses.value = ["Active", "Inactive"];
   }
   // Close other dropdowns
   isCategoryOpen.value = false;
   isUnitOpen.value = false;
 };
 
-const filterCategories = () => {
-  if (!categorySearchQuery.value.trim()) {
-    filteredCategories.value = [...productCategories];
-  } else {
-    const query = categorySearchQuery.value.toLowerCase();
-    filteredCategories.value = productCategories.filter(
-      category => category.toLowerCase().includes(query)
-    );
-  }
-};
+
 
 const filterUnits = () => {
   if (!unitSearchQuery.value.trim()) {
     filteredUnits.value = [...units.value];
   } else {
     const query = unitSearchQuery.value.toLowerCase();
-    filteredUnits.value = units.value.filter(
-      unit => unit.label.toLowerCase().includes(query)
+    filteredUnits.value = units.value.filter((unit) =>
+      unit.label.toLowerCase().includes(query)
     );
+  }
+};
+
+const fetchManufacturers = async () => {
+  try {
+    const response = await axios.get(route("static.manufacturers"));
+    manufacturers.value = response.data;
+  } catch (error) {
+    console.error("Error fetching manufacturers:", error);
+  }
+};
+
+const fetchCategories = async () => {
+  try {
+    const response = await axios.get(route("static.categories"));
+    categories.value = response.data;
+  } catch (error) {
+    console.error("Error fetching categories:", error);
   }
 };
 
 const filterStatuses = () => {
   if (!statusSearchQuery.value.trim()) {
-    filteredStatuses.value = ['Active', 'Inactive'];
+    filteredStatuses.value = ["Active", "Inactive"];
   } else {
     const query = statusSearchQuery.value.toLowerCase();
-    filteredStatuses.value = ['Active', 'Inactive'].filter(
-      status => status.toLowerCase().includes(query)
+    filteredStatuses.value = ["Active", "Inactive"].filter((status) =>
+      status.toLowerCase().includes(query)
     );
   }
 };
@@ -142,27 +124,27 @@ const filterStatuses = () => {
 const selectCategory = (category) => {
   form.category = category;
   isCategoryOpen.value = false;
-  categorySearchQuery.value = '';
+  categorySearchQuery.value = "";
 };
 
 const selectUnit = (unit) => {
   form.unit_of_measure = unit.value;
   isUnitOpen.value = false;
-  unitSearchQuery.value = '';
+  unitSearchQuery.value = "";
 };
 
 const selectStatus = (status) => {
   form.status = status.toLowerCase();
   isStatusOpen.value = false;
-  statusSearchQuery.value = '';
+  statusSearchQuery.value = "";
 };
 
 // Close dropdowns when clicking outside
 const closeDropdownsOutside = (event) => {
-  const dropdowns = document.querySelectorAll('.custom-select-container');
+  const dropdowns = document.querySelectorAll(".custom-select-container");
   let clickedInside = false;
-  
-  dropdowns.forEach(dropdown => {
+
+  dropdowns.forEach((dropdown) => {
     if (dropdown.contains(event.target)) {
       clickedInside = true;
     }
@@ -250,18 +232,6 @@ const setPrimaryImage = (imageId) => {
       imagePreview.value = image.url;
     }
   });
-};
-
-const removeImage = (imageId) => {
-  const index = productImages.value.findIndex((img) => img.id === imageId);
-  if (index > -1) {
-    const wasRemovingPrimary = productImages.value[index].isPrimary;
-    productImages.value.splice(index, 1);
-    if (wasRemovingPrimary && productImages.value.length > 0) {
-      productImages.value[0].isPrimary = true;
-      imagePreview.value = productImages.value[0].url;
-    }
-  }
 };
 
 const closeProductModal = () => {
@@ -457,7 +427,7 @@ const sortedProducts = computed(() => {
     const keyMap = {
       sku: "sku_number",
       unitOfMeasure: "unit_of_measure",
-      manufacturer: "manufucturer"
+      manufacturer: "manufucturer",
     };
 
     let aKey = keyMap[sortKey.value] || sortKey.value;
@@ -502,14 +472,16 @@ const getSortIcon = (key) => {
 onMounted(() => {
   fetchSupplierProducts();
   fetchUnits();
-  document.addEventListener('click', closeDropdownsOutside);
+  fetchCategories();
+  fetchManufacturers();
+  document.addEventListener("click", closeDropdownsOutside);
   // Initialize filtered arrays
-  filteredCategories.value = [...productCategories];
-  filteredStatuses.value = ['Active', 'Inactive'];
+
+  filteredStatuses.value = ["Active", "Inactive"];
 });
 
 onUnmounted(() => {
-  document.removeEventListener('click', closeDropdownsOutside);
+  document.removeEventListener("click", closeDropdownsOutside);
 });
 </script>
 
@@ -585,25 +557,47 @@ onUnmounted(() => {
               <thead class="bg-gray-50">
                 <tr>
                   <th class="table-header">Product</th>
-                  <th @click="sortBy('name')" class="table-header table-header-sortable">
+                  <th
+                    @click="sortBy('name')"
+                    class="table-header table-header-sortable"
+                  >
                     Name <i :class="getSortIcon('name')"></i>
                   </th>
-                  <th @click="sortBy('sku')" class="table-header table-header-sortable">
+                  <th
+                    @click="sortBy('sku')"
+                    class="table-header table-header-sortable"
+                  >
                     SKU <i :class="getSortIcon('sku')"></i>
                   </th>
-                  <th @click="sortBy('category')" class="table-header table-header-sortable">
+                  <th
+                    @click="sortBy('category')"
+                    class="table-header table-header-sortable"
+                  >
                     Category <i :class="getSortIcon('category')"></i>
                   </th>
-                  <th @click="sortBy('unitOfMeasure')" class="table-header table-header-sortable">
-                    Unit of Measure <i :class="getSortIcon('unitOfMeasure')"></i>
+                  <th
+                    @click="sortBy('unitOfMeasure')"
+                    class="table-header table-header-sortable"
+                  >
+                    Unit of Measure
+                    <i :class="getSortIcon('unitOfMeasure')"></i>
                   </th>
-                  <th @click="sortBy('description')" class="table-header table-header-sortable">
+                  <th
+                    @click="sortBy('description')"
+                    class="table-header table-header-sortable"
+                  >
                     Description <i :class="getSortIcon('description')"></i>
                   </th>
-                  <th @click="sortBy('manufacturer')" class="table-header table-header-sortable">
+                  <th
+                    @click="sortBy('manufacturer')"
+                    class="table-header table-header-sortable"
+                  >
                     Manufacturer <i :class="getSortIcon('manufacturer')"></i>
                   </th>
-                  <th @click="sortBy('status')" class="table-header table-header-sortable">
+                  <th
+                    @click="sortBy('status')"
+                    class="table-header table-header-sortable"
+                  >
                     Status <i :class="getSortIcon('status')"></i>
                   </th>
                   <th class="table-header actions-column">Actions</th>
@@ -694,7 +688,9 @@ onUnmounted(() => {
           <div class="modal-container">
             <div class="modal-header">
               <h2>{{ editingProduct ? "Edit Product" : "Add New Product" }}</h2>
-              <button class="close-btn" @click="closeProductModal">&times;</button>
+              <button class="close-btn" @click="closeProductModal">
+                &times;
+              </button>
             </div>
             <div class="modal-body">
               <form @submit.prevent="saveProduct">
@@ -720,7 +716,14 @@ onUnmounted(() => {
                         stroke-linecap="round"
                         stroke-linejoin="round"
                       >
-                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                        <rect
+                          x="3"
+                          y="3"
+                          width="18"
+                          height="18"
+                          rx="2"
+                          ry="2"
+                        />
                         <circle cx="8.5" cy="8.5" r="1.5" />
                         <polyline points="21 15 16 10 5 21" />
                       </svg>
@@ -823,86 +826,46 @@ onUnmounted(() => {
                 </div>
 
                 <div class="form-group">
-                  <label for="category">Category <span class="required">*</span></label>
-                  <div class="custom-select-container">
-                    <div 
-                      class="custom-select-trigger" 
-                      @click="toggleCategoryDropdown"
-                      :class="{ 'active': isCategoryOpen }"
-                    >
-                      <span :data-has-value="!!form.category">{{ form.category || 'Select category' }}</span>
-                      <svg 
-                        class="dropdown-arrow" 
-                        :class="{ 'open': isCategoryOpen }"
-                        xmlns="http://www.w3.org/2000/svg" 
-                        width="16" 
-                        height="16" 
-                        viewBox="0 0 24 24" 
-                        fill="none" 
-                        stroke="currentColor" 
-                        stroke-width="2" 
-                        stroke-linecap="round" 
-                        stroke-linejoin="round"
-                      >
-                        <polyline points="6 9 12 15 18 9"></polyline>
-                      </svg>
-                    </div>
-                    
-                    <div class="custom-select-dropdown" v-show="isCategoryOpen">
-                      <div class="search-box">
-                        <input
-                          type="text"
-                          v-model="categorySearchQuery"
-                          @input="filterCategories"
-                          placeholder="Search categories..."
-                          class="dropdown-search"
-                          @click.stop
-                        >
-                      </div>
-                      
-                      <div class="dropdown-options">
-                        <div
-                          v-for="category in filteredCategories"
-                          :key="category"
-                          class="dropdown-option"
-                          @click="selectCategory(category)"
-                        >
-                          {{ category }}
-                        </div>
-                        <div v-if="filteredCategories.length === 0" class="no-results">
-                          No categories match your search
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  <label for="category"
+                    >Category <span class="required">*</span></label
+                  >
+                  <SearchableDropdown
+                    v-model="form.category"
+                    :options="categories"
+                    placeholder="Select category"
+                  />
                 </div>
 
                 <div class="form-group">
-                  <label for="unitOfMeasure">Unit of Measure <span class="required">*</span></label>
+                  <label for="unitOfMeasure"
+                    >Unit of Measure <span class="required">*</span></label
+                  >
                   <div class="custom-select-container">
-                    <div 
-                      class="custom-select-trigger" 
+                    <div
+                      class="custom-select-trigger"
                       @click="toggleUnitDropdown"
-                      :class="{ 'active': isUnitOpen }"
+                      :class="{ active: isUnitOpen }"
                     >
-                      <span :data-has-value="!!form.unit_of_measure">{{ form.unit_of_measure || 'Select unit' }}</span>
-                      <svg 
-                        class="dropdown-arrow" 
-                        :class="{ 'open': isUnitOpen }"
-                        xmlns="http://www.w3.org/2000/svg" 
-                        width="16" 
-                        height="16" 
-                        viewBox="0 0 24 24" 
-                        fill="none" 
-                        stroke="currentColor" 
-                        stroke-width="2" 
-                        stroke-linecap="round" 
+                      <span :data-has-value="!!form.unit_of_measure">{{
+                        form.unit_of_measure || "Select unit"
+                      }}</span>
+                      <svg
+                        class="dropdown-arrow"
+                        :class="{ open: isUnitOpen }"
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
                         stroke-linejoin="round"
                       >
                         <polyline points="6 9 12 15 18 9"></polyline>
                       </svg>
                     </div>
-                    
+
                     <div class="custom-select-dropdown" v-show="isUnitOpen">
                       <div class="search-box">
                         <input
@@ -912,9 +875,9 @@ onUnmounted(() => {
                           placeholder="Search units..."
                           class="dropdown-search"
                           @click.stop
-                        >
+                        />
                       </div>
-                      
+
                       <div class="dropdown-options">
                         <div
                           v-for="unit in filteredUnits"
@@ -924,7 +887,10 @@ onUnmounted(() => {
                         >
                           {{ unit.label }}
                         </div>
-                        <div v-if="filteredUnits.length === 0" class="no-results">
+                        <div
+                          v-if="filteredUnits.length === 0"
+                          class="no-results"
+                        >
                           No units match your search
                         </div>
                       </div>
@@ -949,41 +915,41 @@ onUnmounted(() => {
                   <label for="manufacturer"
                     >Manufacturer <span class="required">*</span></label
                   >
-                  <input
-                    type="text"
-                    id="manufacturer"
+                  <SearchableDropdown
                     v-model="form.manufucturer"
-                    required
-                    placeholder="Enter manufacturer name"
+                    :options="manufacturers"
+                    placeholder="Select manufacturer"
                   />
                 </div>
 
                 <div class="form-group">
                   <label for="status">Status</label>
                   <div class="custom-select-container">
-                    <div 
-                      class="custom-select-trigger" 
+                    <div
+                      class="custom-select-trigger"
                       @click="toggleStatusDropdown"
-                      :class="{ 'active': isStatusOpen }"
+                      :class="{ active: isStatusOpen }"
                     >
-                      <span :data-has-value="!!form.status">{{ form.status || 'Select status' }}</span>
-                      <svg 
-                        class="dropdown-arrow" 
-                        :class="{ 'open': isStatusOpen }"
-                        xmlns="http://www.w3.org/2000/svg" 
-                        width="16" 
-                        height="16" 
-                        viewBox="0 0 24 24" 
-                        fill="none" 
-                        stroke="currentColor" 
-                        stroke-width="2" 
-                        stroke-linecap="round" 
+                      <span :data-has-value="!!form.status">{{
+                        form.status || "Select status"
+                      }}</span>
+                      <svg
+                        class="dropdown-arrow"
+                        :class="{ open: isStatusOpen }"
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
                         stroke-linejoin="round"
                       >
                         <polyline points="6 9 12 15 18 9"></polyline>
                       </svg>
                     </div>
-                    
+
                     <div class="custom-select-dropdown" v-show="isStatusOpen">
                       <div class="search-box">
                         <input
@@ -993,9 +959,9 @@ onUnmounted(() => {
                           placeholder="Search statuses..."
                           class="dropdown-search"
                           @click.stop
-                        >
+                        />
                       </div>
-                      
+
                       <div class="dropdown-options">
                         <div
                           v-for="status in filteredStatuses"
@@ -1005,7 +971,10 @@ onUnmounted(() => {
                         >
                           {{ status }}
                         </div>
-                        <div v-if="filteredStatuses.length === 0" class="no-results">
+                        <div
+                          v-if="filteredStatuses.length === 0"
+                          class="no-results"
+                        >
                           No statuses match your search
                         </div>
                       </div>
@@ -1131,12 +1100,12 @@ onUnmounted(() => {
 }
 
 .thumbnail-container:hover {
-  border-color: #0E64A5;
+  border-color: #0e64a5;
   transform: scale(1.05);
 }
 
 .primary-thumbnail {
-  border-color: #0E64A5;
+  border-color: #0e64a5;
   transform: scale(1.05);
 }
 
@@ -1164,11 +1133,11 @@ onUnmounted(() => {
 }
 
 .custom-select-trigger:hover {
-  border-color: #0E64A5;
+  border-color: #0e64a5;
 }
 
 .custom-select-trigger.active {
-  border-color: #0E64A5;
+  border-color: #0e64a5;
   box-shadow: 0 0 0 2px rgba(14, 100, 165, 0.1);
 }
 
@@ -1197,7 +1166,8 @@ onUnmounted(() => {
   border: 1px solid #e5e7eb;
   border-radius: 6px;
   margin-top: 4px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
   z-index: 50;
   max-height: 300px;
   overflow-y: auto;
@@ -1217,7 +1187,7 @@ onUnmounted(() => {
 }
 
 .dropdown-search:focus {
-  border-color: #0E64A5;
+  border-color: #0e64a5;
   box-shadow: 0 0 0 2px rgba(14, 100, 165, 0.1);
 }
 

@@ -41,6 +41,9 @@ Route::middleware('auth')->group(function () {
 
     // Static Data Routes
     Route::get('static/units', [StaticDataController::class, 'getUnits'])->name('static.units');
+    Route::get('static/categories', [StaticDataController::class, 'getCategories'])->name('static.categories');
+    Route::get('static/manufacturers', [StaticDataController::class, 'getManufacturers'])->name('static.manufacturers');
+    
 });
 
 require __DIR__ . '/auth.php';
