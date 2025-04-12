@@ -209,14 +209,6 @@ const placeOrder = async () => {
       );
 
       if (response.status === 201) {
-        // Clear cart items for this supplier
-        // This should be done on the server side as wel
-        await axios.delete("/retailers/cart/clear", {
-          params: {
-            retailer_id: supplierOrder.retailer_id,
-            supplier_id: supplierOrder.supplier_id,
-          },
-        });
       // Redirect to orders page
       window.location.href = route('retailer.orders');
       }

@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Company\CompanyController; 
 
 #Sync Routes
-Route::get('retailers/sync-company', [CompanyController::class, 'syncCompanyFromIpos'])
+Route::get('retailers/sync-company', [CompanyController::class, 'getRetailerData'])
     ->name('retailer.company.sync');
 
 

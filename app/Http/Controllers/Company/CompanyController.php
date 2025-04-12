@@ -274,4 +274,27 @@ class CompanyController extends Controller
         }
     }
 
+    #This function is only for testing purposes and should be removed in productio
+    public function getRetailerData(Request $request)
+    {
+        try {
+            $user = User::where('email', 'festus.mumo@iprocu.re')
+                ->where('user_type', UserType::Retailer)
+                ->with('company')
+                ->firstOrFail();
+    
+            if (!$user->company) {
+                return response()->json(['error' => 'No company associated with this user'], 404);
+            }
+    
+            return response()->json([
+                'message' => 'Company and user data retrieved successfully',
+                'company' => $user->company,
+                'user' => $user
+            ]);
+    
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
 }

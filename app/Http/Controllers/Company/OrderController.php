@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Companies\Order;
 use Illuminate\Http\Request;
 use App\Models\Companies\OrderedProduct;
+use App\Models\Companies\CartItem; // Add this at the top with other imports
 
 class OrderController extends Controller
 {
@@ -28,6 +29,9 @@ class OrderController extends Controller
                     'created_by' => $request->created_by
                 ]);
             }
+
+            // Clear cart items for the retailer
+            CartItem::where('retailer_id', $request->retailer_id)->delete();
 
             \DB::commit();
 
