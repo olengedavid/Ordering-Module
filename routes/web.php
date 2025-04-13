@@ -27,6 +27,11 @@ Route::middleware('auth')->group(function () {
         ]); 
     })->name('supplier.details');
 
+    // Supplier Orders Route
+    Route::get('/supplier/orders', function() {
+        return Inertia::render('Retail/RetailerOrders');
+    })->name('supplier.orders');
+
     // Supplier Users Routes
     Route::get('/supplier/users', [UserPermissionController::class, 'index'])->name('supplier.users.index');
     Route::post('/supplier/users', [UserPermissionController::class, 'store'])->name('supplier.users.store');

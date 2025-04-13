@@ -41,7 +41,7 @@
 
       <!-- Navigation Links - Hidden on mobile -->
       <div class="all-nav-links">
-        <Link :href="route('retailer.orders')" class="nav-link" :class="{ active: route().current('retailer.orders') }">
+        <Link :href="route('supplier.orders')" class="nav-link" :class="{ active: route().current('supplier.orders') }">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" color="#000000" fill="none"
           class="nav-icon">
           <path opacity="0.4"
@@ -102,7 +102,7 @@
             stroke="currentColor" stroke-width="1.5" />
           <path
             d="M7 5.00379V4.60429C7 3.38019 7 2.76814 7.38076 2.38786C7.76152 2.00758 8.37435 2.00758 9.6 2.00758H15.1535C15.8599 2.00758 16.7765 1.89489 17.2487 2.53866C17.7502 3.22243 17.3216 4.1621 17.5388 4.91785C17.6049 5.14763 17.7681 5.32509 17.9184 5.50519L20 8"
-            stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+            stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
           <path d="M10 8H20V18C20 19.8856 20 20.8284 19.4142 21.4142C18.8284 22 17.8856 22 16 22H10"
             stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
           <path
@@ -206,7 +206,7 @@
       </div>
 
       <div class="mobile-menu-content">
-        <Link :href="route('retailer.orders')" class="mobile-nav-link" :class="{ active: route().current('retailer.orders') }" @click.prevent>
+        <Link :href="route('supplier.orders')" class="mobile-nav-link" :class="{ active: route().current('supplier.orders') }" @click.prevent>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" color="#000000" fill="none"
           class="nav-icon">
           <!-- Orders icon SVG -->
