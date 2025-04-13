@@ -1,5 +1,6 @@
 <template>
-  <RetailerNavbar />
+  <SupplierNavbar v-if="isSupplier" />
+  <RetailerNavbar v-else />
   <div class="page-container">
     <div class="content-container">
       <div class="header-container">
@@ -300,11 +301,13 @@ import axios from "axios";
 import { formatNumber, formatDateOnly } from "@/utils/formatters";
 import { router } from "@inertiajs/vue3";
 import RetailerNavbar from "./RetailerNavbar.vue";
+import SupplierNavbar from "@/Components/SupplierNavbar.vue";
 
 export default {
   name: "OrderView",
   components: {
     RetailerNavbar,
+    SupplierNavbar
   },
   props: {
     uuid: {
@@ -409,6 +412,9 @@ export default {
         "status-badge-cancelled": status === "cancelled",
       };
     },
+    isSupplier() {
+      return this.$page.props.auth?.user?.user_type === 'supplier';
+    }
   },
   methods: {
     formatNumber(value) {
@@ -465,7 +471,8 @@ export default {
       return diffDays;
     },
     goBack() {
-      router.visit(route("retailer.orders"), {
+      const route_name = this.isSupplier ? 'supplier.orders' : 'retailer.orders';
+      router.visit(route(route_name), {
         preserveState: true,
         preserveScroll: true,
       });

@@ -1,5 +1,5 @@
 <template>
-  <SupplierNavbar v-if="$page.props.auth.user.user_type === 'supplier'" />
+  <SupplierNavbar v-if="isSupplier" />
   <RetailerNavbar v-else />
   <div class="page-container">
     <div class="content-container">
@@ -251,6 +251,11 @@ export default {
       totalOrders: 0
     };
   },
+  computed: {
+    isSupplier() {
+      return this.$page.props.auth?.user?.user_type === 'supplier';
+    }
+  },
   watch: {
     currentPage: {
       handler() {
@@ -321,8 +326,8 @@ export default {
       this.currentPage = 1;
     },
     viewOrderDetails(order) {
-      // Navigate to order details page with dummy data
-      this.$inertia.visit(route('retailer.orders.show', { ref: order.order_ref, uuid: order.uuid}), {
+      const route_name = this.isSupplier ? 'supplier.orders.show' : 'retailer.orders.show';
+      this.$inertia.visit(route(route_name, { ref: order.order_ref, uuid: order.uuid}), {
         preserveState: true,
         preserveScroll: true,
       });

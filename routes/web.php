@@ -6,6 +6,7 @@ use Illuminate\Foundation\Application;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StaticDataController;
 use App\Http\Controllers\UserPermissionController;
+use Illuminate\Http\Request;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -31,6 +32,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/supplier/orders', function() {
         return Inertia::render('Retail/RetailerOrders');
     })->name('supplier.orders');
+
+    // Supplier Order Details Route
+    Route::get('/supplier/orders/show', function (Request $request) {
+        return Inertia::render('Retail/Components/OrderDetails', [
+            'uuid' => $request->query('uuid')
+        ]);
+    })->name('supplier.orders.show');
 
     // Supplier Users Routes
     Route::get('/supplier/users', [UserPermissionController::class, 'index'])->name('supplier.users.index');
