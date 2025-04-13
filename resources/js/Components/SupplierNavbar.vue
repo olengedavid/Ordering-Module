@@ -41,7 +41,7 @@
 
       <!-- Navigation Links - Hidden on mobile -->
       <div class="all-nav-links">
-        <Link :href="route('dashboard')" class="nav-link disabled" :class="{ active: route().current('orders.*') }" @click.prevent>
+        <Link :href="route('retailer.orders')" class="nav-link" :class="{ active: route().current('retailer.orders') }">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" color="#000000" fill="none"
           class="nav-icon">
           <path opacity="0.4"
@@ -206,7 +206,7 @@
       </div>
 
       <div class="mobile-menu-content">
-        <Link :href="route('dashboard')" class="mobile-nav-link disabled" :class="{ active: route().current('orders.*') }" @click.prevent>
+        <Link :href="route('retailer.orders')" class="mobile-nav-link" :class="{ active: route().current('retailer.orders') }" @click.prevent>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" color="#000000" fill="none"
           class="nav-icon">
           <!-- Orders icon SVG -->

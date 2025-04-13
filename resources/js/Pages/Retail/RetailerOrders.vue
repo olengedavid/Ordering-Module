@@ -1,5 +1,6 @@
 <template>
-  <RetailerNavbar />
+  <SupplierNavbar v-if="$page.props.auth.user.user_type === 'supplier'" />
+  <RetailerNavbar v-else />
   <div class="page-container">
     <div class="content-container">
       <h1 class="page-title">Orders</h1>
@@ -218,12 +219,14 @@
 
 <script>
 import RetailerNavbar from "./Components/RetailerNavbar.vue";
+import SupplierNavbar from "@/Components/SupplierNavbar.vue";
 import { formatNumber, formatDateOnly } from "@/utils/formatters";
 
 export default {
   name: "RetailerOrdersPage",
   components: {
     RetailerNavbar,
+    SupplierNavbar
   },
   data() {
     return {
